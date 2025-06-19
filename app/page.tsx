@@ -4,31 +4,24 @@ import { useState } from "react"
 import {
   Bell,
   Calendar,
-  ChevronDown,
   FileText,
-  Home,
   Menu,
   Receipt,
-  Search,
   Settings,
   Users,
   Plus,
   Edit,
   Trash2,
   Eye,
-  Phone,
-  Mail,
-  Clock,
   DollarSign,
-  Activity,
   TrendingUp,
-  UserCheck,
   CalendarDays,
+  Home,
+  Search,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -38,410 +31,560 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 
-// Mock Data
-const mockPatients = [
-  {
-    id: 1,
-    name: "John Doe",
-    age: 35,
-    gender: "Male",
-    phone: "+1-555-0123",
-    email: "john.doe@email.com",
-    lastVisit: "2024-01-15",
-    status: "Active",
-    condition: "Hypertension",
-    address: "123 Main St, City, State 12345",
-    emergencyContact: "Jane Doe - +1-555-0124",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    age: 28,
-    gender: "Female",
-    phone: "+1-555-0124",
-    email: "jane.smith@email.com",
-    lastVisit: "2024-01-14",
-    status: "Active",
-    condition: "Diabetes",
-    address: "456 Oak Ave, City, State 12345",
-    emergencyContact: "John Smith - +1-555-0125",
-  },
-  {
-    id: 3,
-    name: "Robert Johnson",
-    age: 45,
-    gender: "Male",
-    phone: "+1-555-0125",
-    email: "robert.j@email.com",
-    lastVisit: "2024-01-13",
-    status: "Inactive",
-    condition: "Asthma",
-    address: "789 Pine St, City, State 12345",
-    emergencyContact: "Mary Johnson - +1-555-0126",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    age: 32,
-    gender: "Female",
-    phone: "+1-555-0126",
-    email: "emily.davis@email.com",
-    lastVisit: "2024-01-12",
-    status: "Active",
-    condition: "Migraine",
-    address: "321 Elm St, City, State 12345",
-    emergencyContact: "Mike Davis - +1-555-0127",
-  },
-  {
-    id: 5,
-    name: "Michael Wilson",
-    age: 52,
-    gender: "Male",
-    phone: "+1-555-0127",
-    email: "michael.w@email.com",
-    lastVisit: "2024-01-11",
-    status: "Active",
-    condition: "Arthritis",
-    address: "654 Maple Ave, City, State 12345",
-    emergencyContact: "Sarah Wilson - +1-555-0128",
-  },
-]
-
-const mockAppointments = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    patientId: 1,
-    date: "2024-01-20",
-    time: "09:00 AM",
-    doctor: "Dr. Smith",
-    type: "Consultation",
-    status: "Scheduled",
-    notes: "Regular checkup for hypertension",
-    duration: "30 minutes",
-  },
-  {
-    id: 2,
-    patientName: "Jane Smith",
-    patientId: 2,
-    date: "2024-01-20",
-    time: "10:30 AM",
-    doctor: "Dr. Johnson",
-    type: "Follow-up",
-    status: "Confirmed",
-    notes: "Diabetes management follow-up",
-    duration: "45 minutes",
-  },
-  {
-    id: 3,
-    patientName: "Robert Johnson",
-    patientId: 3,
-    date: "2024-01-21",
-    time: "02:00 PM",
-    doctor: "Dr. Brown",
-    type: "Check-up",
-    status: "Pending",
-    notes: "Asthma evaluation",
-    duration: "30 minutes",
-  },
-  {
-    id: 4,
-    patientName: "Emily Davis",
-    patientId: 4,
-    date: "2024-01-22",
-    time: "11:00 AM",
-    doctor: "Dr. Wilson",
-    type: "Consultation",
-    status: "Scheduled",
-    notes: "Migraine treatment consultation",
-    duration: "60 minutes",
-  },
-  {
-    id: 5,
-    patientName: "Michael Wilson",
-    patientId: 5,
-    date: "2024-01-23",
-    time: "03:30 PM",
-    doctor: "Dr. Smith",
-    type: "Treatment",
-    status: "Confirmed",
-    notes: "Arthritis treatment session",
-    duration: "45 minutes",
-  },
-]
-
-const mockMedicalRecords = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    patientId: 1,
-    date: "2024-01-15",
-    diagnosis: "Hypertension",
-    treatment: "Lisinopril 10mg daily",
-    doctor: "Dr. Smith",
-    notes: "Patient responding well to treatment. Blood pressure stable at 130/80.",
-    vitals: { bp: "130/80", pulse: "72", temp: "98.6°F", weight: "180 lbs" },
-    prescriptions: ["Lisinopril 10mg", "Aspirin 81mg"],
-  },
-  {
-    id: 2,
-    patientName: "Jane Smith",
-    patientId: 2,
-    date: "2024-01-14",
-    diagnosis: "Type 2 Diabetes",
-    treatment: "Metformin 500mg twice daily",
-    doctor: "Dr. Johnson",
-    notes: "Blood sugar levels improving with medication and diet changes. HbA1c down to 7.2%.",
-    vitals: { bp: "125/75", pulse: "68", temp: "98.4°F", weight: "145 lbs" },
-    prescriptions: ["Metformin 500mg", "Glipizide 5mg"],
-  },
-  {
-    id: 3,
-    patientName: "Robert Johnson",
-    patientId: 3,
-    date: "2024-01-13",
-    diagnosis: "Asthma",
-    treatment: "Albuterol inhaler as needed",
-    doctor: "Dr. Brown",
-    notes: "Symptoms under control with current medication. Peak flow improved.",
-    vitals: { bp: "120/78", pulse: "75", temp: "98.5°F", weight: "165 lbs" },
-    prescriptions: ["Albuterol inhaler", "Fluticasone inhaler"],
-  },
-  {
-    id: 4,
-    patientName: "Emily Davis",
-    patientId: 4,
-    date: "2024-01-12",
-    diagnosis: "Migraine",
-    treatment: "Sumatriptan 50mg as needed",
-    doctor: "Dr. Wilson",
-    notes: "Frequency of migraines reduced from daily to 2-3 times per week.",
-    vitals: { bp: "118/72", pulse: "70", temp: "98.3°F", weight: "125 lbs" },
-    prescriptions: ["Sumatriptan 50mg", "Propranolol 40mg"],
-  },
-  {
-    id: 5,
-    patientName: "Michael Wilson",
-    patientId: 5,
-    date: "2024-01-11",
-    diagnosis: "Osteoarthritis",
-    treatment: "Physical therapy and NSAIDs",
-    doctor: "Dr. Smith",
-    notes: "Joint mobility improving with physical therapy. Pain reduced with medication.",
-    vitals: { bp: "135/85", pulse: "78", temp: "98.7°F", weight: "195 lbs" },
-    prescriptions: ["Ibuprofen 600mg", "Glucosamine supplement"],
-  },
-]
-
-const mockInvoices = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    patientId: 1,
-    date: "2024-01-15",
-    amount: 250,
-    status: "Paid",
-    service: "Consultation",
-    dueDate: "2024-01-30",
-    paymentMethod: "Credit Card",
-    insuranceClaim: "Submitted",
-  },
-  {
-    id: 2,
-    patientName: "Jane Smith",
-    patientId: 2,
-    date: "2024-01-14",
-    amount: 180,
-    status: "Pending",
-    service: "Lab Tests",
-    dueDate: "2024-01-29",
-    paymentMethod: "Insurance",
-    insuranceClaim: "Pending",
-  },
-  {
-    id: 3,
-    patientName: "Robert Johnson",
-    patientId: 3,
-    date: "2024-01-13",
-    amount: 320,
-    status: "Overdue",
-    service: "Treatment",
-    dueDate: "2024-01-28",
-    paymentMethod: "Cash",
-    insuranceClaim: "Denied",
-  },
-  {
-    id: 4,
-    patientName: "Emily Davis",
-    patientId: 4,
-    date: "2024-01-12",
-    amount: 150,
-    status: "Paid",
-    service: "Check-up",
-    dueDate: "2024-01-27",
-    paymentMethod: "Debit Card",
-    insuranceClaim: "Approved",
-  },
-  {
-    id: 5,
-    patientName: "Michael Wilson",
-    patientId: 5,
-    date: "2024-01-11",
-    amount: 280,
-    status: "Pending",
-    service: "Therapy",
-    dueDate: "2024-01-26",
-    paymentMethod: "Insurance",
-    insuranceClaim: "Processing",
-  },
-]
+// Import the form components
+import PatientForm from "@/components/patient-form"
+import AppointmentForm from "@/components/appointment-form"
+import MedicalRecordForm from "@/components/medical-record-form"
+import InvoiceForm from "@/components/invoice-form"
+import ReportsModal from "@/components/reports-modal"
+import CalendarView from "@/components/calendar-view"
 
 export default function Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [currentPage, setCurrentPage] = useState("dashboard")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [patients, setPatients] = useState(mockPatients)
-  const [appointments, setAppointments] = useState(mockAppointments)
-  const [medicalRecords, setMedicalRecords] = useState(mockMedicalRecords)
-  const [invoices, setInvoices] = useState(mockInvoices)
+  const [searchTerm, setSearchTerm] = useState("")
 
-  // Dashboard Analytics
-  const totalPatients = patients.length
-  const activePatients = patients.filter((p) => p.status === "Active").length
-  const todayAppointments = appointments.filter((a) => a.date === "2024-01-20").length
-  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amount, 0)
-  const pendingPayments = invoices.filter((inv) => inv.status === "Pending" || inv.status === "Overdue").length
+  // Enhanced dummy data with more realistic information
+  const [patients, setPatients] = useState([
+    {
+      id: 1,
+      name: "John Doe",
+      age: 45,
+      gender: "Male",
+      phone: "(555) 123-4567",
+      email: "john.doe@email.com",
+      address: "123 Main St, City, State 12345",
+      bloodType: "A+",
+      allergies: "Penicillin",
+      emergencyContact: "Jane Doe - (555) 123-4568",
+      insuranceProvider: "Blue Cross",
+      insuranceNumber: "BC123456789",
+      status: "Active",
+      lastVisit: "2024-01-15",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      age: 32,
+      gender: "Female",
+      phone: "(555) 987-6543",
+      email: "jane.smith@email.com",
+      address: "456 Oak Ave, City, State 12345",
+      bloodType: "O-",
+      allergies: "None",
+      emergencyContact: "Bob Smith - (555) 987-6544",
+      insuranceProvider: "Aetna",
+      insuranceNumber: "AE987654321",
+      status: "Active",
+      lastVisit: "2024-01-20",
+    },
+    {
+      id: 3,
+      name: "Robert Johnson",
+      age: 58,
+      gender: "Male",
+      phone: "(555) 456-7890",
+      email: "robert.j@email.com",
+      address: "789 Pine St, City, State 12345",
+      bloodType: "B+",
+      allergies: "Shellfish",
+      emergencyContact: "Mary Johnson - (555) 456-7891",
+      insuranceProvider: "Cigna",
+      insuranceNumber: "CG456789123",
+      status: "Active",
+      lastVisit: "2024-01-18",
+    },
+  ])
+
+  const [appointments, setAppointments] = useState([
+    {
+      id: 1,
+      patientId: 1,
+      patientName: "John Doe",
+      date: "2024-01-25",
+      time: "10:00 AM",
+      doctor: "Dr. Smith",
+      type: "Check-up",
+      duration: "30 minutes",
+      status: "Confirmed",
+      notes: "Annual physical examination",
+    },
+    {
+      id: 2,
+      patientId: 2,
+      patientName: "Jane Smith",
+      date: "2024-01-26",
+      time: "2:00 PM",
+      doctor: "Dr. Johnson",
+      type: "Follow-up",
+      duration: "45 minutes",
+      status: "Pending",
+      notes: "Follow-up for blood pressure monitoring",
+    },
+    {
+      id: 3,
+      patientId: 3,
+      patientName: "Robert Johnson",
+      date: "2024-01-27",
+      time: "11:30 AM",
+      doctor: "Dr. Brown",
+      type: "Consultation",
+      duration: "60 minutes",
+      status: "Scheduled",
+      notes: "Initial consultation for joint pain",
+    },
+  ])
+
+  const [medicalRecords, setMedicalRecords] = useState([
+    {
+      id: 1,
+      patientId: 1,
+      patientName: "John Doe",
+      date: "2024-01-15",
+      doctor: "Dr. Smith",
+      diagnosis: "Hypertension",
+      treatment: "Lifestyle changes and medication",
+      severity: "Moderate",
+      status: "Active",
+      vitals: { bp: "140/90", pulse: "78", temp: "98.6°F", weight: "180 lbs", height: "5'10\"", oxygen: "98%" },
+      prescriptions: ["Lisinopril 10mg daily", "Hydrochlorothiazide 25mg daily"],
+      symptoms: ["Headache", "Dizziness"],
+      notes: "Patient advised to reduce sodium intake and increase exercise",
+    },
+    {
+      id: 2,
+      patientId: 2,
+      patientName: "Jane Smith",
+      date: "2024-01-20",
+      doctor: "Dr. Johnson",
+      diagnosis: "Seasonal Allergies",
+      treatment: "Antihistamines and nasal spray",
+      severity: "Mild",
+      status: "Resolved",
+      vitals: { bp: "120/80", pulse: "72", temp: "98.4°F", weight: "135 lbs", height: "5'6\"", oxygen: "99%" },
+      prescriptions: ["Claritin 10mg daily", "Flonase nasal spray"],
+      symptoms: ["Sneezing", "Runny nose", "Itchy eyes"],
+      notes: "Symptoms improved with treatment",
+    },
+  ])
+
+  const [invoices, setInvoices] = useState([
+    {
+      id: 1,
+      patientId: 1,
+      patientName: "John Doe",
+      date: "2024-01-15",
+      dueDate: "2024-02-15",
+      service: "Annual Physical Examination",
+      amount: 250,
+      status: "Paid",
+      paymentMethod: "Insurance",
+      insuranceClaim: "Approved",
+      items: [
+        { description: "Office Visit", quantity: 1, rate: 150, amount: 150 },
+        { description: "Blood Work", quantity: 1, rate: 100, amount: 100 },
+      ],
+      subtotal: 250,
+      tax: 20,
+      discount: 0,
+      total: 270,
+    },
+    {
+      id: 2,
+      patientId: 2,
+      patientName: "Jane Smith",
+      date: "2024-01-20",
+      dueDate: "2024-02-20",
+      service: "Allergy Consultation",
+      amount: 180,
+      status: "Pending",
+      paymentMethod: "",
+      insuranceClaim: "Submitted",
+      items: [
+        { description: "Consultation", quantity: 1, rate: 120, amount: 120 },
+        { description: "Allergy Test", quantity: 1, rate: 60, amount: 60 },
+      ],
+      subtotal: 180,
+      tax: 14.4,
+      discount: 0,
+      total: 194.4,
+    },
+  ])
+
+  // Modal states
+  const [patientFormOpen, setPatientFormOpen] = useState(false)
+  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false)
+  const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false)
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false)
+  const [reportsModalOpen, setReportsModalOpen] = useState(false)
+  const [calendarViewOpen, setCalendarViewOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+
+  // Filter functions
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.phone.includes(searchTerm) ||
+      patient.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  const filteredAppointments = appointments.filter(
+    (appointment) =>
+      appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.doctor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.type.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  const filteredMedicalRecords = medicalRecords.filter(
+    (record) =>
+      record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.doctor.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  const filteredInvoices = invoices.filter(
+    (invoice) =>
+      invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.status.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  // CRUD handlers
+  const handleAddPatient = () => {
+    setEditingItem(null)
+    setPatientFormOpen(true)
+  }
+
+  const handleEditPatient = (patient) => {
+    setEditingItem(patient)
+    setPatientFormOpen(true)
+  }
+
+  const handleSavePatient = (patientData) => {
+    if (editingItem) {
+      setPatients(patients.map((p) => (p.id === editingItem.id ? { ...patientData, id: editingItem.id } : p)))
+    } else {
+      setPatients([...patients, { ...patientData, id: Date.now() }])
+    }
+  }
+
+  const handleDeletePatient = (patientId) => {
+    if (confirm("Are you sure you want to delete this patient?")) {
+      setPatients(patients.filter((p) => p.id !== patientId))
+      // Also remove related appointments, records, and invoices
+      setAppointments(appointments.filter((a) => a.patientId !== patientId))
+      setMedicalRecords(medicalRecords.filter((r) => r.patientId !== patientId))
+      setInvoices(invoices.filter((i) => i.patientId !== patientId))
+    }
+  }
+
+  const handleAddAppointment = () => {
+    setEditingItem(null)
+    setAppointmentFormOpen(true)
+  }
+
+  const handleEditAppointment = (appointment) => {
+    setEditingItem(appointment)
+    setAppointmentFormOpen(true)
+  }
+
+  const handleSaveAppointment = (appointmentData) => {
+    if (editingItem) {
+      setAppointments(
+        appointments.map((a) => (a.id === editingItem.id ? { ...appointmentData, id: editingItem.id } : a)),
+      )
+    } else {
+      setAppointments([...appointments, { ...appointmentData, id: Date.now() }])
+    }
+  }
+
+  const handleDeleteAppointment = (appointmentId) => {
+    if (confirm("Are you sure you want to delete this appointment?")) {
+      setAppointments(appointments.filter((a) => a.id !== appointmentId))
+    }
+  }
+
+  const handleAddMedicalRecord = () => {
+    setEditingItem(null)
+    setMedicalRecordFormOpen(true)
+  }
+
+  const handleEditMedicalRecord = (record) => {
+    setEditingItem(record)
+    setMedicalRecordFormOpen(true)
+  }
+
+  const handleSaveMedicalRecord = (recordData) => {
+    if (editingItem) {
+      setMedicalRecords(
+        medicalRecords.map((r) => (r.id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),
+      )
+    } else {
+      setMedicalRecords([...medicalRecords, { ...recordData, id: Date.now() }])
+    }
+  }
+
+  const handleDeleteMedicalRecord = (recordId) => {
+    if (confirm("Are you sure you want to delete this medical record?")) {
+      setMedicalRecords(medicalRecords.filter((r) => r.id !== recordId))
+    }
+  }
+
+  const handleAddInvoice = () => {
+    setEditingItem(null)
+    setInvoiceFormOpen(true)
+  }
+
+  const handleEditInvoice = (invoice) => {
+    setEditingItem(invoice)
+    setInvoiceFormOpen(true)
+  }
+
+  const handleSaveInvoice = (invoiceData) => {
+    if (editingItem) {
+      setInvoices(invoices.map((i) => (i.id === editingItem.id ? { ...invoiceData, id: editingItem.id } : i)))
+    } else {
+      setInvoices([...invoices, { ...invoiceData, id: Date.now() }])
+    }
+  }
+
+  const handleDeleteInvoice = (invoiceId) => {
+    if (confirm("Are you sure you want to delete this invoice?")) {
+      setInvoices(invoices.filter((i) => i.id !== invoiceId))
+    }
+  }
+
+  const getStatusBadgeVariant = (status) => {
+    switch (status.toLowerCase()) {
+      case "active":
+      case "confirmed":
+      case "paid":
+      case "approved":
+        return "default"
+      case "pending":
+      case "scheduled":
+      case "submitted":
+        return "secondary"
+      case "cancelled":
+      case "overdue":
+      case "denied":
+        return "destructive"
+      case "resolved":
+      case "completed":
+        return "outline"
+      default:
+        return "secondary"
+    }
+  }
+
+  const renderSidebar = () => (
+    <div
+      className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-700 transition-transform duration-300 z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+    >
+      <div className="p-6 border-b border-slate-700">
+        <h1 className="text-xl font-bold text-white">CliniTrack</h1>
+        <p className="text-sm text-slate-400">Medical Dashboard</p>
+      </div>
+      <nav className="p-4">
+        <ul className="space-y-2">
+          <li>
+            <Button
+              variant={currentPage === "dashboard" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("dashboard")}
+            >
+              <Home className="mr-3 h-4 w-4" />
+              Dashboard
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "patients" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("patients")}
+            >
+              <Users className="mr-3 h-4 w-4" />
+              Patients
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "appointments" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("appointments")}
+            >
+              <Calendar className="mr-3 h-4 w-4" />
+              Appointments
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "medicalRecords" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("medicalRecords")}
+            >
+              <FileText className="mr-3 h-4 w-4" />
+              Medical Records
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "billing" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("billing")}
+            >
+              <Receipt className="mr-3 h-4 w-4" />
+              Billing
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "calendar" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCalendarViewOpen(true)}
+            >
+              <CalendarDays className="mr-3 h-4 w-4" />
+              Calendar View
+            </Button>
+          </li>
+          <li>
+            <Button
+              variant={currentPage === "settings" ? "secondary" : "ghost"}
+              className="w-full justify-start text-white hover:bg-slate-800"
+              onClick={() => setCurrentPage("settings")}
+            >
+              <Settings className="mr-3 h-4 w-4" />
+              Settings
+            </Button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  )
 
   const renderDashboard = () => (
     <div className="space-y-6">
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-400">Total Patients</p>
-                <p className="text-3xl font-bold">{totalPatients}</p>
-                <p className="text-sm text-green-400 flex items-center mt-1">
-                  <TrendingUp className="mr-1 h-3 w-3" />
-                  12% increase
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-500" />
-              </div>
-            </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Total Patients</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">{patients.length}</div>
+            <p className="text-xs text-slate-500">Active patients in system</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-400">Active Patients</p>
-                <p className="text-3xl font-bold">{activePatients}</p>
-                <p className="text-sm text-green-400 flex items-center mt-1">
-                  <UserCheck className="mr-1 h-3 w-3" />
-                  {Math.round((activePatients / totalPatients) * 100)}% active
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                <Activity className="h-6 w-6 text-green-500" />
-              </div>
-            </div>
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Today's Appointments</CardTitle>
+            <Calendar className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">{appointments.length}</div>
+            <p className="text-xs text-slate-500">Scheduled for today</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-400">Today's Appointments</p>
-                <p className="text-3xl font-bold">{todayAppointments}</p>
-                <p className="text-sm text-blue-400 flex items-center mt-1">
-                  <CalendarDays className="mr-1 h-3 w-3" />
-                  Scheduled today
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-purple-500" />
-              </div>
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Pending Invoices</CardTitle>
+            <DollarSign className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">
+              {invoices.filter((invoice) => invoice.status === "Pending").length}
             </div>
+            <p className="text-xs text-slate-500">Awaiting payment</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-400">Total Revenue</p>
-                <p className="text-3xl font-bold">${totalRevenue.toLocaleString()}</p>
-                <p className="text-sm text-yellow-400 flex items-center mt-1">
-                  <DollarSign className="mr-1 h-3 w-3" />
-                  {pendingPayments} pending
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <Receipt className="h-6 w-6 text-yellow-500" />
-              </div>
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900">
+              $
+              {invoices
+                .filter((i) => i.status === "Paid")
+                .reduce((sum, i) => sum + i.total, 0)
+                .toLocaleString()}
             </div>
+            <p className="text-xs text-slate-500">+12% from last month</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Quick Actions */}
+      <Card className="bg-white border border-slate-200">
+        <CardHeader>
+          <CardTitle className="text-slate-900">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button onClick={handleAddPatient} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Patient
+            </Button>
+            <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              Schedule Appointment
+            </Button>
+            <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Medical Record
+            </Button>
+            <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Invoice
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white border border-slate-200">
           <CardHeader>
-            <CardTitle>Recent Appointments</CardTitle>
+            <CardTitle className="text-slate-900">Recent Appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {appointments.slice(0, 5).map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+            <div className="space-y-3">
+              {appointments.slice(0, 3).map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
-                    <p className="font-medium">{appointment.patientName}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="font-medium text-slate-900">{appointment.patientName}</p>
+                    <p className="text-sm text-slate-500">
                       {appointment.date} at {appointment.time}
                     </p>
                   </div>
-                  <Badge variant={appointment.status === "Confirmed" ? "default" : "secondary"}>
-                    {appointment.status}
-                  </Badge>
+                  <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white border border-slate-200">
           <CardHeader>
-            <CardTitle>Recent Patients</CardTitle>
+            <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {patients.slice(0, 5).map((patient) => (
-                <div key={patient.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {patient.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{patient.name}</p>
-                      <p className="text-sm text-slate-400">{patient.condition}</p>
-                    </div>
+            <div className="space-y-3">
+              {medicalRecords.slice(0, 3).map((record) => (
+                <div key={record.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-slate-900">{record.patientName}</p>
+                    <p className="text-sm text-slate-500">{record.diagnosis}</p>
                   </div>
-                  <Badge variant={patient.status === "Active" ? "default" : "secondary"}>{patient.status}</Badge>
+                  <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
                 </div>
               ))}
             </div>
@@ -454,89 +597,60 @@ export default function Dashboard() {
   const renderPatients = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Patients Management</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Patients</h2>
+          <p className="text-slate-600">Manage patient information and records</p>
+        </div>
+        <Button onClick={handleAddPatient} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Add New Patient
         </Button>
       </div>
 
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Patients ({patients.length})</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Input placeholder="Search patients..." className="w-64 bg-slate-700 border-slate-600" />
-              <Button variant="outline" size="sm">
-                Filter
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
+      <Card className="bg-white border border-slate-200">
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700">
-                <TableHead>Patient</TableHead>
-                <TableHead>Age/Gender</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Last Visit</TableHead>
-                <TableHead>Condition</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-slate-600">Name</TableHead>
+                <TableHead className="text-slate-600">Age</TableHead>
+                <TableHead className="text-slate-600">Gender</TableHead>
+                <TableHead className="text-slate-600">Phone</TableHead>
+                <TableHead className="text-slate-600">Last Visit</TableHead>
+                <TableHead className="text-slate-600">Status</TableHead>
+                <TableHead className="text-right text-slate-600">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {patients.map((patient) => (
-                <TableRow key={patient.id} className="border-slate-700">
+              {filteredPatients.map((patient) => (
+                <TableRow key={patient.id} className="hover:bg-slate-50">
+                  <TableCell className="font-medium text-slate-900">{patient.name}</TableCell>
+                  <TableCell className="text-slate-600">{patient.age}</TableCell>
+                  <TableCell className="text-slate-600">{patient.gender}</TableCell>
+                  <TableCell className="text-slate-600">{patient.phone}</TableCell>
+                  <TableCell className="text-slate-600">{patient.lastVisit}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {patient.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{patient.name}</p>
-                        <p className="text-sm text-slate-400">ID: {patient.id.toString().padStart(4, "0")}</p>
-                      </div>
-                    </div>
+                    <Badge variant={getStatusBadgeVariant(patient.status)}>{patient.status}</Badge>
                   </TableCell>
-                  <TableCell>
-                    <div>
-                      <p>{patient.age} years</p>
-                      <p className="text-sm text-slate-400">{patient.gender}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="flex items-center text-sm">
-                        <Phone className="mr-1 h-3 w-3" />
-                        {patient.phone}
-                      </p>
-                      <p className="flex items-center text-sm text-slate-400">
-                        <Mail className="mr-1 h-3 w-3" />
-                        {patient.email}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{patient.lastVisit}</TableCell>
-                  <TableCell>{patient.condition}</TableCell>
-                  <TableCell>
-                    <Badge variant={patient.status === "Active" ? "default" : "secondary"}>{patient.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditPatient(patient)}
+                        className="text-slate-600 hover:text-slate-900"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeletePatient(patient.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -553,119 +667,60 @@ export default function Dashboard() {
   const renderAppointments = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Appointments</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Appointments</h2>
+          <p className="text-slate-600">Schedule and manage patient appointments</p>
+        </div>
+        <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Schedule Appointment
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-400">{appointments.length}</p>
-              <p className="text-sm text-slate-400">Total Appointments</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-400">
-                {appointments.filter((a) => a.status === "Confirmed").length}
-              </p>
-              <p className="text-sm text-slate-400">Confirmed</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-400">
-                {appointments.filter((a) => a.status === "Pending").length}
-              </p>
-              <p className="text-sm text-slate-400">Pending</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-400">{todayAppointments}</p>
-              <p className="text-sm text-slate-400">Today</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle>Appointment Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className="bg-white border border-slate-200">
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700">
-                <TableHead>Patient</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-slate-600">Patient</TableHead>
+                <TableHead className="text-slate-600">Date</TableHead>
+                <TableHead className="text-slate-600">Time</TableHead>
+                <TableHead className="text-slate-600">Doctor</TableHead>
+                <TableHead className="text-slate-600">Type</TableHead>
+                <TableHead className="text-slate-600">Status</TableHead>
+                <TableHead className="text-right text-slate-600">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment.id} className="border-slate-700">
+              {filteredAppointments.map((appointment) => (
+                <TableRow key={appointment.id} className="hover:bg-slate-50">
+                  <TableCell className="font-medium text-slate-900">{appointment.patientName}</TableCell>
+                  <TableCell className="text-slate-600">{appointment.date}</TableCell>
+                  <TableCell className="text-slate-600">{appointment.time}</TableCell>
+                  <TableCell className="text-slate-600">{appointment.doctor}</TableCell>
+                  <TableCell className="text-slate-600">{appointment.type}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {appointment.patientName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{appointment.patientName}</span>
-                    </div>
+                    <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
                   </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="flex items-center">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        {appointment.date}
-                      </p>
-                      <p className="flex items-center text-sm text-slate-400">
-                        <Clock className="mr-1 h-3 w-3" />
-                        {appointment.time}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>{appointment.doctor}</TableCell>
-                  <TableCell>{appointment.type}</TableCell>
-                  <TableCell>{appointment.duration}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        appointment.status === "Confirmed"
-                          ? "default"
-                          : appointment.status === "Pending"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {appointment.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditAppointment(appointment)}
+                        className="text-slate-600 hover:text-slate-900"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteAppointment(appointment.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -682,73 +737,72 @@ export default function Dashboard() {
   const renderMedicalRecords = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Medical Records</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Medical Records</h2>
+          <p className="text-slate-600">Patient medical history and treatment records</p>
+        </div>
+        <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
-          Add New Record
+          Add Medical Record
         </Button>
       </div>
 
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Patient Records ({medicalRecords.length})</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Input placeholder="Search records..." className="w-64 bg-slate-700 border-slate-600" />
-              <Select>
-                <SelectTrigger className="w-32 bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Records</SelectItem>
-                  <SelectItem value="recent">Recent</SelectItem>
-                  <SelectItem value="diagnosis">By Diagnosis</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
+      <Card className="bg-white border border-slate-200">
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700">
-                <TableHead>Patient</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Diagnosis</TableHead>
-                <TableHead>Treatment</TableHead>
-                <TableHead>Doctor</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-slate-600">Patient</TableHead>
+                <TableHead className="text-slate-600">Date</TableHead>
+                <TableHead className="text-slate-600">Doctor</TableHead>
+                <TableHead className="text-slate-600">Diagnosis</TableHead>
+                <TableHead className="text-slate-600">Severity</TableHead>
+                <TableHead className="text-slate-600">Status</TableHead>
+                <TableHead className="text-right text-slate-600">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {medicalRecords.map((record) => (
-                <TableRow key={record.id} className="border-slate-700">
+              {filteredMedicalRecords.map((record) => (
+                <TableRow key={record.id} className="hover:bg-slate-50">
+                  <TableCell className="font-medium text-slate-900">{record.patientName}</TableCell>
+                  <TableCell className="text-slate-600">{record.date}</TableCell>
+                  <TableCell className="text-slate-600">{record.doctor}</TableCell>
+                  <TableCell className="text-slate-600">{record.diagnosis}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {record.patientName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{record.patientName}</span>
-                    </div>
+                    <Badge
+                      variant={
+                        record.severity === "Severe"
+                          ? "destructive"
+                          : record.severity === "Moderate"
+                            ? "secondary"
+                            : "outline"
+                      }
+                    >
+                      {record.severity}
+                    </Badge>
                   </TableCell>
-                  <TableCell>{record.date}</TableCell>
-                  <TableCell>{record.diagnosis}</TableCell>
-                  <TableCell>{record.treatment}</TableCell>
-                  <TableCell>{record.doctor}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                    <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditMedicalRecord(record)}
+                        className="text-slate-600 hover:text-slate-900"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteMedicalRecord(record.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -765,111 +819,62 @@ export default function Dashboard() {
   const renderBilling = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Billing & Invoices</h2>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Billing & Invoices</h2>
+          <p className="text-slate-600">Manage patient billing and payment records</p>
+        </div>
+        <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Create Invoice
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-400">${totalRevenue.toLocaleString()}</p>
-              <p className="text-sm text-slate-400">Total Revenue</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-400">{invoices.filter((i) => i.status === "Paid").length}</p>
-              <p className="text-sm text-slate-400">Paid Invoices</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-400">
-                {invoices.filter((i) => i.status === "Pending").length}
-              </p>
-              <p className="text-sm text-slate-400">Pending</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-400">{invoices.filter((i) => i.status === "Overdue").length}</p>
-              <p className="text-sm text-slate-400">Overdue</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle>Recent Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className="bg-white border border-slate-200">
+        <CardContent className="p-6">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-700">
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-slate-600">Patient</TableHead>
+                <TableHead className="text-slate-600">Date</TableHead>
+                <TableHead className="text-slate-600">Service</TableHead>
+                <TableHead className="text-slate-600">Amount</TableHead>
+                <TableHead className="text-slate-600">Status</TableHead>
+                <TableHead className="text-slate-600">Insurance</TableHead>
+                <TableHead className="text-right text-slate-600">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.id} className="border-slate-700">
-                  <TableCell>#{invoice.id.toString().padStart(4, "0")}</TableCell>
+              {filteredInvoices.map((invoice) => (
+                <TableRow key={invoice.id} className="hover:bg-slate-50">
+                  <TableCell className="font-medium text-slate-900">{invoice.patientName}</TableCell>
+                  <TableCell className="text-slate-600">{invoice.date}</TableCell>
+                  <TableCell className="text-slate-600">{invoice.service}</TableCell>
+                  <TableCell className="text-slate-600">${invoice.total.toFixed(2)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {invoice.patientName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{invoice.patientName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{invoice.service}</TableCell>
-                  <TableCell>{invoice.date}</TableCell>
-                  <TableCell>{invoice.dueDate}</TableCell>
-                  <TableCell>${invoice.amount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        invoice.status === "Paid"
-                          ? "default"
-                          : invoice.status === "Pending"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                    >
-                      {invoice.status}
-                    </Badge>
+                    <Badge variant={getStatusBadgeVariant(invoice.status)}>{invoice.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                    <Badge variant={getStatusBadgeVariant(invoice.insuranceClaim)}>{invoice.insuranceClaim}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditInvoice(invoice)}
+                        className="text-slate-600 hover:text-slate-900"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteInvoice(invoice.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -885,506 +890,205 @@ export default function Dashboard() {
 
   const renderSettings = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">Clinic Settings</h2>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
+        <p className="text-slate-600">Manage your account and application preferences</p>
+      </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="bg-slate-800">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white border border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-slate-900">Account Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-slate-700">
+                Full Name
+              </Label>
+              <Input id="name" defaultValue="Dr. John Smith" className="border-slate-300" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-slate-700">
+                Email Address
+              </Label>
+              <Input id="email" type="email" defaultValue="dr.smith@clinic.com" className="border-slate-300" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-slate-700">
+                Phone Number
+              </Label>
+              <Input id="phone" defaultValue="(555) 123-4567" className="border-slate-300" />
+            </div>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">Update Profile</Button>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="general">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="clinicName">Clinic Name</Label>
-                  <Input
-                    id="clinicName"
-                    defaultValue="CliniTrack Medical Center"
-                    className="bg-slate-700 border-slate-600"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" defaultValue="+1-555-0100" className="bg-slate-700 border-slate-600" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" defaultValue="info@clinitrack.com" className="bg-slate-700 border-slate-600" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <Input id="website" defaultValue="www.clinitrack.com" className="bg-slate-700 border-slate-600" />
-                </div>
+        <Card className="bg-white border border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-slate-900">Notification Preferences</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="emailNotifications" className="text-slate-700">
+                  Email Notifications
+                </Label>
+                <p className="text-sm text-slate-500">Receive appointment reminders via email</p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  defaultValue="123 Medical Center Drive, Healthcare City, HC 12345"
-                  className="bg-slate-700 border-slate-600"
-                />
+              <Switch id="emailNotifications" defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="smsNotifications" className="text-slate-700">
+                  SMS Notifications
+                </Label>
+                <p className="text-sm text-slate-500">Receive urgent alerts via SMS</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select>
-                    <SelectTrigger className="bg-slate-700 border-slate-600">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="est">Eastern Time (EST)</SelectItem>
-                      <SelectItem value="cst">Central Time (CST)</SelectItem>
-                      <SelectItem value="mst">Mountain Time (MST)</SelectItem>
-                      <SelectItem value="pst">Pacific Time (PST)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <Select>
-                    <SelectTrigger className="bg-slate-700 border-slate-600">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Switch id="smsNotifications" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="reportNotifications" className="text-slate-700">
+                  Weekly Reports
+                </Label>
+                <p className="text-sm text-slate-500">Get weekly summary reports</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Email Notifications</h4>
-                  <p className="text-sm text-slate-400">Receive notifications via email</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">SMS Notifications</h4>
-                  <p className="text-sm text-slate-400">Receive notifications via SMS</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Appointment Reminders</h4>
-                  <p className="text-sm text-slate-400">Send reminders to patients</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Payment Notifications</h4>
-                  <p className="text-sm text-slate-400">Notify about payment status</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Two-Factor Authentication</h4>
-                  <p className="text-sm text-slate-400">Add an extra layer of security</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Session Timeout</h4>
-                  <p className="text-sm text-slate-400">Auto logout after inactivity</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
-                <Input id="sessionTimeout" defaultValue="30" className="bg-slate-700 border-slate-600" />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Login Notifications</h4>
-                  <p className="text-sm text-slate-400">Notify on new device login</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="billing">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle>Billing Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Default Currency</Label>
-                  <Select>
-                    <SelectTrigger className="bg-slate-700 border-slate-600">
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usd">USD ($)</SelectItem>
-                      <SelectItem value="eur">EUR (€)</SelectItem>
-                      <SelectItem value="gbp">GBP (£)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                  <Input id="taxRate" defaultValue="8.5" className="bg-slate-700 border-slate-600" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Auto-generate Invoices</h4>
-                  <p className="text-sm text-slate-400">Automatically create invoices after appointments</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">Payment Reminders</h4>
-                  <p className="text-sm text-slate-400">Send automatic payment reminders</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reminderDays">Reminder Days Before Due</Label>
-                <Input id="reminderDays" defaultValue="3" className="bg-slate-700 border-slate-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex justify-end">
-        <Button className="bg-blue-600 hover:bg-blue-700">Save Settings</Button>
+              <Switch id="reportNotifications" defaultChecked />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
 
-  const renderContent = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return renderDashboard()
-      case "patients":
-        return renderPatients()
-      case "appointments":
-        return renderAppointments()
-      case "medical-records":
-        return renderMedicalRecords()
-      case "billing":
-        return renderBilling()
-      case "settings":
-        return renderSettings()
-      default:
-        return renderDashboard()
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      {/* Top Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-slate-700">
-        <div className="flex items-center justify-between px-4 h-16">
-          {/* Logo */}
+    <div className="flex h-screen bg-slate-50">
+      {renderSidebar()}
+
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      <div
+        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${isSidebarOpen ? "lg:ml-64" : "ml-0"}`}
+      >
+        {/* Header */}
+        <header className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <Menu className="h-5 w-5" />
+            <Button
+              variant="ghost"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="text-slate-600 hover:text-slate-900"
+            >
+              <Menu className="h-6 w-6" />
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <span className="text-white font-bold text-sm">CT</span>
-              </div>
-              <span className="font-semibold text-lg hidden sm:block">CliniTrack</span>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900 capitalize">
+                {currentPage.replace(/([A-Z])/g, " $1")}
+              </h1>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="flex items-center space-x-4">
+            {currentPage === "dashboard" && (
+              <Button
+                onClick={() => setReportsModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Generate Report
+              </Button>
+            )}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
+                type="search"
                 placeholder="Search..."
-                className="pl-10 bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400"
+                className="pl-10 w-64 border-slate-300"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center space-x-4">
-            {/* Notifications */}
+            <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
+              <Bell className="h-5 w-5" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 bg-red-500 text-xs">2</Badge>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80 bg-slate-800 border-slate-700">
-                <div className="p-3 border-b border-slate-700">
-                  <h4 className="font-medium">Notifications (2)</h4>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  <DropdownMenuItem className="p-3 hover:bg-slate-700">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <Receipt className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Payment Received</p>
-                        <p className="text-xs text-slate-400">John Doe paid $250 for consultation</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="p-3 hover:bg-slate-700">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Appointment Reminder</p>
-                        <p className="text-xs text-slate-400">Jane Smith appointment in 1 hour</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                </div>
-                <div className="p-3 border-t border-slate-700">
-                  <Button variant="ghost" className="w-full text-blue-400 hover:text-blue-300">
-                    View all
-                  </Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center space-x-2">
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                    <AvatarFallback>AA</AvatarFallback>
+                    <AvatarImage src="/placeholder-user.jpg" />
+                    <AvatarFallback className="bg-blue-600 text-white">DS</AvatarFallback>
                   </Avatar>
-                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                <DropdownMenuItem className="hover:bg-slate-700">
-                  <Users className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-slate-700" onClick={() => setCurrentPage("settings")}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Clinic Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <DropdownMenuItem className="hover:bg-slate-700">Logout</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+                <DropdownMenuItem>Billing</DropdownMenuItem>
+                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600">Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-      </header>
-
-      <div className="flex pt-16">
-        {/* Mobile Sidebar Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
-        )}
-
-        {/* Sidebar */}
-        <aside
-          className={`fixed left-0 top-16 bottom-0 w-64 bg-slate-800 border-r border-slate-700 overflow-y-auto transform transition-transform duration-300 ease-in-out z-40 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
-        >
-          {/* User Profile */}
-          <div className="p-6 border-b border-slate-700">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                <AvatarFallback>AA</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-medium">Mr. Ahsan Adil</h3>
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-slate-400">Online</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="p-4">
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Main</h4>
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "dashboard" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("dashboard")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Home className="mr-3 h-4 w-4" />
-                    Dashboard
-                    <Badge className="ml-auto bg-red-500">9+</Badge>
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Clinic</h4>
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "patients" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("patients")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Users className="mr-3 h-4 w-4" />
-                    Patients
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "appointments" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("appointments")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Calendar className="mr-3 h-4 w-4" />
-                    Appointments
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "medical-records" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("medical-records")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <FileText className="mr-3 h-4 w-4" />
-                    Medical Records
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "billing" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("billing")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Receipt className="mr-3 h-4 w-4" />
-                    Billing & Invoices
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start ${currentPage === "settings" ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-300 hover:text-white hover:bg-slate-700"}`}
-                    onClick={() => {
-                      setCurrentPage("settings")
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Settings className="mr-3 h-4 w-4" />
-                    Clinic Settings
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </nav>
-        </aside>
+        </header>
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 p-6">
-          {/* Page Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold flex items-center">
-                  {currentPage === "dashboard" && (
-                    <>
-                      <Home className="mr-2 h-6 w-6" />
-                      Dashboard
-                    </>
-                  )}
-                  {currentPage === "patients" && (
-                    <>
-                      <Users className="mr-2 h-6 w-6" />
-                      Patients
-                    </>
-                  )}
-                  {currentPage === "appointments" && (
-                    <>
-                      <Calendar className="mr-2 h-6 w-6" />
-                      Appointments
-                    </>
-                  )}
-                  {currentPage === "medical-records" && (
-                    <>
-                      <FileText className="mr-2 h-6 w-6" />
-                      Medical Records
-                    </>
-                  )}
-                  {currentPage === "billing" && (
-                    <>
-                      <Receipt className="mr-2 h-6 w-6" />
-                      Billing & Invoices
-                    </>
-                  )}
-                  {currentPage === "settings" && (
-                    <>
-                      <Settings className="mr-2 h-6 w-6" />
-                      Clinic Settings
-                    </>
-                  )}
-                </h1>
-                <nav className="flex items-center space-x-2 text-sm text-slate-400 mt-1">
-                  <span>CliniTrack</span>
-                  <span>/</span>
-                  <span className="capitalize">{currentPage.replace("-", " ")}</span>
-                </nav>
-              </div>
-              {currentPage === "dashboard" && <Button className="bg-blue-600 hover:bg-blue-700">Create Report</Button>}
-            </div>
-          </div>
-
-          {/* Dynamic Content */}
-          {renderContent()}
+        <main className="flex-1 p-6 overflow-y-auto">
+          {currentPage === "dashboard" && renderDashboard()}
+          {currentPage === "patients" && renderPatients()}
+          {currentPage === "appointments" && renderAppointments()}
+          {currentPage === "medicalRecords" && renderMedicalRecords()}
+          {currentPage === "billing" && renderBilling()}
+          {currentPage === "settings" && renderSettings()}
         </main>
+
+        {/* Modal Components */}
+        <PatientForm
+          open={patientFormOpen}
+          onOpenChange={setPatientFormOpen}
+          patient={editingItem}
+          onSave={handleSavePatient}
+        />
+
+        <AppointmentForm
+          open={appointmentFormOpen}
+          onOpenChange={setAppointmentFormOpen}
+          appointment={editingItem}
+          onSave={handleSaveAppointment}
+          patients={patients}
+        />
+
+        <MedicalRecordForm
+          open={medicalRecordFormOpen}
+          onOpenChange={setMedicalRecordFormOpen}
+          record={editingItem}
+          onSave={handleSaveMedicalRecord}
+          patients={patients}
+        />
+
+        <InvoiceForm
+          open={invoiceFormOpen}
+          onOpenChange={setInvoiceFormOpen}
+          invoice={editingItem}
+          onSave={handleSaveInvoice}
+          patients={patients}
+        />
+
+        <ReportsModal
+          open={reportsModalOpen}
+          onOpenChange={setReportsModalOpen}
+          patients={patients}
+          appointments={appointments}
+          invoices={invoices}
+        />
+
+        <CalendarView
+          open={calendarViewOpen}
+          onOpenChange={setCalendarViewOpen}
+          appointments={appointments}
+          onAddAppointment={handleAddAppointment}
+          onEditAppointment={handleEditAppointment}
+        />
       </div>
     </div>
   )
