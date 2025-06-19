@@ -18,6 +18,11 @@ import {
   CalendarDays,
   Home,
   Search,
+  User,
+  Shield,
+  Stethoscope,
+  UserCheck,
+  LogOut,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,7 +40,12 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 
-// Import the form components
+// Import components
+import { useAuth } from "@/contexts/auth-context"
+import { RoleGuard } from "@/components/role-guard"
+import LoginScreen from "@/components/login-screen"
+
+// Import form components
 import PatientForm from "@/components/patient-form"
 import AppointmentForm from "@/components/appointment-form"
 import MedicalRecordForm from "@/components/medical-record-form"
@@ -44,6 +54,7 @@ import ReportsModal from "@/components/reports-modal"
 import CalendarView from "@/components/calendar-view"
 
 export default function Dashboard() {
+  const { user, logout, isLoading } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [searchTerm, setSearchTerm] = useState("")
@@ -224,6 +235,23 @@ export default function Dashboard() {
   const [calendarViewOpen, setCalendarViewOpen] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
 
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show login screen if user is not authenticated
+  if (!user) {
+    return <LoginScreen />
+  }
+
   // Filter functions
   const filteredPatients = patients.filter(
     (patient) =>
@@ -381,6 +409,50 @@ export default function Dashboard() {
     }
   }
 
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case "admin":
+        return Shield
+      case "doctor":
+        return Stethoscope
+      case "staff":
+        return UserCheck
+      default:
+        return User
+    }
+  }
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "text-red-600 bg-red-100"
+      case "doctor":
+        return "text-blue-600 bg-blue-100"
+      case "staff":
+        return "text-green-600 bg-green-100"
+      default:
+        return "text-gray-600 bg-gray-100"
+    }
+  }
+
+  // Get navigation items based on user role
+  const getNavigationItems = () => {
+    const baseItems = [
+      { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"] },
+      { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"] },
+      { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"] },
+    ]
+
+    const roleSpecificItems = [
+      { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"] },
+      { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"] },
+      { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
+      { id: "settings", label: "Settings", icon: Settings, roles: ["admin"] },
+    ]
+
+    return [...baseItems, ...roleSpecificItems].filter((item) => item.roles.includes(user?.role || ""))
+  }
+
   const renderSidebar = () => (
     <div
       className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-700 transition-transform duration-300 z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
@@ -388,79 +460,40 @@ export default function Dashboard() {
       <div className="p-6 border-b border-slate-700">
         <h1 className="text-xl font-bold text-white">CliniTrack</h1>
         <p className="text-sm text-slate-400">Medical Dashboard</p>
+
+        {/* User Role Badge */}
+        <div className="mt-3">
+          <div
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user?.role)}`}
+          >
+            {(() => {
+              const IconComponent = getRoleIcon(user?.role)
+              return <IconComponent className="w-3 h-3 mr-1" />
+            })()}
+            {user?.role?.toUpperCase()}
+          </div>
+        </div>
       </div>
       <nav className="p-4">
         <ul className="space-y-2">
-          <li>
-            <Button
-              variant={currentPage === "dashboard" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("dashboard")}
-            >
-              <Home className="mr-3 h-4 w-4" />
-              Dashboard
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "patients" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("patients")}
-            >
-              <Users className="mr-3 h-4 w-4" />
-              Patients
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "appointments" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("appointments")}
-            >
-              <Calendar className="mr-3 h-4 w-4" />
-              Appointments
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "medicalRecords" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("medicalRecords")}
-            >
-              <FileText className="mr-3 h-4 w-4" />
-              Medical Records
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "billing" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("billing")}
-            >
-              <Receipt className="mr-3 h-4 w-4" />
-              Billing
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "calendar" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCalendarViewOpen(true)}
-            >
-              <CalendarDays className="mr-3 h-4 w-4" />
-              Calendar View
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant={currentPage === "settings" ? "secondary" : "ghost"}
-              className="w-full justify-start text-white hover:bg-slate-800"
-              onClick={() => setCurrentPage("settings")}
-            >
-              <Settings className="mr-3 h-4 w-4" />
-              Settings
-            </Button>
-          </li>
+          {getNavigationItems().map((item) => (
+            <li key={item.id}>
+              <Button
+                variant={currentPage === item.id ? "secondary" : "ghost"}
+                className="w-full justify-start text-white hover:bg-slate-800"
+                onClick={() => {
+                  if (item.id === "calendar") {
+                    setCalendarViewOpen(true)
+                  } else {
+                    setCurrentPage(item.id)
+                  }
+                }}
+              >
+                <item.icon className="mr-3 h-4 w-4" />
+                {item.label}
+              </Button>
+            </li>
+          ))}
         </ul>
       </nav>
     </div>
@@ -468,6 +501,17 @@ export default function Dashboard() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+        <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.name}!</h2>
+        <p className="opacity-90">
+          {user?.role === "admin" && "You have full access to all system features and user management."}
+          {user?.role === "doctor" && "Access patient records, appointments, and medical documentation."}
+          {user?.role === "staff" && "Manage appointments, patient check-ins, and basic records."}
+        </p>
+        {user?.department && <p className="text-sm opacity-75 mt-1">Department: {user.department}</p>}
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-white border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -491,35 +535,39 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Pending Invoices</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              {invoices.filter((invoice) => invoice.status === "Pending").length}
-            </div>
-            <p className="text-xs text-slate-500">Awaiting payment</p>
-          </CardContent>
-        </Card>
+        <RoleGuard allowedRoles={["admin", "staff"]}>
+          <Card className="bg-white border border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Pending Invoices</CardTitle>
+              <DollarSign className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                {invoices.filter((invoice) => invoice.status === "Pending").length}
+              </div>
+              <p className="text-xs text-slate-500">Awaiting payment</p>
+            </CardContent>
+          </Card>
+        </RoleGuard>
 
-        <Card className="bg-white border border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
-              $
-              {invoices
-                .filter((i) => i.status === "Paid")
-                .reduce((sum, i) => sum + i.total, 0)
-                .toLocaleString()}
-            </div>
-            <p className="text-xs text-slate-500">+12% from last month</p>
-          </CardContent>
-        </Card>
+        <RoleGuard allowedRoles={["admin"]}>
+          <Card className="bg-white border border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-900">
+                $
+                {invoices
+                  .filter((i) => i.status === "Paid")
+                  .reduce((sum, i) => sum + i.total, 0)
+                  .toLocaleString()}
+              </div>
+              <p className="text-xs text-slate-500">+12% from last month</p>
+            </CardContent>
+          </Card>
+        </RoleGuard>
       </div>
 
       {/* Quick Actions */}
@@ -537,14 +585,18 @@ export default function Dashboard() {
               <Plus className="mr-2 h-4 w-4" />
               Schedule Appointment
             </Button>
-            <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Medical Record
-            </Button>
-            <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Invoice
-            </Button>
+            <RoleGuard allowedRoles={["admin", "doctor"]}>
+              <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Medical Record
+              </Button>
+            </RoleGuard>
+            <RoleGuard allowedRoles={["admin", "staff"]}>
+              <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            </RoleGuard>
           </div>
         </CardContent>
       </Card>
@@ -572,24 +624,26 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {medicalRecords.slice(0, 3).map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-slate-900">{record.patientName}</p>
-                    <p className="text-sm text-slate-500">{record.diagnosis}</p>
+        <RoleGuard allowedRoles={["admin", "doctor"]}>
+          <Card className="bg-white border border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {medicalRecords.slice(0, 3).map((record) => (
+                  <div key={record.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-slate-900">{record.patientName}</p>
+                      <p className="text-sm text-slate-500">{record.diagnosis}</p>
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
                   </div>
-                  <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </RoleGuard>
       </div>
     </div>
   )
@@ -645,14 +699,16 @@ export default function Dashboard() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeletePatient(patient.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <RoleGuard allowedRoles={["admin"]}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeletePatient(patient.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </RoleGuard>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -735,230 +791,267 @@ export default function Dashboard() {
   )
 
   const renderMedicalRecords = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Medical Records</h2>
-          <p className="text-slate-600">Patient medical history and treatment records</p>
+    <RoleGuard
+      allowedRoles={["admin", "doctor"]}
+      fallback={
+        <div className="text-center py-12">
+          <Shield className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Access Restricted</h3>
+          <p className="text-slate-600">You don't have permission to view medical records.</p>
         </div>
-        <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Medical Record
-        </Button>
-      </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Medical Records</h2>
+            <p className="text-slate-600">Patient medical history and treatment records</p>
+          </div>
+          <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Medical Record
+          </Button>
+        </div>
 
-      <Card className="bg-white border border-slate-200">
-        <CardContent className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-slate-600">Patient</TableHead>
-                <TableHead className="text-slate-600">Date</TableHead>
-                <TableHead className="text-slate-600">Doctor</TableHead>
-                <TableHead className="text-slate-600">Diagnosis</TableHead>
-                <TableHead className="text-slate-600">Severity</TableHead>
-                <TableHead className="text-slate-600">Status</TableHead>
-                <TableHead className="text-right text-slate-600">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMedicalRecords.map((record) => (
-                <TableRow key={record.id} className="hover:bg-slate-50">
-                  <TableCell className="font-medium text-slate-900">{record.patientName}</TableCell>
-                  <TableCell className="text-slate-600">{record.date}</TableCell>
-                  <TableCell className="text-slate-600">{record.doctor}</TableCell>
-                  <TableCell className="text-slate-600">{record.diagnosis}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        record.severity === "Severe"
-                          ? "destructive"
-                          : record.severity === "Moderate"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {record.severity}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditMedicalRecord(record)}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteMedicalRecord(record.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <Card className="bg-white border border-slate-200">
+          <CardContent className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-slate-600">Patient</TableHead>
+                  <TableHead className="text-slate-600">Date</TableHead>
+                  <TableHead className="text-slate-600">Doctor</TableHead>
+                  <TableHead className="text-slate-600">Diagnosis</TableHead>
+                  <TableHead className="text-slate-600">Severity</TableHead>
+                  <TableHead className="text-slate-600">Status</TableHead>
+                  <TableHead className="text-right text-slate-600">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {filteredMedicalRecords.map((record) => (
+                  <TableRow key={record.id} className="hover:bg-slate-50">
+                    <TableCell className="font-medium text-slate-900">{record.patientName}</TableCell>
+                    <TableCell className="text-slate-600">{record.date}</TableCell>
+                    <TableCell className="text-slate-600">{record.doctor}</TableCell>
+                    <TableCell className="text-slate-600">{record.diagnosis}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          record.severity === "Severe"
+                            ? "destructive"
+                            : record.severity === "Moderate"
+                              ? "secondary"
+                              : "outline"
+                        }
+                      >
+                        {record.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditMedicalRecord(record)}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <RoleGuard allowedRoles={["admin"]}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteMedicalRecord(record.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </RoleGuard>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </RoleGuard>
   )
 
   const renderBilling = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Billing & Invoices</h2>
-          <p className="text-slate-600">Manage patient billing and payment records</p>
+    <RoleGuard
+      allowedRoles={["admin", "staff"]}
+      fallback={
+        <div className="text-center py-12">
+          <Shield className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Access Restricted</h3>
+          <p className="text-slate-600">You don't have permission to view billing information.</p>
         </div>
-        <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Invoice
-        </Button>
-      </div>
+      }
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Billing & Invoices</h2>
+            <p className="text-slate-600">Manage patient billing and payment records</p>
+          </div>
+          <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Invoice
+          </Button>
+        </div>
 
-      <Card className="bg-white border border-slate-200">
-        <CardContent className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-slate-600">Patient</TableHead>
-                <TableHead className="text-slate-600">Date</TableHead>
-                <TableHead className="text-slate-600">Service</TableHead>
-                <TableHead className="text-slate-600">Amount</TableHead>
-                <TableHead className="text-slate-600">Status</TableHead>
-                <TableHead className="text-slate-600">Insurance</TableHead>
-                <TableHead className="text-right text-slate-600">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id} className="hover:bg-slate-50">
-                  <TableCell className="font-medium text-slate-900">{invoice.patientName}</TableCell>
-                  <TableCell className="text-slate-600">{invoice.date}</TableCell>
-                  <TableCell className="text-slate-600">{invoice.service}</TableCell>
-                  <TableCell className="text-slate-600">${invoice.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(invoice.status)}>{invoice.status}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(invoice.insuranceClaim)}>{invoice.insuranceClaim}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditInvoice(invoice)}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteInvoice(invoice.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <Card className="bg-white border border-slate-200">
+          <CardContent className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-slate-600">Patient</TableHead>
+                  <TableHead className="text-slate-600">Date</TableHead>
+                  <TableHead className="text-slate-600">Service</TableHead>
+                  <TableHead className="text-slate-600">Amount</TableHead>
+                  <TableHead className="text-slate-600">Status</TableHead>
+                  <TableHead className="text-slate-600">Insurance</TableHead>
+                  <TableHead className="text-right text-slate-600">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {filteredInvoices.map((invoice) => (
+                  <TableRow key={invoice.id} className="hover:bg-slate-50">
+                    <TableCell className="font-medium text-slate-900">{invoice.patientName}</TableCell>
+                    <TableCell className="text-slate-600">{invoice.date}</TableCell>
+                    <TableCell className="text-slate-600">{invoice.service}</TableCell>
+                    <TableCell className="text-slate-600">${invoice.total.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(invoice.status)}>{invoice.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(invoice.insuranceClaim)}>{invoice.insuranceClaim}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditInvoice(invoice)}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <RoleGuard allowedRoles={["admin"]}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteInvoice(invoice.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </RoleGuard>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </RoleGuard>
   )
 
   const renderSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
-        <p className="text-slate-600">Manage your account and application preferences</p>
-      </div>
+    <RoleGuard
+      allowedRoles={["admin"]}
+      fallback={
+        <div className="text-center py-12">
+          <Shield className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Access Restricted</h3>
+          <p className="text-slate-600">Only administrators can access system settings.</p>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
+          <p className="text-slate-600">Manage your account and application preferences</p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-slate-900">Account Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-700">
-                Full Name
-              </Label>
-              <Input id="name" defaultValue="Dr. John Smith" className="border-slate-300" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700">
-                Email Address
-              </Label>
-              <Input id="email" type="email" defaultValue="dr.smith@clinic.com" className="border-slate-300" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-slate-700">
-                Phone Number
-              </Label>
-              <Input id="phone" defaultValue="(555) 123-4567" className="border-slate-300" />
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">Update Profile</Button>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="bg-white border border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Account Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-slate-700">
+                  Full Name
+                </Label>
+                <Input id="name" defaultValue={user?.name} className="border-slate-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-700">
+                  Email Address
+                </Label>
+                <Input id="email" type="email" defaultValue={user?.email} className="border-slate-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="department" className="text-slate-700">
+                  Department
+                </Label>
+                <Input id="department" defaultValue={user?.department} className="border-slate-300" />
+              </div>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">Update Profile</Button>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-slate-900">Notification Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="emailNotifications" className="text-slate-700">
-                  Email Notifications
-                </Label>
-                <p className="text-sm text-slate-500">Receive appointment reminders via email</p>
+          <Card className="bg-white border border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Notification Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="emailNotifications" className="text-slate-700">
+                    Email Notifications
+                  </Label>
+                  <p className="text-sm text-slate-500">Receive appointment reminders via email</p>
+                </div>
+                <Switch id="emailNotifications" defaultChecked />
               </div>
-              <Switch id="emailNotifications" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="smsNotifications" className="text-slate-700">
-                  SMS Notifications
-                </Label>
-                <p className="text-sm text-slate-500">Receive urgent alerts via SMS</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="smsNotifications" className="text-slate-700">
+                    SMS Notifications
+                  </Label>
+                  <p className="text-sm text-slate-500">Receive urgent alerts via SMS</p>
+                </div>
+                <Switch id="smsNotifications" />
               </div>
-              <Switch id="smsNotifications" />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="reportNotifications" className="text-slate-700">
-                  Weekly Reports
-                </Label>
-                <p className="text-sm text-slate-500">Get weekly summary reports</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="reportNotifications" className="text-slate-700">
+                    Weekly Reports
+                  </Label>
+                  <p className="text-sm text-slate-500">Get weekly summary reports</p>
+                </div>
+                <Switch id="reportNotifications" defaultChecked />
               </div>
-              <Switch id="reportNotifications" defaultChecked />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   )
 
   return (
@@ -991,14 +1084,16 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {currentPage === "dashboard" && (
-              <Button
-                onClick={() => setReportsModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-              >
-                Generate Report
-              </Button>
-            )}
+            <RoleGuard allowedRoles={["admin"]}>
+              {currentPage === "dashboard" && (
+                <Button
+                  onClick={() => setReportsModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Generate Report
+                </Button>
+              )}
+            </RoleGuard>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
@@ -1016,17 +1111,31 @@ export default function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-user.jpg" />
-                    <AvatarFallback className="bg-blue-600 text-white">DS</AvatarFallback>
+                    <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} />
+                    <AvatarFallback className="bg-blue-600 text-white">
+                      {user?.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("") || "U"}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{user?.name}</p>
+                  <p className="text-xs text-slate-500">{user?.email}</p>
+                  <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                 <DropdownMenuItem>Billing</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">Sign Out</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
