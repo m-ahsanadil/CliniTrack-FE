@@ -1,5 +1,5 @@
-import LoginScreen from '@/components/login-screen'
+import Login from "@/src/modules/Authentication/login";
 
 export default function LoginPage() {
-    return <LoginScreen />;
+    return <Login />;
 }
