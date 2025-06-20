@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import {
   Bell,
   Calendar,
@@ -41,7 +40,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 
 // Import components
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import LoginScreen from "@/components/login-screen"
 
@@ -52,188 +51,26 @@ import MedicalRecordForm from "@/components/medical-record-form"
 import InvoiceForm from "@/components/invoice-form"
 import ReportsModal from "@/components/reports-modal"
 import CalendarView from "@/components/calendar-view"
+import { Appointments, getRoleColor, getRoleIcon } from "@/src/constants"
+import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 
-export default function Dashboard() {
+export default function HomePage() {
   const { user, logout, isLoading } = useAuth()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [currentPage, setCurrentPage] = useState("dashboard")
-  const [searchTerm, setSearchTerm] = useState("")
-
-  // Enhanced dummy data with more realistic information
-  const [patients, setPatients] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      age: 45,
-      gender: "Male",
-      phone: "(555) 123-4567",
-      email: "john.doe@email.com",
-      address: "123 Main St, City, State 12345",
-      bloodType: "A+",
-      allergies: "Penicillin",
-      emergencyContact: "Jane Doe - (555) 123-4568",
-      insuranceProvider: "Blue Cross",
-      insuranceNumber: "BC123456789",
-      status: "Active",
-      lastVisit: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      age: 32,
-      gender: "Female",
-      phone: "(555) 987-6543",
-      email: "jane.smith@email.com",
-      address: "456 Oak Ave, City, State 12345",
-      bloodType: "O-",
-      allergies: "None",
-      emergencyContact: "Bob Smith - (555) 987-6544",
-      insuranceProvider: "Aetna",
-      insuranceNumber: "AE987654321",
-      status: "Active",
-      lastVisit: "2024-01-20",
-    },
-    {
-      id: 3,
-      name: "Robert Johnson",
-      age: 58,
-      gender: "Male",
-      phone: "(555) 456-7890",
-      email: "robert.j@email.com",
-      address: "789 Pine St, City, State 12345",
-      bloodType: "B+",
-      allergies: "Shellfish",
-      emergencyContact: "Mary Johnson - (555) 456-7891",
-      insuranceProvider: "Cigna",
-      insuranceNumber: "CG456789123",
-      status: "Active",
-      lastVisit: "2024-01-18",
-    },
-  ])
-
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      patientId: 1,
-      patientName: "John Doe",
-      date: "2024-01-25",
-      time: "10:00 AM",
-      doctor: "Dr. Smith",
-      type: "Check-up",
-      duration: "30 minutes",
-      status: "Confirmed",
-      notes: "Annual physical examination",
-    },
-    {
-      id: 2,
-      patientId: 2,
-      patientName: "Jane Smith",
-      date: "2024-01-26",
-      time: "2:00 PM",
-      doctor: "Dr. Johnson",
-      type: "Follow-up",
-      duration: "45 minutes",
-      status: "Pending",
-      notes: "Follow-up for blood pressure monitoring",
-    },
-    {
-      id: 3,
-      patientId: 3,
-      patientName: "Robert Johnson",
-      date: "2024-01-27",
-      time: "11:30 AM",
-      doctor: "Dr. Brown",
-      type: "Consultation",
-      duration: "60 minutes",
-      status: "Scheduled",
-      notes: "Initial consultation for joint pain",
-    },
-  ])
-
-  const [medicalRecords, setMedicalRecords] = useState([
-    {
-      id: 1,
-      patientId: 1,
-      patientName: "John Doe",
-      date: "2024-01-15",
-      doctor: "Dr. Smith",
-      diagnosis: "Hypertension",
-      treatment: "Lifestyle changes and medication",
-      severity: "Moderate",
-      status: "Active",
-      vitals: { bp: "140/90", pulse: "78", temp: "98.6°F", weight: "180 lbs", height: "5'10\"", oxygen: "98%" },
-      prescriptions: ["Lisinopril 10mg daily", "Hydrochlorothiazide 25mg daily"],
-      symptoms: ["Headache", "Dizziness"],
-      notes: "Patient advised to reduce sodium intake and increase exercise",
-    },
-    {
-      id: 2,
-      patientId: 2,
-      patientName: "Jane Smith",
-      date: "2024-01-20",
-      doctor: "Dr. Johnson",
-      diagnosis: "Seasonal Allergies",
-      treatment: "Antihistamines and nasal spray",
-      severity: "Mild",
-      status: "Resolved",
-      vitals: { bp: "120/80", pulse: "72", temp: "98.4°F", weight: "135 lbs", height: "5'6\"", oxygen: "99%" },
-      prescriptions: ["Claritin 10mg daily", "Flonase nasal spray"],
-      symptoms: ["Sneezing", "Runny nose", "Itchy eyes"],
-      notes: "Symptoms improved with treatment",
-    },
-  ])
-
-  const [invoices, setInvoices] = useState([
-    {
-      id: 1,
-      patientId: 1,
-      patientName: "John Doe",
-      date: "2024-01-15",
-      dueDate: "2024-02-15",
-      service: "Annual Physical Examination",
-      amount: 250,
-      status: "Paid",
-      paymentMethod: "Insurance",
-      insuranceClaim: "Approved",
-      items: [
-        { description: "Office Visit", quantity: 1, rate: 150, amount: 150 },
-        { description: "Blood Work", quantity: 1, rate: 100, amount: 100 },
-      ],
-      subtotal: 250,
-      tax: 20,
-      discount: 0,
-      total: 270,
-    },
-    {
-      id: 2,
-      patientId: 2,
-      patientName: "Jane Smith",
-      date: "2024-01-20",
-      dueDate: "2024-02-20",
-      service: "Allergy Consultation",
-      amount: 180,
-      status: "Pending",
-      paymentMethod: "",
-      insuranceClaim: "Submitted",
-      items: [
-        { description: "Consultation", quantity: 1, rate: 120, amount: 120 },
-        { description: "Allergy Test", quantity: 1, rate: 60, amount: 60 },
-      ],
-      subtotal: 180,
-      tax: 14.4,
-      discount: 0,
-      total: 194.4,
-    },
-  ])
-
-  // Modal states
-  const [patientFormOpen, setPatientFormOpen] = useState(false)
-  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false)
-  const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false)
-  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false)
-  const [reportsModalOpen, setReportsModalOpen] = useState(false)
-  const [calendarViewOpen, setCalendarViewOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState(null)
+  const { isSidebarOpen, setIsSidebarOpen,
+    currentPage, setCurrentPage,
+    searchTerm, setSearchTerm,
+    patients, setPatients,
+    appointments, setAppointments,
+    medicalRecords, setMedicalRecords,
+    invoices, setInvoices,
+    patientFormOpen, setPatientFormOpen,
+    appointmentFormOpen, setAppointmentFormOpen,
+    medicalRecordFormOpen, setMedicalRecordFormOpen,
+    invoiceFormOpen, setInvoiceFormOpen,
+    reportsModalOpen, setReportsModalOpen,
+    calendarViewOpen, setCalendarViewOpen,
+    editingItem, setEditingItem
+  } = useGlobalUI();
 
   // Show loading screen while checking authentication
   if (isLoading) {
@@ -287,12 +124,12 @@ export default function Dashboard() {
     setPatientFormOpen(true)
   }
 
-  const handleEditPatient = (patient) => {
+  const handleEditPatient = (patient: { id: number; name: string; age: number; gender: string; phone: string; email: string; address: string; bloodType: string; allergies: string; emergencyContact: string; insuranceProvider: string; insuranceNumber: string; status: string; lastVisit: string }) => {
     setEditingItem(patient)
     setPatientFormOpen(true)
   }
 
-  const handleSavePatient = (patientData) => {
+  const handleSavePatient = (patientData: { id: number; name: string; age: number; gender: string; phone: string; email: string; address: string; bloodType: string; allergies: string; emergencyContact: string; insuranceProvider: string; insuranceNumber: string; status: string; lastVisit: string }) => {
     if (editingItem) {
       setPatients(patients.map((p) => (p.id === editingItem.id ? { ...patientData, id: editingItem.id } : p)))
     } else {
@@ -300,7 +137,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeletePatient = (patientId) => {
+  const handleDeletePatient = (patientId: number) => {
     if (confirm("Are you sure you want to delete this patient?")) {
       setPatients(patients.filter((p) => p.id !== patientId))
       // Also remove related appointments, records, and invoices
@@ -315,12 +152,12 @@ export default function Dashboard() {
     setAppointmentFormOpen(true)
   }
 
-  const handleEditAppointment = (appointment) => {
+  const handleEditAppointment = (appointment: { id: number; patientId: number; patientName: string; date: string; time: string; doctor: string; type: string; duration: string; status: string; notes: string }) => {
     setEditingItem(appointment)
     setAppointmentFormOpen(true)
   }
 
-  const handleSaveAppointment = (appointmentData) => {
+  const handleSaveAppointment = (appointmentData: { id: number; patientId: number; patientName: string; date: string; time: string; doctor: string; type: string; duration: string; status: string; notes: string }) => {
     if (editingItem) {
       setAppointments(
         appointments.map((a) => (a.id === editingItem.id ? { ...appointmentData, id: editingItem.id } : a)),
@@ -330,7 +167,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeleteAppointment = (appointmentId) => {
+  const handleDeleteAppointment = (appointmentId: number) => {
     if (confirm("Are you sure you want to delete this appointment?")) {
       setAppointments(appointments.filter((a) => a.id !== appointmentId))
     }
@@ -341,12 +178,12 @@ export default function Dashboard() {
     setMedicalRecordFormOpen(true)
   }
 
-  const handleEditMedicalRecord = (record) => {
+  const handleEditMedicalRecord = (record: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string }; prescriptions: string[]; symptoms: string[]; notes: string }) => {
     setEditingItem(record)
     setMedicalRecordFormOpen(true)
   }
 
-  const handleSaveMedicalRecord = (recordData) => {
+  const handleSaveMedicalRecord = (recordData: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string }; prescriptions: string[]; symptoms: string[]; notes: string }) => {
     if (editingItem) {
       setMedicalRecords(
         medicalRecords.map((r) => (r.id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),
@@ -356,7 +193,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeleteMedicalRecord = (recordId) => {
+  const handleDeleteMedicalRecord = (recordId: number) => {
     if (confirm("Are you sure you want to delete this medical record?")) {
       setMedicalRecords(medicalRecords.filter((r) => r.id !== recordId))
     }
@@ -367,12 +204,12 @@ export default function Dashboard() {
     setInvoiceFormOpen(true)
   }
 
-  const handleEditInvoice = (invoice) => {
+  const handleEditInvoice = (invoice: { id: number; patientId: number; patientName: string; date: string; dueDate: string; service: string; amount: number; status: string; paymentMethod: string; insuranceClaim: string; items: { description: string; quantity: number; rate: number; amount: number }[]; subtotal: number; tax: number; discount: number; total: number }) => {
     setEditingItem(invoice)
     setInvoiceFormOpen(true)
   }
 
-  const handleSaveInvoice = (invoiceData) => {
+  const handleSaveInvoice = (invoiceData: { id: number; patientId: number; patientName: string; date: string; dueDate: string; service: string; amount: number; status: string; paymentMethod: string; insuranceClaim: string; items: { description: string; quantity: number; rate: number; amount: number }[]; subtotal: number; tax: number; discount: number; total: number }) => {
     if (editingItem) {
       setInvoices(invoices.map((i) => (i.id === editingItem.id ? { ...invoiceData, id: editingItem.id } : i)))
     } else {
@@ -380,13 +217,13 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeleteInvoice = (invoiceId) => {
+  const handleDeleteInvoice = (invoiceId: number) => {
     if (confirm("Are you sure you want to delete this invoice?")) {
       setInvoices(invoices.filter((i) => i.id !== invoiceId))
     }
   }
 
-  const getStatusBadgeVariant = (status) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
       case "confirmed":
@@ -406,32 +243,6 @@ export default function Dashboard() {
         return "outline"
       default:
         return "secondary"
-    }
-  }
-
-  const getRoleIcon = (role) => {
-    switch (role) {
-      case "admin":
-        return Shield
-      case "doctor":
-        return Stethoscope
-      case "staff":
-        return UserCheck
-      default:
-        return User
-    }
-  }
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "admin":
-        return "text-red-600 bg-red-100"
-      case "doctor":
-        return "text-blue-600 bg-blue-100"
-      case "staff":
-        return "text-green-600 bg-green-100"
-      default:
-        return "text-gray-600 bg-gray-100"
     }
   }
 
@@ -1202,3 +1013,8 @@ export default function Dashboard() {
     </div>
   )
 }
+// import LoginPage from './(AUTHENTICATION)/login/page'
+
+// export default function HomePage() {
+//   return <LoginPage />
+// }
