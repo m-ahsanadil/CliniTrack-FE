@@ -7,12 +7,14 @@ export interface DoctorProfileProps {
 }
 
 
-export default function DoctorProfilePage({ params }: { params: DoctorProfileProps }) {
+export default async function DoctorProfilePage({ params }: { params: Promise<DoctorProfileProps> }) {
+    const resolvedParams = await params
+
     return (
         <DoctorProfile
-            dashboardId={params.dashboardId}
-            role={params.role}
-            doctorId={params.doctorId}
+            dashboardId={resolvedParams.dashboardId}
+            role={resolvedParams.role}
+            doctorId={resolvedParams.doctorId}
         />
     )
 }
