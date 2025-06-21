@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { CalendarIcon, Plus, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { doctors } from "@/src/constants"
 
 interface MedicalRecordFormProps {
   open: boolean
@@ -96,17 +97,7 @@ export default function MedicalRecordForm({ open, onOpenChange, record, onSave, 
     })
   }
 
-  const doctors = [
-    "Dr. Smith",
-    "Dr. Johnson",
-    "Dr. Brown",
-    "Dr. Wilson",
-    "Dr. Davis",
-    "Dr. Miller",
-    "Dr. Garcia",
-    "Dr. Rodriguez",
-    "Dr. Martinez",
-  ]
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -19,6 +19,51 @@ export const getRoleIcon = (role?: string) => {
     }
 }
 
+export const specialties = [
+    'Pediatrics',
+    'Cardiology',
+    'Dermatology',
+    'Emergency Medicine',
+    'Family Medicine',
+    'Internal Medicine',
+    'Neurology',
+    'Oncology',
+    'Orthopedics',
+    'Psychiatry',
+    'Radiology',
+    'Surgery',
+    'Other'
+]
+
+export const countries = [
+    'Saudi Arabia',
+    'United Arab Emirates',
+    'Kuwait',
+    'Qatar',
+    'Bahrain',
+    'Oman',
+    'Other'
+]
+
+ export  const doctors = [
+    "Dr. Smith",
+    "Dr. Johnson",
+    "Dr. Brown",
+    "Dr. Wilson",
+    "Dr. Davis",
+    "Dr. Miller",
+    "Dr. Garcia",
+    "Dr. Rodriguez",
+    "Dr. Martinez",
+  ]
+
+export const statusOptions = [
+    { value: 'Active', label: 'Active' },
+    { value: 'Inactive', label: 'Inactive' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Suspended', label: 'Suspended' }
+]
+
 export const getRoleColor = (role?: string) => {
     switch (role) {
         case "admin":

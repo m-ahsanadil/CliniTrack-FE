@@ -11,7 +11,7 @@ import rootReducer from "./rootReducer";
 const persistConfig = {
     key: REDUX_PERSIST_KEY,
     storage: storage,
-    whitelist: ["auth"],
+    whitelist: ["auth", 'doctor'],
     blacklist: [],
     debug: false,
 };

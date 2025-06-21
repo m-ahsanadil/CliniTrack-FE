@@ -7,19 +7,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Stethoscope, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/src/redux/providers/contexts/auth-context";
 import { loginApi, registerApi } from "./api/api";
 import { demoAccounts, mockUsers } from "@/src/constants";
-import { useAppDispatch } from "@/src/redux/store/reduxHook";
+import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { useRouter } from "next/navigation";
 import { setCredentials } from "./api/slice";
 import { LoginApiResponse, User } from "./api/types";
 import decodeJWTWithWebAPI from "@/src/utils/decodedToken";
+import { DoctorProfileDialog } from "../../Dashboard/doctor/organisms/DoctorProfileDialog";
+import { DoctorProfileRequest } from "../../Dashboard/doctor/api/types";
 
 export default function index() {
-    const router = useRouter();
+    const { user } = useAppSelector(state => state.auth)
     const dispatch = useAppDispatch();
+    const router = useRouter();
     const { isLoading } = useAuth()
     const [activeTab, setActiveTab] = useState("login");
     const [showPassword, setShowPassword] = useState(false)
@@ -35,7 +38,6 @@ export default function index() {
         password: "",
         role: "",
     })
-
 
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault()
@@ -56,12 +58,12 @@ export default function index() {
                 user: {
                     id: demoUser.id,
                     email: demoUser.email,
-                    username: demoUser.name, // or split name if needed
-                    password: "", // or omit
+                    username: demoUser.name,
+                    password: "",
                     role: demoUser.role,
                 }
             }));
-            router.push("/dashboard");
+            router.push(`/${demoUser.id}/${demoUser.role}/dashboard`)
             return;
         }
 
@@ -94,12 +96,11 @@ export default function index() {
                     role: decodedToken.role,
                     department: decodedToken?.department,
                 };
-                console.log(user)
                 dispatch(setCredentials({
                     token: response.token,
                     user: user
                 }));
-                router.push("/dashboard")
+                router.push(`/${user.id}/${user.role}/dashboard`)
             }
         } catch (error) {
             console.log('Login error:', error)
@@ -144,6 +145,7 @@ export default function index() {
 
     const sanitize = (text: string) =>
         text.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 
 
 
@@ -403,6 +405,6 @@ export default function index() {
                     </TabsContent>
                 </Tabs>
             </div>
-        </div >
+        </div>
     )
 }

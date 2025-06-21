@@ -1,10 +1,12 @@
+"use client";
 import {
     Calendar,
     FileText,
     Receipt,
     Settings,
     Users,
-    Home
+    Home,
+    AlertTriangle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -13,29 +15,80 @@ import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import Link from "next/link"
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useAppSelector } from "../redux/store/reduxHook"
+import { useEffect, useState } from "react"
 
 
 export default function sidebar() {
     const pathname = usePathname();
-    // const { user } = useAuth();
+    const params = useParams()
     const { user } = useAppSelector(state => state.auth);
-    const { isSidebarOpen, setCalendarViewOpen, currentPage } = useGlobalUI();
+    const { isSidebarOpen } = useGlobalUI();
+    const [routeVerification, setRouteVerification] = useState({
+        isValid: true,
+        message: ""
+    })
+
+    // Verify route access based on user ID and role
+    const verifyRouteAccess = () => {
+        if (!user?.id || !user?.role) {
+            setRouteVerification({
+                isValid: false,
+                message: "User authentication required"
+            })
+            return false
+        }
+
+        // Extract dashboardId and role from URL params
+        const dashboardId = params?.dashboardId
+        const urlRole = params?.role
+
+        // Verify user has access to the dashboard
+        if (dashboardId && dashboardId !== user.id) {
+            setRouteVerification({
+                isValid: false,
+                message: "Access denied: Dashboard ID mismatch"
+            })
+            return false
+        }
+
+        // Verify role matches
+        if (urlRole && urlRole !== user.role) {
+            setRouteVerification({
+                isValid: false,
+                message: "Access denied: Role mismatch"
+            })
+            return false
+        }
+
+        setRouteVerification({
+            isValid: true,
+            message: ""
+        })
+        return true
+    }
+
+    // Run verification when user data or route changes
+    useEffect(() => {
+        verifyRouteAccess()
+    }, [user?.id, user?.role, pathname, params])
 
     // Get navigation items based on user role
     const getNavigationItems = () => {
+        if (!user?.role) return []
+
         const baseItems = [
-            { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"], href: "/dashboard" },
-            { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"], href: "/patients" },
-            { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"], href: "/appointments" },
+            { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/dashboard` },
+            { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/patients` },
+            { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/appointments` },
         ]
 
         const roleSpecificItems = [
-            { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"], href: "/medical-records" },
-            { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"], href: "/billing" },
+            { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"], href: `/${user.id}/${user.role}/medical-records` },
+            { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"], href: `/${user.id}/${user.role}/billing` },
             // { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
-            { id: "settings", label: "Settings", icon: Settings, roles: ["admin"], href: "/settings" },
+            { id: "settings", label: "Settings", icon: Settings, roles: ["admin"], href: `/${user.id}/${user.role}/settings` },
         ]
 
 
@@ -61,6 +114,20 @@ export default function sidebar() {
                         })()}
                         {user?.role?.toUpperCase()}
                     </div>
+                </div>
+                {/* Route Verification Status */}
+                {!routeVerification.isValid && (
+                    <div className="mt-3 p-2 bg-red-900/20 border border-red-700 rounded-md">
+                        <div className="flex items-center text-red-400 text-xs">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {routeVerification.message}
+                        </div>
+                    </div>
+                )}
+                {/* User Info Display */}
+                <div className="mt-3 text-xs text-slate-400">
+                    <div>ID: {user?.id}</div>
+                    <div>Role: {user?.role}</div>
                 </div>
             </div>
             <nav className="p-4">

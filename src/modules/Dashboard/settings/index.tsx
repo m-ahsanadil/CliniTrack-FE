@@ -11,8 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // hook
 import { useAppSelector } from "@/src/redux/store/reduxHook"
+import { SettingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/settings/page"
 
-export default function index() {
+export default function index({ dashboardId, role}: SettingProps) {
     const { user } = useAppSelector(state => state.auth)
 
     return (

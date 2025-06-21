@@ -16,9 +16,12 @@ import { Badge } from "@/components/ui/badge"
 import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { getStatusBadgeVariant } from "@/src/constants"
+import { useAppSelector } from "@/src/redux/store/reduxHook"
+import { MedicalRecordProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/medical-records/page"
 
 
-export default function index() {
+export default function index({ dashboardId, role }: MedicalRecordProps) {
+    const {user} = useAppSelector(state => state.auth)
     const { handleAddMedicalRecord, filteredMedicalRecords, handleEditMedicalRecord, handleDeleteMedicalRecord } = useGlobalUI();
   
     return (

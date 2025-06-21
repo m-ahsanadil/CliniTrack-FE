@@ -16,9 +16,13 @@ import { getStatusBadgeVariant } from "@/src/constants";
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext";
 import { useEffect } from "react";
 import { patientApi } from "./api/api";
+import { BillingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/billing/page";
+import { useAppSelector } from "@/src/redux/store/reduxHook";
+import { PatientsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/patients/page";
 
 
-export default function index() {
+export default function index({ dashboardId, role }: PatientsProps) {
+    const {user} = useAppSelector(state => state.auth)
     const { setPatients, handleAddPatient, filteredPatients, handleEditPatient, handleDeletePatient } = useGlobalUI();
 
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, FC } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,9 +20,14 @@ import {
     AlertCircle
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { DoctorProfileRequest } from './api/types'
-import { DoctorProfileDialog  } from './organisms/DoctorProfileDialog'
+import { DoctorProfileRequest, ProviderAdminProfileRequest } from './api/types'
+import { DoctorProfileDialog } from './organisms/DoctorProfileDialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { DoctorProfileProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/doctor/[doctorId]/page'
+import { useAppDispatch, useAppSelector } from '@/src/redux/store/reduxHook'
+import { useRouter } from 'next/navigation'
+import { ProviderAdminProfileApi } from './api/api'
+import { clearDoctors, fetchDoctorsRequest, fetchDoctorsSuccess } from './api/slice'
 
 
 interface DoctorProfile extends DoctorProfileRequest {
@@ -30,7 +35,30 @@ interface DoctorProfile extends DoctorProfileRequest {
     isProfileComplete?: boolean
 }
 
-const DoctorProfile = () => {
+const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) => {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+    const { user } = useAppSelector(state => state.auth);
+    const { list: doctorsList, error } = useAppSelector(state => state.doctor);
+
+    useEffect(() => {
+        if (!user) return;
+        // ✅ Match route params with Redux user
+        if (user && (user.id !== dashboardId || user.role !== role)) {
+            // router.push("/unauthorized") // Or custom 403 page
+        }
+    }, [user, dashboardId, role, router])
+
+    // Find current doctor from Redux state
+    useEffect(() => {
+        if (doctorsList.length > 0 && user?.id) {
+            const currentDoctor = doctorsList.find((doc: ProviderAdminProfileRequest) =>
+                doc.providerId === user.id
+            );
+            setDoctorData(currentDoctor || null);
+        }
+    }, [doctorsList, user?.id]);
+
     const [doctorData, setDoctorData] = useState<DoctorProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false)
@@ -58,85 +86,65 @@ const DoctorProfile = () => {
         return requiredFields.some(field => !field || field.trim() === '')
     }
 
-    // Mock data - replace with actual API call
-    useEffect(() => {
-        const fetchDoctorProfile = async () => {
-            try {
-                // Check if this is first login (you can store this in localStorage or get from API)
-                const firstLogin = localStorage.getItem('doctor_first_login') === 'true'
-                setIsFirstLogin(firstLogin)
+    const fetchDoctorProfile = async () => {
+        if (!user) return;
 
-                // Simulate API call
-                setTimeout(() => {
-                    const mockData: DoctorProfile = {
-                        id: "DOC-001",
-                        providerId: "PROV-001-DOC",
-                        name: "Dr. Emily White",
-                        specialty: "Pediatrics",
-                        phone: "+966502345678",
-                        email: "emily.white@clinitrack.com",
-                        address: {
-                            street: "456 Health Blvd",
-                            city: "Dammam",
-                            state: "Eastern Province",
-                            zipCode: "31412",
-                            country: "Saudi Arabia"
-                        },
-                        licenseNumber: "MD-56789",
-                        npiNumber: "1234567890",
-                        clinicAffiliation: "CliniTrack Clinic",
-                        status: "Active",
-                        createdBy: "clinicadmin",
-                        updatedBy: "clinicadmin"
-                    }
-
-                    // For demo: simulate incomplete profile for first login
-                    if (firstLogin) {
-                        const incompleteData: DoctorProfile = {
-                            id: "DOC-001",
-                            providerId: "PROV-001-DOC",
-                            name: "",
-                            specialty: "",
-                            phone: "",
-                            email: "emily.white@clinitrack.com", // Only email from registration
-                            address: {
-                                street: "",
-                                city: "",
-                                state: "",
-                                zipCode: "",
-                                country: ""
-                            },
-                            licenseNumber: "",
-                            npiNumber: "",
-                            clinicAffiliation: "",
-                            status: "Pending",
-                            createdBy: "system",
-                            updatedBy: "system"
-                        }
-                        setDoctorData(incompleteData)
-
-                        // Show complete profile modal for incomplete profiles
-                        if (isProfileIncomplete(incompleteData)) {
-                            setShowCompleteProfileModal(true)
-                        }
-                    } else {
-                        setDoctorData(mockData)
-                    }
-
-                    setLoading(false)
-                }, 1000)
-            } catch (error) {
-                toast({
-                    title: "Error",
-                    description: "Failed to load profile data",
-                    variant: "destructive"
-                })
-                setLoading(false)
+        // Check if data already exists in Redux
+        if (doctorsList.length > 0) {
+            const currentDoctor = doctorsList.find((doc: ProviderAdminProfileRequest) =>
+                doc.providerId === user.id
+            );
+            if (currentDoctor) {
+                setDoctorData(currentDoctor);
+                return;
             }
         }
 
-        fetchDoctorProfile()
-    }, [toast])
+        // Fetch from API if not in Redux
+        dispatch(fetchDoctorsRequest());
+        try {
+            const firstLogin = localStorage.getItem('doctor_first_login') === 'true';
+            setIsFirstLogin(firstLogin);
+
+            const response = await ProviderAdminProfileApi.getAll();
+            const doctors = response?.data;
+
+            if (!Array.isArray(doctors)) {
+                throw new Error("Invalid data format from server.");
+            }
+
+            // Store in Redux
+            dispatch(fetchDoctorsSuccess(doctors));
+
+            // Find the current doctor by matching user ID
+            const currentDoctor = doctors.find((doc: ProviderAdminProfileRequest) => doc.providerId === user?.id);
+
+            if (!currentDoctor) {
+                setDoctorData(null);
+                setLoading(false);
+                return;
+            }
+
+            setDoctorData(currentDoctor);
+
+            if (firstLogin && isProfileIncomplete(currentDoctor)) {
+                setShowCompleteProfileModal(true);
+            }
+
+            setLoading(false);
+        } catch (error) {
+            console.error("Failed to fetch profile:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load profile data",
+                variant: "destructive"
+            });
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        if (user) fetchDoctorProfile();
+    }, [toast, user]);
 
 
     const getStatusColor = (status: string) => {
@@ -160,21 +168,36 @@ const DoctorProfile = () => {
             .toUpperCase()
     }
 
-    const handleProfileUpdate = (updatedData: DoctorProfile) => {
-        setDoctorData(updatedData)
+    const handleProfileUpdate = async (updatedData: Partial<ProviderAdminProfileRequest>) => {
+        // Clear Redux data and refetch
+        dispatch(clearDoctors());
+
+        // Update local state immediately for UI responsiveness
+        setDoctorData(updatedData as DoctorProfile);
+
+        // Refetch data to sync with server
+        await fetchDoctorProfile();
+
         toast({
             title: "Success",
             description: "Profile updated successfully"
         })
     }
 
-    const handleProfileCreate = (newData: DoctorProfile) => {
-        setDoctorData(newData)
-        setShowCompleteProfileModal(false)
+    const handleProfileCreate = async (newData: Partial<ProviderAdminProfileRequest>) => {
+        // Clear Redux data and refetch
+        dispatch(clearDoctors());
+
+        // Update local state
+        setDoctorData(newData as DoctorProfile);
+        setShowCompleteProfileModal(false);
 
         // Clear first login flag
-        localStorage.removeItem('doctor_first_login')
-        setIsFirstLogin(false)
+        localStorage.removeItem('doctor_first_login');
+        setIsFirstLogin(false);
+
+        // Refetch data to sync with server
+        await fetchDoctorProfile();
 
         toast({
             title: "Success",

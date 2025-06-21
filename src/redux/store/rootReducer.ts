@@ -2,12 +2,15 @@ import { combineReducers, UnknownAction } from "redux";
 
 // Import Reducers
 import authReducer from "@/src/modules/Authentication/auth/api/slice"
+import doctorReducer from "@/src/modules/Dashboard/doctor/api/slice";
+
 
 // Temporary placeholder reducer to avoid empty combineReducers
 const placeholderReducer = (state = {}) => state;
 
 const appReducer = combineReducers({
-    auth: authReducer
+    auth: authReducer,
+    doctor: doctorReducer,
 });
 
 // Define the type for the combined state

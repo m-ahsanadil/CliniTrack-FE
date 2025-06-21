@@ -16,9 +16,14 @@ import { Badge } from "@/components/ui/badge"
 import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import { FC } from "react"
+import { BillingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/billing/page"
+import { useAppSelector } from "@/src/redux/store/reduxHook"
 
-export default function index() {
-const {handleAddInvoice, filteredInvoices, handleEditInvoice, handleDeleteInvoice} = useGlobalUI();
+export default function index({ dashboardId, role }: BillingProps) {
+    const { user } = useAppSelector(state => state.auth);
+
+    const { handleAddInvoice, filteredInvoices, handleEditInvoice, handleDeleteInvoice } = useGlobalUI();
 
     return (
         <RoleGuard

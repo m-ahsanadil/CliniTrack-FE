@@ -12,11 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 
 // Import form components
-import {  getStatusBadgeVariant } from "@/src/constants"
+import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import { useAppSelector } from "@/src/redux/store/reduxHook"
+import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
 
-export default function index() {
-    const { 
+export default function index({ dashboardId, role }: AppointmentProps) {
+    const { user } = useAppSelector(state => state.auth)
+    const {
         handleDeleteAppointment,
         handleAddAppointment,
         handleEditAppointment,
