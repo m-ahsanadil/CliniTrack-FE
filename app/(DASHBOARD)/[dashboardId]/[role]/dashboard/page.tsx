@@ -5,10 +5,12 @@ export interface DashboardProps {
   role: string
 }
 
-export default function DashboardPage({ params }: { params: DashboardProps }) {
+export default async function DashboardPage({ params }: { params: Promise<DashboardProps> }) {
+  const resolvedParams = await params
+
   return (<Dashboard
-    dashboardId={params.dashboardId}
-    role={params.role}
+    dashboardId={resolvedParams.dashboardId}
+    role={resolvedParams.role}
   />);
 
 }

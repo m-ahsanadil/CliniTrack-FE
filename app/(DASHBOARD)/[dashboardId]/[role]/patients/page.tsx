@@ -5,6 +5,13 @@ export interface PatientsProps {
   role: string
 }
 
-export default function PatientsPage({ params }: { params: PatientsProps }) {
-  return <Patients dashboardId={params.dashboardId} role={params.role} />
+export default async function PatientsPage({ params }: { params: Promise<PatientsProps> }) {
+  const resolvedParams = await params
+
+  return (
+    <Patients
+      dashboardId={resolvedParams.dashboardId}
+      role={resolvedParams.role}
+    />
+  )
 }

@@ -5,6 +5,12 @@ export interface SettingProps {
     role: string
 }
 
-export default function SettingsPage({ params }: { params: SettingProps }) {
-    return <Settings dashboardId={params.dashboardId} role={params.role} />
+export default async function SettingsPage({ params }: { params: Promise<SettingProps> }) {
+    const resolvedParams = await params
+
+    return (
+        <Settings
+            dashboardId={resolvedParams.dashboardId}
+            role={resolvedParams.role}
+        />)
 }

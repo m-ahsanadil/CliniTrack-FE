@@ -5,11 +5,13 @@ export interface AppointmentProps {
     role: string
 }
 
-export default function AppointmentsPage({ params }: { params: AppointmentProps }) {
+export default async function AppointmentsPage({ params }: { params: Promise<AppointmentProps> }) {
+    const resolvedParams = await params
+
     return (
         <Appointment
-            dashboardId={params.dashboardId}
-            role={params.role}
+            dashboardId={resolvedParams.dashboardId}
+            role={resolvedParams.role}
         />
     );
 }

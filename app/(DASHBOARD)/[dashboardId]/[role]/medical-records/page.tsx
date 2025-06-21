@@ -5,11 +5,13 @@ export interface MedicalRecordProps {
   role: string
 }
 
-export default function MedicalRecordsPage({ params }: { params: MedicalRecordProps }) {
+export default async function MedicalRecordsPage({ params }: { params: Promise<MedicalRecordProps> }) {
+  const resolvedParams = await params
+
   return (
     <MedialRecord
-      dashboardId={params.dashboardId}
-      role={params.role}
+      dashboardId={resolvedParams.dashboardId}
+      role={resolvedParams.role}
     />
   )
 }

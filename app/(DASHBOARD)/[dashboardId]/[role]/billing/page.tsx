@@ -5,11 +5,13 @@ export interface BillingProps {
   role: string
 }
 
-export default function BillingPage({ params }: { params: BillingProps }) {
+export default async function BillingPage({ params }: { params: Promise<BillingProps> }) {
+      const resolvedParams = await params
+
   return (
     <Billing
-      dashboardId={params.dashboardId}
-      role={params.role}
+     dashboardId={resolvedParams.dashboardId}
+            role={resolvedParams.role}
     />
   )
 }
