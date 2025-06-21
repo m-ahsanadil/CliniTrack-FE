@@ -1,5 +1,4 @@
 "use client";
-import { SetStateAction, useState } from "react"
 import {
     Plus,
     Edit,
@@ -13,41 +12,15 @@ import { Badge } from "@/components/ui/badge"
 
 // Import components
 import { RoleGuard } from "@/components/role-guard"
-import { Appointments, getStatusBadgeVariant, Invoices, MedicalRecords, Patients } from "@/src/constants";
+import { getStatusBadgeVariant } from "@/src/constants";
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext";
+import { useEffect } from "react";
+import { patientApi } from "./api/api";
 
 
 export default function index() {
-const {setPatientFormOpen, setEditingItem, searchTerm, patients, setAppointments, setPatients, appointments, medicalRecords, setMedicalRecords, setInvoices, invoices} = useGlobalUI();
+    const { setPatients, handleAddPatient, filteredPatients, handleEditPatient, handleDeletePatient } = useGlobalUI();
 
-    // Filter functions
-    const filteredPatients = patients.filter(
-        (patient) =>
-            patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            patient.phone.includes(searchTerm) ||
-            patient.email.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-
-    // CRUD handlers
-    const handleAddPatient = () => {
-        setEditingItem(null)
-        setPatientFormOpen(true)
-    }
-
-    const handleEditPatient = (patient: { id: number; name: string; age: number; gender: string; phone: string; email: string; address: string; bloodType: string; allergies: string; emergencyContact: string; insuranceProvider: string; insuranceNumber: string; status: string; lastVisit: string; }) => {
-        setEditingItem(patient)
-        setPatientFormOpen(true)
-    }
-
-    const handleDeletePatient = (patientId: number) => {
-        if (confirm("Are you sure you want to delete this patient?")) {
-            setPatients(patients.filter((p) => p.id !== patientId))
-            // Also remove related appointments, records, and invoices
-            setAppointments(appointments.filter((a) => a.patientId !== patientId))
-            setMedicalRecords(medicalRecords.filter((r) => r.patientId !== patientId))
-            setInvoices(invoices.filter((i) => i.patientId !== patientId))
-        }
-    }
 
     return (
         <div className="space-y-6">
