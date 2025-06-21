@@ -14,35 +14,36 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 
 // Import components
 import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
-import { usePathname } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { logout } from "../modules/Authentication/auth/api/slice"
 
 
 
 export default function Header() {
+    const router = useRouter()
+    // const params = useParams();
     const pathname = usePathname()
     const dispatch = useAppDispatch();
-    const router = useRouter()
+    // const dashboardId = params.dashboardId;
+    // const role = params.role;
+
+    const { user } = useAppSelector(state => state.auth);
 
     const currentPage = pathname.split("/").pop() || "dashboard"
-
-    // const { user, logout } = useAuth()
-    const { user } = useAppSelector(state => state.auth);
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
-
     const goToSettings = () => {
-        router.push("/settings")
+        router.push(`/${user?.id}/${user?.role}/settings`) 
     }
 
     const goToBilling = () => {
-        router.push("/billing")
+        router.push(`/${user?.id}/${user?.role}/billing`) 
     }
+
 
     const goToSupport = () => {
         router.push("/support")
@@ -120,7 +121,7 @@ export default function Header() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => {
                             dispatch(logout());
-                            router.push("/auth"); 
+                            router.push("/auth");
                         }}
                             className="text-red-600">
                             <LogOut className="mr-2 h-4 w-4" />
