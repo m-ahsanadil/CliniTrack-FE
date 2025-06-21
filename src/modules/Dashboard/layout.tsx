@@ -12,9 +12,17 @@ import InvoiceForm from "@/components/invoice-form"
 import ReportsModal from "@/components/reports-modal"
 import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
+// import { useAppSelector } from '@/src/redux/store/reduxHook';
+// import { notFound } from 'next/navigation';
 
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
+    // const { user } = useAppSelector(state => state.auth)
+
+    // // Trigger not-found if user verification fails
+    // if (!user?.id || !user?.role) {
+    //     notFound() // This will show your custom not-found.tsx
+    // }
 
     const {
         isSidebarOpen, setIsSidebarOpen,
