@@ -1,21 +1,20 @@
 "use client"
 
-import {
-    Shield,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// Import components
+import { RoleGuard } from "@/components/role-guard"
+import { Shield, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-// Import components
-import { RoleGuard } from "@/components/role-guard"
-import { useAuth } from "@/src/redux/providers/contexts/auth-context"
+// hook
+import { useAppSelector } from "@/src/redux/store/reduxHook"
 
 export default function index() {
-      const { user } = useAuth()
-    
+    const { user } = useAppSelector(state => state.auth)
+
     return (
         <RoleGuard
             allowedRoles={["admin"]}
@@ -43,7 +42,7 @@ export default function index() {
                                 <Label htmlFor="name" className="text-slate-700">
                                     Full Name
                                 </Label>
-                                <Input id="name" defaultValue={user?.name} className="border-slate-300" />
+                                <Input id="name" defaultValue={user?.username} className="border-slate-300" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-slate-700">
