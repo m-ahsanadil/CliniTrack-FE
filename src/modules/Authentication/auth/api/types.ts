@@ -12,6 +12,16 @@ export interface User {
     department?: string
 }
 
+export interface DecodedToken {
+    sub: string; // user id
+    email: string;
+    role: "doctor" | "staff" | "admin";
+    username?: string;
+    iat?: number;
+    exp?: number;
+    department?: string;
+}
+
 export interface LoginResponse {
     success: true;
     message: string;
