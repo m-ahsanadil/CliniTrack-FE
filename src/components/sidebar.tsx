@@ -1,11 +1,9 @@
-import { useState } from "react"
 import {
     Calendar,
     FileText,
     Receipt,
     Settings,
     Users,
-    CalendarDays,
     Home
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -15,12 +13,13 @@ import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import Link from "next/link"
+import { usePathname } from "next/navigation";
 
 
 export default function sidebar() {
-
+    const pathname = usePathname();
     const { user } = useAuth();
-    const { isSidebarOpen, setCalendarViewOpen, currentPage, setCurrentPage } = useGlobalUI();
+    const { isSidebarOpen, setCalendarViewOpen, currentPage } = useGlobalUI();
 
     // Get navigation items based on user role
     const getNavigationItems = () => {
@@ -64,49 +63,23 @@ export default function sidebar() {
             </div>
             <nav className="p-4">
                 <ul className="space-y-2">
-                    {/* {getNavigationItems().map((item) => (
-                        <li key={item.id}>
-                            <Button
-                                variant={currentPage === item.id ? "secondary" : "ghost"}
-                                className="w-full justify-start text-white hover:bg-slate-800"
-                                onClick={() => {
-                                    if (item.id === "calendar") {
-                                        setCalendarViewOpen(true)
-                                    } else {
-                                        setCurrentPage(item.id)
-                                    }
-                                }}
-                            >
-                                <item.icon className="mr-3 h-4 w-4" />
-                                {item.label}
-                            </Button>
-                        </li>
-                    ))} */}
-                    {getNavigationItems().map((item) => (
-                        <li key={item.id}>
-                            {item.id === "calendar" ? (
-                                <Button
-                                    variant="ghost"
-                                    className="w-full justify-start text-white hover:bg-slate-800"
-                                    onClick={() => setCalendarViewOpen(true)}
-                                >
-                                    <item.icon className="mr-3 h-4 w-4" />
-                                    {item.label}
-                                </Button>
-                            ) : (
+                    {getNavigationItems().map((item) => {
+                        const isActive = pathname === item.href;
+
+                        return (
+                            <li key={item.id}>
                                 <Link href={item.href!} passHref>
                                     <Button
-                                        variant={currentPage === item.id ? "secondary" : "ghost"}
+                                        variant={isActive ? "secondary" : "ghost"}
                                         className="w-full justify-start text-white hover:bg-slate-800"
                                     >
                                         <item.icon className="mr-3 h-4 w-4" />
                                         {item.label}
                                     </Button>
                                 </Link>
-                            )}
-                        </li>
-                    ))}
-
+                            </li>
+                        );
+                    })}
                 </ul>
             </nav>
         </div>

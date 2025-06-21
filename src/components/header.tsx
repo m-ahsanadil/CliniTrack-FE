@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
     Bell,
     Menu,
@@ -15,6 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from 'next/navigation'
 
 // Import components
 import { useAuth } from "@/src/redux/providers/contexts/auth-context"
@@ -26,9 +26,24 @@ import { usePathname } from 'next/navigation'
 
 export default function Header() {
     const pathname = usePathname()
+    const router = useRouter()
+
     const currentPage = pathname.split("/").pop() || "dashboard"
-    const { user, logout, isLoading } = useAuth()
+
+    const { user, logout } = useAuth()
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
+
+    const goToSettings = () => {
+        router.push("/settings")
+    }
+
+    const goToBilling = () => {
+        router.push("/billing")
+    }
+
+    const goToSupport = () => {
+        router.push("/support")
+    }
 
     return (
         // {/* Header */ }
@@ -96,15 +111,16 @@ export default function Header() {
                             <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
                         </div>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-                        <DropdownMenuItem>Billing</DropdownMenuItem>
-                        <DropdownMenuItem>Support</DropdownMenuItem>
+                        <DropdownMenuItem onClick={goToSettings}>Profile Settings</DropdownMenuItem>
+                        <DropdownMenuItem onClick={goToBilling}>Billing</DropdownMenuItem>
+                        <DropdownMenuItem onClick={goToSupport}>Support</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={logout} className="text-red-600">
                             <LogOut className="mr-2 h-4 w-4" />
                             Sign Out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
+
                 </DropdownMenu>
             </div>
         </header>
