@@ -9,6 +9,7 @@ export interface User {
     email: string;
     password?: string;
     role: "doctor" | "staff" | "admin";
+    department?: string
 }
 
 export interface LoginResponse {
