@@ -22,8 +22,34 @@ interface InvoiceFormProps {
   patients: any[]
 }
 
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+interface FormData {
+  patientId: string;
+  patientName: string;
+  date: string;
+  dueDate: string;
+  service: string;
+  amount: string;
+  status: string;
+  paymentMethod: string;
+  insuranceClaim: string;
+  notes: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+}
+
+
 export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patients }: InvoiceFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     patientId: invoice?.patientId || "",
     patientName: invoice?.patientName || "",
     date: invoice?.date || "",
@@ -34,7 +60,13 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
     paymentMethod: invoice?.paymentMethod || "",
     insuranceClaim: invoice?.insuranceClaim || "Not Submitted",
     notes: invoice?.notes || "",
-    items: invoice?.items || [],
+    // items: invoice?.items || [],
+    items: invoice?.items?.map((item: Partial<InvoiceItem>) => ({
+      description: item.description || "",
+      quantity: item.quantity || 0,
+      rate: item.rate || 0,
+      amount: item.amount || 0,
+    })) || [],
     subtotal: invoice?.subtotal || 0,
     tax: invoice?.tax || 0,
     discount: invoice?.discount || 0,
