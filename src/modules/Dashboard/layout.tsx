@@ -1,7 +1,6 @@
 "use client";
 import Header from '@/src/components/header';
 import Sidebar from '@/src/components/sidebar';
-import { useAuth } from '@/src/redux/providers/contexts/auth-context';
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 
 // Import form components
@@ -14,14 +13,11 @@ import ReportsModal from "@/components/reports-modal"
 import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
 
-export default function DashboardShell({ children }: { children: ReactNode }) {
 
-    const { user, logout, isLoading } = useAuth()
+export default function DashboardShell({ children }: { children: ReactNode }) {
 
     const {
         isSidebarOpen, setIsSidebarOpen,
-        currentPage,
-        searchTerm, setSearchTerm,
         patients,
         appointments,
         invoices,

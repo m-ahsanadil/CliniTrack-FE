@@ -14,7 +14,7 @@ import { RoleGuard } from "@/components/role-guard"
 import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 
 export default function index() {
-      const { user, logout, isLoading } = useAuth()
+      const { user } = useAuth()
     
     return (
         <RoleGuard

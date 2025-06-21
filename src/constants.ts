@@ -32,6 +32,51 @@ export const getRoleColor = (role?: string) => {
     }
 }
 
+export type UserRole = "admin" | "doctor" | "staff"
+
+
+export interface User {
+    id: string
+    name: string
+    email: string
+    role: UserRole
+    avatar?: string
+    department?: string
+    specialization?: string
+}
+
+// Mock users for demonstration
+export const mockUsers: Record<string, User & { password: string }> = {
+    "admin@clinitrack.com": {
+        id: "1",
+        name: "Dr. Sarah Wilson",
+        email: "admin@clinitrack.com",
+        role: "admin",
+        password: "admin123",
+        avatar: "/placeholder-user.jpg",
+        department: "Administration",
+    },
+    "doctor@clinitrack.com": {
+        id: "2",
+        name: "Dr. Michael Chen",
+        email: "doctor@clinitrack.com",
+        role: "doctor",
+        password: "doctor123",
+        avatar: "/placeholder-user.jpg",
+        department: "Cardiology",
+        specialization: "Interventional Cardiology",
+    },
+    "staff@clinitrack.com": {
+        id: "3",
+        name: "Jennifer Martinez",
+        email: "staff@clinitrack.com",
+        role: "staff",
+        password: "staff123",
+        avatar: "/placeholder-user.jpg",
+        department: "Reception",
+    },
+}
+
 export const demoAccounts = [
     {
         role: "admin",

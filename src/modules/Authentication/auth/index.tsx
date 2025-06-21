@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/src/redux/providers/contexts/auth-context";
 import { loginApi, registerApi } from "./api/api";
-import { demoAccounts } from "@/src/constants";
+import { demoAccounts, mockUsers } from "@/src/constants";
 import { useAppDispatch } from "@/src/redux/store/reduxHook";
 import { useRouter } from "next/navigation";
 import { setCredentials } from "./api/slice";
@@ -43,6 +43,25 @@ export default function index() {
         if (!loginData.email || !loginData.password) {
             setError("Please fill in all fields")
             return
+        }
+
+
+        // 👉 Check if the user is a demo/mock user
+        const demoUser = mockUsers[loginData.email];
+
+        if (demoUser && demoUser.password === loginData.password) {
+            dispatch(setCredentials({
+                token: "demo-token", // fake token
+                user: {
+                    id: demoUser.id,
+                    email: demoUser.email,
+                    username: demoUser.name, // or split name if needed
+                    password: "", // or omit
+                    role: demoUser.role,
+                }
+            }));
+            router.push("/dashboard");
+            return;
         }
 
         try {

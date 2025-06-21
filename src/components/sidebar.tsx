@@ -14,11 +14,13 @@ import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
+import { useAppSelector } from "../redux/store/reduxHook"
 
 
 export default function sidebar() {
     const pathname = usePathname();
-    const { user } = useAuth();
+    // const { user } = useAuth();
+    const { user } = useAppSelector(state => state.auth);
     const { isSidebarOpen, setCalendarViewOpen, currentPage } = useGlobalUI();
 
     // Get navigation items based on user role

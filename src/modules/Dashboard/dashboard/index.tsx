@@ -13,14 +13,16 @@ import { Badge } from "@/components/ui/badge"
 // Import components
 import { RoleGuard } from "@/components/role-guard"
 import { useAuth } from "@/src/redux/providers/contexts/auth-context"
-import { getStatusBadgeVariant} from "@/src/constants"
+import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import { useAppSelector } from "@/src/redux/store/reduxHook";
 
 
 
 export default function index() {
-    const { user } = useAuth()
-    const {setEditingItem, setPatientFormOpen, setAppointmentFormOpen, setMedicalRecordFormOpen, setInvoiceFormOpen, patients, appointments, invoices, medicalRecords} = useGlobalUI();
+    const { user } = useAppSelector(state => state.auth)
+    // const { user } = useAuth()
+    const { setEditingItem, setPatientFormOpen, setAppointmentFormOpen, setMedicalRecordFormOpen, setInvoiceFormOpen, patients, appointments, invoices, medicalRecords } = useGlobalUI();
 
     // CRUD handlers
     const handleAddPatient = () => {
@@ -46,13 +48,13 @@ export default function index() {
         <div className="space-y-6">
             {/* Welcome Message */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-                <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.name}!</h2>
+                <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.username}! </h2>
                 <p className="opacity-90">
                     {user?.role === "admin" && "You have full access to all system features and user management."}
                     {user?.role === "doctor" && "Access patient records, appointments, and medical documentation."}
                     {user?.role === "staff" && "Manage appointments, patient check-ins, and basic records."}
                 </p>
-                {user?.department && <p className="text-sm opacity-75 mt-1">Department: {user.department}</p>}
+                {user?.email && <p className="text-sm opacity-75 mt-1">Department: {user.email}</p>}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -17,20 +17,23 @@ import {
 import { useRouter } from 'next/navigation'
 
 // Import components
-import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { usePathname } from 'next/navigation'
+import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
+import { logout } from "../modules/Authentication/auth/api/slice"
 
 
 
 export default function Header() {
     const pathname = usePathname()
+    const dispatch = useAppDispatch();
     const router = useRouter()
 
     const currentPage = pathname.split("/").pop() || "dashboard"
 
-    const { user, logout } = useAuth()
+    // const { user, logout } = useAuth()
+    const { user } = useAppSelector(state => state.auth);
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
 
     const goToSettings = () => {
@@ -94,9 +97,9 @@ export default function Header() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} />
+                                <AvatarImage src={user?.password || "/placeholder-user.jpg"} />
                                 <AvatarFallback className="bg-blue-600 text-white">
-                                    {user?.name
+                                    {user?.username
                                         ?.split(" ")
                                         .map((n) => n[0])
                                         .join("") || "U"}
@@ -106,7 +109,7 @@ export default function Header() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                         <div className="px-2 py-1.5">
-                            <p className="text-sm font-medium">{user?.name}</p>
+                            <p className="text-sm font-medium">{user?.username}</p>
                             <p className="text-xs text-slate-500">{user?.email}</p>
                             <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
                         </div>
@@ -115,7 +118,11 @@ export default function Header() {
                         <DropdownMenuItem onClick={goToBilling}>Billing</DropdownMenuItem>
                         <DropdownMenuItem onClick={goToSupport}>Support</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={logout} className="text-red-600">
+                        <DropdownMenuItem onClick={() => {
+                            dispatch(logout());
+                            router.push("/auth"); 
+                        }}
+                            className="text-red-600">
                             <LogOut className="mr-2 h-4 w-4" />
                             Sign Out
                         </DropdownMenuItem>
