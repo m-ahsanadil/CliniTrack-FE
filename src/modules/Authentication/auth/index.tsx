@@ -14,7 +14,8 @@ import { demoAccounts, mockUsers } from "@/src/constants";
 import { useAppDispatch } from "@/src/redux/store/reduxHook";
 import { useRouter } from "next/navigation";
 import { setCredentials } from "./api/slice";
-import { LoginApiResponse } from "./api/types";
+import { LoginApiResponse, User } from "./api/types";
+import decodeJWTWithWebAPI from "@/src/utils/decodedToken";
 
 export default function index() {
     const router = useRouter();
@@ -72,9 +73,31 @@ export default function index() {
             })
 
             if (response.success) {
+                const decodedToken = decodeJWTWithWebAPI(response.token);
+
+                // ✅ Add null check for decodedToken
+                if (!decodedToken) {
+                    setError("Invalid token received");
+                    return;
+                }
+
+                // ✅ Check for required fields
+                if (!decodedToken.id || !decodedToken.role) {
+                    setError("Token missing required information");
+                    console.log('Decoded token:', decodedToken); // Debug log
+                    return;
+                }
+                const user: User = {
+                    id: decodedToken.id,
+                    email: decodedToken?.email,
+                    username: decodedToken.username || decodedToken.email?.split('@')[0] || 'user',
+                    role: decodedToken.role,
+                    department: decodedToken?.department,
+                };
+                console.log(user)
                 dispatch(setCredentials({
                     token: response.token,
-                    user: response.user
+                    user: user
                 }));
                 router.push("/dashboard")
             }
