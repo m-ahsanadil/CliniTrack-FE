@@ -52,18 +52,15 @@ export const ENDPOINTS = {
         UPDATE: (id: string | number) => `/reports/${id}`, // PUT
         DELETE: (id: string | number) => `/reports/${id}`, // DELETE
     },
+
+    // Appointment endpoints
+    APPOINTMENT: {
+        GET_ALL: `/appointments`, // GET
+        GET_BY_ID: (id: string | number) => `/appointments/${id}`, // GET
+        CREATE: `/appointments`, // POST
+        UPDATE: (id: string | number) => `/appointments/${id}`, // PUT
+        DELETE: (id: string | number) => `/appointments/${id}`, // DELETE
+    },
+
+
 } as const;
-
-
-// Example usage:
-// GET /api/patients
-// fetch(PATIENT_ENDPOINTS.GET_ALL)
-
-// GET /api/patients/123
-// fetch(PATIENT_ENDPOINTS.GET_BY_ID(123))
-
-// POST /api/auth/login
-// fetch(AUTH_ENDPOINTS.LOGIN, { method: HTTP_METHODS.POST, ... })
-
-// PATCH /api/invoices/456/pay
-// fetch(INVOICE_ENDPOINTS.MARK_PAID(456), { method: HTTP_METHODS.PATCH, ... })

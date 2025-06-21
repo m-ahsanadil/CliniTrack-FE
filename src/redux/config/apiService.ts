@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
+import { store } from '../store/store';
 
 class ApiService {
     private axiosInstance: AxiosInstance;
@@ -24,13 +25,13 @@ class ApiService {
         // Request interceptor for API calls
         this.axiosInstance.interceptors.request.use(
             async (config) => {
-                // const state = store.getState();
-                // const token = state.login.user?.token;
+                const state = store.getState();
+                const token = state.auth.token
 
-                // if (token) {
-                //     config.headers = config.headers || {}
-                //     config.headers.Authorization = `Bearer ${token}`
-                // }
+                if (token) {
+                    config.headers = config.headers || {}
+                    config.headers.Authorization = `Bearer ${token}`
+                }
 
                 // Handle FormData content type
                 if (config.data instanceof FormData) {
