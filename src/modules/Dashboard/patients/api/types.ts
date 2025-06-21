@@ -85,17 +85,88 @@ export interface Patient {
 }
 
 // ✅ Success Response
-export interface PatientResponse {
+export interface PatientPostResponse {
     success: true;
     message: string;
     data: Patient;
 }
 
-export interface PatientErrorResponse {
+export interface PatientPostErrorResponse {
     success: false;
     message: string;
     data: string;
 }
 
 // Combined response type
-export type PatientApiResponse = PatientResponse | PatientErrorResponse;
+export type PatientPostApiResponse = PatientPostResponse | PatientPostErrorResponse;
+
+// GET ALL 
+export interface PatientsGetResponse {
+    success: boolean;
+    count: number;
+    data: {
+        _id: string;
+        patientId: string;
+        firstName: string;
+        lastName: string;
+        fullName: string;
+        dateOfBirth: string; // ISO date string
+        age: number;
+        gender: "Male" | "Female" | "Other";
+        ssn: string;
+        phone: string;
+        email: string;
+        address: {
+            street: string;
+            city: string;
+            state: string;
+            zipCode: string;
+            country: string;
+        };
+        emergencyContact: {
+            name: string;
+            relationship: string;
+            phone: string;
+            email: string;
+        };
+        insurance: {
+            provider: string;
+            policyNumber: string;
+            groupNumber: string;
+            subscriberId: string;
+            relationshipToSubscriber: string;
+            effectiveDate: string;   // ISO date string
+            expirationDate: string;  // ISO date string
+        };
+        allergies: string[];
+        chronicConditions: string[];
+        currentMedications: {
+            _id: string;
+            name: string;
+            dosage: string;
+            frequency: string;
+            prescribedBy: string;
+            startDate: string;
+        }[];
+        status: "Active" | "Inactive";
+        registrationDate: string; // ISO date string
+        preferredLanguage: string;
+        tags: string[];
+        createdBy: string;
+        updatedBy: string;
+        createdAt: string; // ISO date string
+        updatedAt: string; // ISO date string
+        __v: number;
+    }[];
+}
+
+export interface PatientsGetErrorResponse {
+    success: false;
+    message: string;
+    data: string;
+}
+
+// Combined response type
+export type PatientsGetApiResponse = PatientsGetResponse | PatientsGetErrorResponse;
+
+// GET BY ID 

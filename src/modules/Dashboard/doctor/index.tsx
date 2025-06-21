@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, FC } from 'react'
+import React, { useState, useEffect, FC, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,8 +27,7 @@ import { DoctorProfileProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/docto
 import { useAppDispatch, useAppSelector } from '@/src/redux/store/reduxHook'
 import { useRouter } from 'next/navigation'
 import { ProviderAdminProfileApi } from './api/api'
-import { clearDoctors, fetchDoctorsRequest, fetchDoctorsSuccess } from './api/slice'
-
+import { clearDoctors, fetchDoctorsRequest, fetchDoctorsSuccess, fetchDoctorsFailure } from './api/slice'
 
 interface DoctorProfile extends DoctorProfileRequest {
     id?: string
@@ -38,114 +37,122 @@ interface DoctorProfile extends DoctorProfileRequest {
 const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) => {
     const router = useRouter();
     const dispatch = useAppDispatch();
+    const { toast } = useToast();
+
+    // Redux selectors
     const { user } = useAppSelector(state => state.auth);
-    const { list: doctorsList, error } = useAppSelector(state => state.doctor);
+    const { list: doctorsList, loading, error, lastFetched } = useAppSelector(state => state.doctor);
+    console.log(doctorsList);
 
-    useEffect(() => {
-        if (!user) return;
-        // ✅ Match route params with Redux user
-        if (user && (user.id !== dashboardId || user.role !== role)) {
-            // router.push("/unauthorized") // Or custom 403 page
-        }
-    }, [user, dashboardId, role, router])
+    // Local state - minimized to only what's truly needed locally
+    const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+    const [isFirstLogin, setIsFirstLogin] = useState(false);
 
-    // Find current doctor from Redux state
-    useEffect(() => {
-        if (doctorsList.length > 0 && user?.id) {
-            const currentDoctor = doctorsList.find((doc: ProviderAdminProfileRequest) =>
-                doc.providerId === user.id
-            );
-            setDoctorData(currentDoctor || null);
-        }
+    // Memoized current doctor from Redux state
+    const currentDoctor = useMemo(() => {
+        if (!user?.id || !doctorsList.length) return null;
+        return doctorsList.find((doc: ProviderAdminProfileRequest) =>
+            doc.providerId === user.id
+        ) || null;
     }, [doctorsList, user?.id]);
 
-    const [doctorData, setDoctorData] = useState<DoctorProfile | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false)
-    const [isFirstLogin, setIsFirstLogin] = useState(false)
-    const { toast } = useToast()
-
-    const isProfileIncomplete = (data: DoctorProfile | null): boolean => {
-        if (!data) return true
+    // Memoized profile completion check
+    const isProfileIncomplete = useMemo(() => {
+        if (!currentDoctor) return true;
 
         const requiredFields = [
-            data.name,
-            data.specialty,
-            data.phone,
-            data.email,
-            data.address?.street,
-            data.address?.city,
-            data.address?.state,
-            data.address?.zipCode,
-            data.address?.country,
-            data.licenseNumber,
-            data.npiNumber,
-            data.clinicAffiliation
-        ]
+            currentDoctor.name,
+            currentDoctor.specialty,
+            currentDoctor.phone,
+            currentDoctor.email,
+            currentDoctor.address?.street,
+            currentDoctor.address?.city,
+            currentDoctor.address?.state,
+            currentDoctor.address?.zipCode,
+            currentDoctor.address?.country,
+            currentDoctor.licenseNumber,
+            currentDoctor.npiNumber,
+            currentDoctor.clinicAffiliation
+        ];
 
-        return requiredFields.some(field => !field || field.trim() === '')
-    }
+        return requiredFields.some(field => !field || field.trim() === '');
+    }, [currentDoctor]);
 
-    const fetchDoctorProfile = async () => {
+    // Check if we need to fetch data
+    const shouldFetchData = useMemo(() => {
+        if (!user) return false;
+        if (loading) return false;
+        if (!doctorsList.length) return true;
+
+        // Check if data is stale (optional - fetch every 5 minutes)
+        const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+        if (lastFetched && Date.now() - lastFetched > STALE_TIME) return true;
+
+        return false;
+    }, [user, doctorsList.length, loading, lastFetched]);
+
+    // Route protection
+    useEffect(() => {
         if (!user) return;
-
-        // Check if data already exists in Redux
-        if (doctorsList.length > 0) {
-            const currentDoctor = doctorsList.find((doc: ProviderAdminProfileRequest) =>
-                doc.providerId === user.id
-            );
-            if (currentDoctor) {
-                setDoctorData(currentDoctor);
-                return;
-            }
+        if (user.id !== dashboardId || user.role !== role) {
+            router.push("/unauthorized");
         }
+    }, [user, dashboardId, role, router]);
 
-        // Fetch from API if not in Redux
-        dispatch(fetchDoctorsRequest());
-        try {
-            const firstLogin = localStorage.getItem('doctor_first_login') === 'true';
-            setIsFirstLogin(firstLogin);
+    // Check first login status
+    useEffect(() => {
+        const firstLogin = localStorage.getItem('doctor_first_login') === 'true';
+        setIsFirstLogin(firstLogin);
+    }, []);
 
-            const response = await ProviderAdminProfileApi.getAll();
-            const doctors = response?.data;
+    // Main data fetching effect - only fetch when needed
+    useEffect(() => {
+        if (!shouldFetchData) return;
 
-            if (!Array.isArray(doctors)) {
-                throw new Error("Invalid data format from server.");
+        const fetchData = async () => {
+            dispatch(fetchDoctorsRequest());
+
+            try {
+                const response = await ProviderAdminProfileApi.getAll();
+                const doctors = response?.data;
+
+                if (!Array.isArray(doctors)) {
+                    throw new Error("Invalid data format from server.");
+                }
+
+                dispatch(fetchDoctorsSuccess(doctors));
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+                dispatch(fetchDoctorsFailure(error?.message || "Failed to load profile data"));
+
+                toast({
+                    title: "Error",
+                    description: "Failed to load profile data",
+                    variant: "destructive"
+                });
             }
+        };
 
-            // Store in Redux
-            dispatch(fetchDoctorsSuccess(doctors));
+        fetchData();
+    }, [shouldFetchData, dispatch, toast]);
 
-            // Find the current doctor by matching user ID
-            const currentDoctor = doctors.find((doc: ProviderAdminProfileRequest) => doc.providerId === user?.id);
+    // Handle first login modal
+    useEffect(() => {
+        if (isFirstLogin && currentDoctor && isProfileIncomplete) {
+            setShowCompleteProfileModal(true);
+        }
+    }, [isFirstLogin, currentDoctor, isProfileIncomplete]);
 
-            if (!currentDoctor) {
-                setDoctorData(null);
-                setLoading(false);
-                return;
-            }
-
-            setDoctorData(currentDoctor);
-
-            if (firstLogin && isProfileIncomplete(currentDoctor)) {
-                setShowCompleteProfileModal(true);
-            }
-
-            setLoading(false);
-        } catch (error) {
-            console.error("Failed to fetch profile:", error);
+    // Handle errors from Redux
+    useEffect(() => {
+        if (error) {
             toast({
                 title: "Error",
-                description: "Failed to load profile data",
+                description: error,
                 variant: "destructive"
             });
-            setLoading(false);
         }
-    };
-    useEffect(() => {
-        if (user) fetchDoctorProfile();
-    }, [toast, user]);
-
+    }, [error, toast]);
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
@@ -169,73 +176,63 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
     }
 
     const handleProfileUpdate = async (updatedData: Partial<ProviderAdminProfileRequest>) => {
-        // Clear Redux data and refetch
+        // Clear Redux data to trigger refetch
         dispatch(clearDoctors());
-
-        // Update local state immediately for UI responsiveness
-        setDoctorData(updatedData as DoctorProfile);
-
-        // Refetch data to sync with server
-        await fetchDoctorProfile();
 
         toast({
             title: "Success",
             description: "Profile updated successfully"
-        })
+        });
     }
 
     const handleProfileCreate = async (newData: Partial<ProviderAdminProfileRequest>) => {
-        // Clear Redux data and refetch
+        // Clear Redux data to trigger refetch
         dispatch(clearDoctors());
 
-        // Update local state
-        setDoctorData(newData as DoctorProfile);
         setShowCompleteProfileModal(false);
 
         // Clear first login flag
         localStorage.removeItem('doctor_first_login');
         setIsFirstLogin(false);
 
-        // Refetch data to sync with server
-        await fetchDoctorProfile();
-
         toast({
             title: "Success",
             description: "Profile completed successfully! Welcome to CliniTrack."
-        })
+        });
     }
 
     const handleCompleteProfileModalClose = (open: boolean) => {
-        setShowCompleteProfileModal(open)
+        setShowCompleteProfileModal(open);
         if (!open && isFirstLogin) {
-            // If user closes modal without completing, show reminder
             toast({
                 title: "Profile Incomplete",
                 description: "Please complete your profile to access all features.",
                 variant: "destructive"
-            })
+            });
         }
     }
 
-    if (loading) {
-        return (
-            <div className="container mx-auto p-6">
-                <div className="animate-pulse space-y-6">
-                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="md:col-span-1">
-                            <div className="h-64 bg-gray-200 rounded-lg"></div>
-                        </div>
-                        <div className="md:col-span-2">
-                            <div className="h-64 bg-gray-200 rounded-lg"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    // Loading state
+    // if (loading) {
+    //     return (
+    //         <div className="container mx-auto p-6">
+    //             <div className="animate-pulse space-y-6">
+    //                 <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+    //                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    //                     <div className="md:col-span-1">
+    //                         <div className="h-64 bg-gray-200 rounded-lg"></div>
+    //                     </div>
+    //                     <div className="md:col-span-2">
+    //                         <div className="h-64 bg-gray-200 rounded-lg"></div>
+    //                     </div>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     )
+    // }
 
-    if (!doctorData) {
+    // No profile state
+    if (!currentDoctor) {
         return (
             <div className="container mx-auto p-6">
                 <Card>
@@ -254,23 +251,17 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
         )
     }
 
-
-
-    const profileIncomplete = isProfileIncomplete(doctorData)
-
-
     return (
         <div className="container mx-auto p-6 space-y-6">
-
             {/* Profile Incomplete Alert */}
-            {profileIncomplete && (
+            {isProfileIncomplete && (
                 <Alert className="border-yellow-200 bg-yellow-50">
                     <AlertCircle className="h-4 w-4 text-yellow-600" />
                     <AlertTitle className="text-yellow-800">Profile Incomplete</AlertTitle>
                     <AlertDescription className="text-yellow-700">
                         Please complete your profile to access all CliniTrack features and improve your visibility.
                         <DoctorProfileDialog
-                            doctorData={doctorData}
+                            doctorData={currentDoctor}
                             mode="create"
                             onCreate={handleProfileCreate}
                             isOpen={showCompleteProfileModal}
@@ -280,19 +271,7 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                     </AlertDescription>
                 </Alert>
             )}
-            {/* Header
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Doctor Profile</h1>
-                    <p className="text-muted-foreground">
-                        Manage your professional information and settings
-                    </p>
-                </div>
-                <EditProfileDialog
-                    doctorData={doctorData}
-                    onUpdate={handleProfileUpdate}
-                />
-            </div> */}
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
@@ -301,15 +280,15 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                         Manage your professional information and settings
                     </p>
                 </div>
-                {!profileIncomplete && (
+                {!isProfileIncomplete && (
                     <DoctorProfileDialog
-                        doctorData={doctorData}
+                        doctorData={currentDoctor}
                         onUpdate={handleProfileUpdate}
                         mode="edit"
                         triggerButton={true}
                     />
                 )}
-                {profileIncomplete && (
+                {isProfileIncomplete && (
                     <Button
                         onClick={() => setShowCompleteProfileModal(true)}
                         className="bg-yellow-600 hover:bg-yellow-700"
@@ -324,22 +303,22 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                 <Card className="lg:col-span-1">
                     <CardHeader className="text-center">
                         <Avatar className="h-24 w-24 mx-auto mb-4">
-                            <AvatarImage src="" alt={doctorData.name} />
+                            <AvatarImage src="" alt={currentDoctor.name} />
                             <AvatarFallback className="text-lg">
-                                {getInitials(doctorData.name)}
+                                {getInitials(currentDoctor.name)}
                             </AvatarFallback>
                         </Avatar>
-                        <CardTitle className="text-xl">{doctorData.name}</CardTitle>
+                        <CardTitle className="text-xl">{currentDoctor.name}</CardTitle>
                         <CardDescription className="flex items-center justify-center gap-2">
                             <Stethoscope className="h-4 w-4" />
-                            {doctorData.specialty}
+                            {currentDoctor.specialty}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex justify-center">
-                            <Badge className={getStatusColor(doctorData.status)}>
+                            <Badge className={getStatusColor(currentDoctor.status)}>
                                 <Activity className="h-3 w-3 mr-1" />
-                                {doctorData.status}
+                                {currentDoctor.status}
                             </Badge>
                         </div>
                         <Separator />
@@ -347,12 +326,12 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                             <div className="flex items-center gap-2 text-sm">
                                 <User className="h-4 w-4 text-muted-foreground" />
                                 <span className="font-medium">Provider ID:</span>
-                                <span className="text-muted-foreground">{doctorData.providerId}</span>
+                                <span className="text-muted-foreground">{currentDoctor.providerId}</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                                 <Building2 className="h-4 w-4 text-muted-foreground" />
                                 <span className="font-medium">Clinic:</span>
-                                <span className="text-muted-foreground">{doctorData.clinicAffiliation}</span>
+                                <span className="text-muted-foreground">{currentDoctor.clinicAffiliation}</span>
                             </div>
                         </div>
                     </CardContent>
@@ -373,14 +352,14 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                                 <label className="text-sm font-medium text-muted-foreground">Phone</label>
                                 <div className="flex items-center gap-2">
                                     <Phone className="h-4 w-4 text-muted-foreground" />
-                                    <span>{doctorData.phone}</span>
+                                    <span>{currentDoctor.phone}</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">Email</label>
                                 <div className="flex items-center gap-2">
                                     <Mail className="h-4 w-4 text-muted-foreground" />
-                                    <span>{doctorData.email}</span>
+                                    <span>{currentDoctor.email}</span>
                                 </div>
                             </div>
                         </CardContent>
@@ -396,11 +375,11 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                <p className="font-medium">{doctorData.address.street}</p>
+                                <p className="font-medium">{currentDoctor.address.street}</p>
                                 <p className="text-muted-foreground">
-                                    {doctorData.address.city}, {doctorData.address.state} {doctorData.address.zipCode}
+                                    {currentDoctor.address.city}, {currentDoctor.address.state} {currentDoctor.address.zipCode}
                                 </p>
-                                <p className="text-muted-foreground">{doctorData.address.country}</p>
+                                <p className="text-muted-foreground">{currentDoctor.address.country}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -418,28 +397,28 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                                 <label className="text-sm font-medium text-muted-foreground">License Number</label>
                                 <div className="flex items-center gap-2">
                                     <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-mono">{doctorData.licenseNumber}</span>
+                                    <span className="font-mono">{currentDoctor.licenseNumber}</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">NPI Number</label>
                                 <div className="flex items-center gap-2">
                                     <CreditCard className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-mono">{doctorData.npiNumber}</span>
+                                    <span className="font-mono">{currentDoctor.npiNumber}</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">Specialty</label>
                                 <div className="flex items-center gap-2">
                                     <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                                    <span>{doctorData.specialty}</span>
+                                    <span>{currentDoctor.specialty}</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">Status</label>
-                                <Badge className={getStatusColor(doctorData.status)}>
+                                <Badge className={getStatusColor(currentDoctor.status)}>
                                     <Activity className="h-3 w-3 mr-1" />
-                                    {doctorData.status}
+                                    {currentDoctor.status}
                                 </Badge>
                             </div>
                         </CardContent>
@@ -456,11 +435,11 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">Created By</label>
-                                <span>{doctorData.createdBy}</span>
+                                <span>{currentDoctor.createdBy}</span>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-muted-foreground">Updated By</label>
-                                <span>{doctorData.updatedBy}</span>
+                                <span>{currentDoctor.updatedBy}</span>
                             </div>
                         </CardContent>
                     </Card>
