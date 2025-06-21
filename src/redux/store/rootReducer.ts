@@ -1,18 +1,13 @@
 import { combineReducers, UnknownAction } from "redux";
 
 // Import Reducers
-// TODO: Import your actual reducers here
-// import authReducer from './auth/authSlice';
-// import videoReducer from './video/videoSlice';
+import authReducer from "@/src/modules/Authentication/auth/api/slice"
 
 // Temporary placeholder reducer to avoid empty combineReducers
 const placeholderReducer = (state = {}) => state;
 
 const appReducer = combineReducers({
-    // TODO: Replace placeholder with your actual reducers
-    placeholder: placeholderReducer,
-    // auth: authReducer,
-    // videos: videoReducer,
+    auth: authReducer
 });
 
 // Define the type for the combined state

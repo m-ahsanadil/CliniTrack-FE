@@ -11,9 +11,16 @@ import { FormEvent, useState } from "react";
 import { useAuth } from "@/src/redux/providers/contexts/auth-context";
 import { loginApi, registerApi } from "./api/api";
 import { demoAccounts } from "@/src/constants";
+import { useAppDispatch } from "@/src/redux/store/reduxHook";
+import { useRouter } from "next/navigation";
+import { setCredentials } from "./api/slice";
+import { LoginApiResponse } from "./api/types";
 
 export default function index() {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
     const { isLoading } = useAuth()
+    const [activeTab, setActiveTab] = useState("login");
     const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState("")
     const [loginData, setLoginData] = useState({
@@ -40,17 +47,18 @@ export default function index() {
 
         try {
             // Pass both email and password as an object
-            const response = await loginApi.login({
+            const response: LoginApiResponse = await loginApi.login({
                 usernameOrEmail: loginData.email,
                 password: loginData.password
             })
 
-            // If you're using the auth context, you might want to call login from context
-            // const success = await login(loginData.email, loginData.password)
-
-            console.log('Login successful:', response)
-            // Handle successful login (e.g., redirect, store token, etc.)
-
+            if (response.success) {
+                dispatch(setCredentials({
+                    token: response.token,
+                    user: response.user
+                }));
+                router.push("/dashboard")
+            }
         } catch (error) {
             console.log('Login error:', error)
             setError("Invalid email or password")
@@ -75,6 +83,12 @@ export default function index() {
                 password: registerData.password,
                 role: registerData.role as "doctor" | "staff" | "admin"
             })
+
+            if (response.success) {
+                // After successful registration, switch to login tab
+                setActiveTab("login");
+            }
+
         } catch (error) {
             console.log('Register error:', error)
             setError("Invalid fields")
@@ -104,7 +118,7 @@ export default function index() {
                     <p className="text-slate-300">Medical Administration Dashboard</p>
                 </div>
 
-                <Tabs defaultValue="login" className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-6">
                         <TabsTrigger value="login">Login</TabsTrigger>
                         <TabsTrigger value="register">Register</TabsTrigger>
@@ -347,6 +361,6 @@ export default function index() {
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+        </div >
     )
 }

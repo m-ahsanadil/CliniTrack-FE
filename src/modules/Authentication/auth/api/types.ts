@@ -4,29 +4,18 @@ export interface LoginRequest {
 }
 
 export interface User {
-    _id: string;
-    userName: string;
+    id: string;
+    username: string;
     email: string;
-    channelName: string;
-    avatarId: string;
-    avatarUrl: string;
-    phone: string;
-    subscribers: number;
-}
-
-export interface TokenInfo {
-    expiresIn: string;
-    issuedAt: string;
+    password: string;
+    role: "doctor" | "staff" | "admin";
 }
 
 export interface LoginResponse {
     success: true;
     message: string;
-    data: {
-        token: string;
-        user: User;
-        tokenInfo: TokenInfo;
-    };
+    token: string
+    user: User;
 }
 
 // Error response
@@ -40,19 +29,15 @@ interface LoginErrorResponse {
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 
 
-export interface RegisterRequest {
-    username: string;
-    email: string;
-    password: string;
-    role: "doctor" | "staff" | "admin";
-}
+export interface RegisterRequest extends Omit<User, "id"> { }
+
 
 export interface RegisterResponse {
     success: true;
     message: string;
     user: {
         id: string;
-        username: User;
+        username: string;
         email: string;
         role: string;
     };
