@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import Link from "next/link"
 
 
 export default function sidebar() {
@@ -24,17 +25,18 @@ export default function sidebar() {
     // Get navigation items based on user role
     const getNavigationItems = () => {
         const baseItems = [
-            { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"] },
-            { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"] },
-            { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"] },
+            { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"], href: "/dashboard" },
+            { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"], href: "/patients" },
+            { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"], href: "/appointments" },
         ]
 
         const roleSpecificItems = [
-            { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"] },
-            { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"] },
-            { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
-            { id: "settings", label: "Settings", icon: Settings, roles: ["admin"] },
+            { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"], href: "/medical-records" },
+            { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"], href: "/billing" },
+            // { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
+            { id: "settings", label: "Settings", icon: Settings, roles: ["admin"], href: "/settings" },
         ]
+
 
         return [...baseItems, ...roleSpecificItems].filter((item) => item.roles.includes(user?.role || ""))
     }
@@ -62,7 +64,7 @@ export default function sidebar() {
             </div>
             <nav className="p-4">
                 <ul className="space-y-2">
-                    {getNavigationItems().map((item) => (
+                    {/* {getNavigationItems().map((item) => (
                         <li key={item.id}>
                             <Button
                                 variant={currentPage === item.id ? "secondary" : "ghost"}
@@ -79,7 +81,32 @@ export default function sidebar() {
                                 {item.label}
                             </Button>
                         </li>
+                    ))} */}
+                    {getNavigationItems().map((item) => (
+                        <li key={item.id}>
+                            {item.id === "calendar" ? (
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start text-white hover:bg-slate-800"
+                                    onClick={() => setCalendarViewOpen(true)}
+                                >
+                                    <item.icon className="mr-3 h-4 w-4" />
+                                    {item.label}
+                                </Button>
+                            ) : (
+                                <Link href={item.href!} passHref>
+                                    <Button
+                                        variant={currentPage === item.id ? "secondary" : "ghost"}
+                                        className="w-full justify-start text-white hover:bg-slate-800"
+                                    >
+                                        <item.icon className="mr-3 h-4 w-4" />
+                                        {item.label}
+                                    </Button>
+                                </Link>
+                            )}
+                        </li>
                     ))}
+
                 </ul>
             </nav>
         </div>

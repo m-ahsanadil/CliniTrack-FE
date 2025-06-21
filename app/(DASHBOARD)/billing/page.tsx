@@ -1,7 +1,5 @@
-import React from 'react'
+import Billing from "@/src/modules/Dashboard/billing"
 
 export default function BillingPage() {
-  return (
-    <div>BillingPage</div>
-  )
+  return <Billing />
 }

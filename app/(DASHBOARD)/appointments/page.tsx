@@ -1,7 +1,6 @@
-import React from 'react'
+import Appointment from "@/src/modules/Dashboard/appointments"
 
 export default function AppointmentsPage() {
-    return (
-        <div>AppointmentsPage</div>
-    )
+
+    return <Appointment />
 }

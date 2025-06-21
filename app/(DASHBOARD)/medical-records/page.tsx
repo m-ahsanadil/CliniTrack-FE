@@ -1,7 +1,5 @@
-import React from 'react'
+import MedialRecord from "@/src/modules/Dashboard/medicalRecords"
 
 export default function MedicalRecordsPage() {
-  return (
-    <div>PatientsPage</div>
-  )
+  return <MedialRecord />
 }

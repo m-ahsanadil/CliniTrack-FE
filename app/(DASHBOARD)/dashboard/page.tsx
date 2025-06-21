@@ -1,7 +1,5 @@
-import React from 'react'
+import Dashboard from '@/src/modules/Dashboard/dashboard'
 
 export default function DashboardPage() {
-  return (
-    <div>PatientsPage</div>
-  )
+  return <Dashboard />
 }

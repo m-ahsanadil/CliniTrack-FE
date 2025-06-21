@@ -20,15 +20,19 @@ import {
 import { useAuth } from "@/src/redux/providers/contexts/auth-context"
 import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import { usePathname } from 'next/navigation'
+
 
 
 export default function Header() {
+    const pathname = usePathname()
+    const currentPage = pathname.split("/").pop() || "dashboard"
     const { user, logout, isLoading } = useAuth()
-      const { isSidebarOpen, setIsSidebarOpen, currentPage, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
+    const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
 
     return (
         // {/* Header */ }
-        < header className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm" >
+        <header className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm" >
             <div className="flex items-center space-x-4">
                 <Button
                     variant="ghost"
@@ -39,7 +43,10 @@ export default function Header() {
                 </Button>
                 <div>
                     <h1 className="text-lg font-semibold text-slate-900 capitalize">
-                        {currentPage.replace(/([A-Z])/g, " $1")}
+                        {currentPage
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/-/g, " ") // handle kebab-case routes
+                            .replace(/\b\w/g, (char) => char.toUpperCase())}
                     </h1>
                 </div>
             </div>

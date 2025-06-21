@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useAuth, type UserRole } from "@/contexts/auth-context"
+import { useAuth, type UserRole } from "@/src/redux/providers/contexts/auth-context"
 
 interface RoleGuardProps {
   allowedRoles: UserRole[]

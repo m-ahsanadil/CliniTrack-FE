@@ -1,14 +1,18 @@
+
 import { ReactNode } from "react"
+import DashboardShell from "@/src/modules/Dashboard/layout"
 
 export default function DashboardLayout({
   children,
 }: {
   children: ReactNode
 }) {
+
   return (
-    <div className="dashboard-layout">
-      {/* youtube dashboard layout */}
+    <>
+      <DashboardShell>
         {children}
-    </div>
+      </DashboardShell>
+    </>
   )
 }
