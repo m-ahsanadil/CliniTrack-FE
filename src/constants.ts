@@ -3,6 +3,7 @@ import {
     Shield,
     Stethoscope,
     UserCheck,
+    Users,
 } from "lucide-react"
 
 export const getRoleIcon = (role?: string) => {
@@ -30,6 +31,36 @@ export const getRoleColor = (role?: string) => {
             return "text-gray-600 bg-gray-100"
     }
 }
+
+export const demoAccounts = [
+    {
+        role: "admin",
+        email: "admin@clinitrack.com",
+        password: "admin123",
+        name: "Dr. Sarah Wilson",
+        icon: Shield,
+        color: "bg-red-500",
+        description: "Full system access, user management, reports",
+    },
+    {
+        role: "doctor",
+        email: "doctor@clinitrack.com",
+        password: "doctor123",
+        name: "Dr. Michael Chen",
+        icon: Stethoscope,
+        color: "bg-blue-500",
+        description: "Patient records, appointments, medical notes",
+    },
+    {
+        role: "staff",
+        email: "staff@clinitrack.com",
+        password: "staff123",
+        name: "Jennifer Martinez",
+        icon: Users,
+        color: "bg-green-500",
+        description: "Appointments, patient check-in, basic records",
+    },
+]
 
 export const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
