@@ -6,7 +6,8 @@ import doctorReducer from "@/src/modules/Dashboard/doctor/api/slice";
 import billingReducer from "@/src/modules/Dashboard/billing/api/slice";
 import appointmentReducer from "@/src/modules/Dashboard/appointments/api/slice";
 import medicalRecordReducer from "@/src/modules/Dashboard/medicalRecords/api/slice";
-import patientReducer from "@/src/modules/Dashboard/patients/api/slice"; 
+import patientReducer from "@/src/modules/Dashboard/patients/api/slice";
+import reportReducer from "@/src/modules/Dashboard/reports/api/slice";
 
 
 
@@ -21,6 +22,7 @@ const appReducer = combineReducers({
     appointment: appointmentReducer,
     medicalRecord: medicalRecordReducer,
     patients: patientReducer,
+    reports: reportReducer,
 });
 
 // Define the type for the combined state

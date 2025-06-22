@@ -1,33 +1,33 @@
-import { PatientApiResponse, PatientRequest } from "./types";
 import apiService from "@/src/redux/config/apiService";
 import { ENDPOINTS } from "@/src/redux/config/api";
+import { ReportsGetResponse } from "./types";
 
-export const patientApi = {
-        // Create a new patient
-        createPatient: (patientData: PatientRequest): Promise<PatientApiResponse> => {
-                return apiService.post(ENDPOINTS.PATIENT.CREATE, patientData);
+export const reportApi = {
+        // Create a new Report
+        createReport: (reportData: ReportRequest): Promise<ReportApiResponse> => {
+                return apiService.post(ENDPOINTS.REPORT.CREATE, reportData);
         },
 
-        // Get all patients
-        getAllPatients: (): Promise<PatientApiResponse> => {
-                return apiService.get(ENDPOINTS.PATIENT.GET_ALL);
+        // Get all Report
+        getAllReport: (): Promise<ReportsGetResponse> => {
+                return apiService.get(ENDPOINTS.REPORT.GET_ALL);
         },
 
-        // Get a single patient by ID
-        getPatientById: (id: string | number): Promise<PatientApiResponse> => {
-                return apiService.get(ENDPOINTS.PATIENT.GET_BY_ID(id));
+        // Get a single Report by ID
+        getReportById: (id: string | number): Promise<ReportApiResponse> => {
+                return apiService.get(ENDPOINTS.REPORT.GET_BY_ID(id));
         },
 
-        // Update patient by ID
-        updatePatient: (
+        // Update Report by ID
+        updateReport: (
                 id: string | number,
-                patientData: PatientRequest
-        ): Promise<PatientApiResponse> => {
-                return apiService.put(ENDPOINTS.PATIENT.UPDATE(id), patientData);
+                reportData: ReportRequest
+        ): Promise<ReportApiResponse> => {
+                return apiService.put(ENDPOINTS.REPORT.UPDATE(id), reportData);
         },
 
-        // Delete patient by ID
-        deletePatient: (id: string | number): Promise<PatientApiResponse> => {
-                return apiService.delete(ENDPOINTS.PATIENT.DELETE(id));
+        // Delete Report by ID
+        deleteReport: (id: string | number): Promise<ReportApiResponse> => {
+                return apiService.delete(ENDPOINTS.REPORT.DELETE(id));
         }
 };
