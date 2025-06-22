@@ -12,7 +12,6 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ allowedRoles, children, fallback = null }: RoleGuardProps) {
-  // const { user } = useAuth()
   const { user } = useAppSelector(state => state.auth);
 
 
