@@ -1,0 +1,59 @@
+role:STAFF ENDPOINT WORK:
+get-provider,
+get-provider-by-id
+get-patients
+get-patients-by-id
+create-patients
+update-patients
+get-reports
+get-reports-by-id
+create-reports
+update-reports
+get-medical-records
+get-medical-records-by-id
+create-appointment
+create-invoices
+get-invoices
+get-invoice-by-id
+update-invoice
+
+
+role:STAFF ENDPOINT WON'T WORK:
+create-provider
+update-provider
+delete-provider
+delete-patients
+delete-reports
+create-medical-records
+update-medical-records
+delete-medical-records
+delete-invoice
+
+
+role: DOCTOR ENDPOINT WORK:
+create-reports
+update-reports
+get-reports
+get-reports-by-id
+get-patients
+get-patients-by-id
+get-provider,
+get-provider-by-id
+create-medical-records
+update-medical-records
+get-medical-records
+get-medical-records-by-id
+
+
+
+role:DOCTOR ENDPOINT WON'T WORK:
+INVOICE ALL ENDPOINTS WILL NOT WORK
+delete-report
+create-patients
+update-patients
+delete-patients
+create-providers
+update-providers
+delete-providers
+create-appointments
+delete-medical-records
