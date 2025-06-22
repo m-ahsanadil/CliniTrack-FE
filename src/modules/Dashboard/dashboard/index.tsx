@@ -14,18 +14,28 @@ import { Badge } from "@/components/ui/badge"
 import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
-import { useAppSelector } from "@/src/redux/store/reduxHook";
+import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DoctorProfileDialog } from "../doctor/organisms/DoctorProfileDialog";
 import { DoctorProfileRequest } from "../doctor/api/types";
 import { DashboardProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/dashboard/page";
+import { fetchAllAppointments } from "../appointments/api/slice";
+import { fetchAllMedicalRecord } from "../medicalRecords/api/slice";
+import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher";
 
 
 
 export default function index({ dashboardId, role }: DashboardProps) {
+    const dispatch = useAppDispatch();
     const router = useRouter()
+    useAppointmentsFetcher();
+
     const { user } = useAppSelector(state => state.auth)
+    // Get appointments from Redux store
+    const { appointments: apiAppointments, loading: appointmentsLoading, error: appointmentsError, count: appointmentsCount } = useAppSelector(state => state.appointment)
+    const { medicalRecords: apiMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError, count } = useAppSelector(state => state.medicalRecord);
+
 
     const { patients, appointments, invoices, medicalRecords, handleAddAppointment, handleAddInvoice, handleAddPatient, handleAddMedicalRecord } = useGlobalUI();
     const [showDoctorProfileDialog, setShowDoctorProfileDialog] = useState(false)
@@ -36,6 +46,11 @@ export default function index({ dashboardId, role }: DashboardProps) {
             setShowDoctorProfileDialog(true);
         }
     }, [user])
+
+    // Fetch appointments when component mounts
+    useEffect(() => {
+        dispatch(fetchAllMedicalRecord());
+    }, [dispatch]);
 
     // Handle doctor profile creation
     const handleDoctorProfileCreate = (newProfile: DoctorProfileRequest) => {
@@ -50,6 +65,17 @@ export default function index({ dashboardId, role }: DashboardProps) {
 
         }
     }
+
+    // Get today's appointments from API data
+    const getTodaysAppointments = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return apiAppointments.filter(appointment => {
+            const appointmentDate = new Date(appointment.appointmentDate).toISOString().split('T')[0];
+            return appointmentDate === today;
+        });
+    };
+
+    const todaysAppointments = getTodaysAppointments();
     return (
         <>
 
@@ -93,7 +119,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                 <Calendar className="h-4 w-4 text-green-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-slate-900">{appointments.length}</div>
+                                <div className="text-2xl font-bold text-slate-900">{appointmentsCount}</div>
                                 <p className="text-xs text-slate-500">Scheduled for today</p>
                             </CardContent>
                         </Card>
@@ -140,14 +166,18 @@ export default function index({ dashboardId, role }: DashboardProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <Button onClick={handleAddPatient} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Patient
-                                </Button>
-                                <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Schedule Appointment
-                                </Button>
+                                <RoleGuard allowedRoles={['admin', 'staff']}>
+                                    <Button onClick={handleAddPatient} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Patient
+                                    </Button>
+                                </RoleGuard>
+                                <RoleGuard allowedRoles={['admin', 'staff']}>
+                                    <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Schedule Appointment
+                                    </Button>
+                                </RoleGuard>
                                 <RoleGuard allowedRoles={["admin", "doctor"]}>
                                     <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
                                         <Plus className="mr-2 h-4 w-4" />
@@ -171,7 +201,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                 <CardTitle className="text-slate-900">Recent Appointments</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-3">
+                                {/* <div className="space-y-3">
                                     {appointments.slice(0, 3).map((appointment) => (
                                         <div key={appointment.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                                             <div>
@@ -183,11 +213,44 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                             <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
                                         </div>
                                     ))}
-                                </div>
+                                </div> */}
+                                {appointmentsLoading ? (
+                                    <div className="text-center py-4">Loading appointments...</div>
+                                ) : appointmentsError ? (
+                                    <div className="text-center py-4 text-red-500">Error: {appointmentsError}</div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {apiAppointments.slice(0, 3).map((appointment) => (
+                                            <div
+                                                key={appointment._id}
+                                                className="p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all"
+                                            >
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                                    <div>
+                                                        <p className="font-semibold text-lg text-slate-800">{appointment.patientName}</p>
+                                                        <p className="text-sm text-slate-600 mt-1">
+                                                            {new Date(appointment.appointmentDate).toLocaleDateString()} at {appointment.startTime}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500 mt-0.5 italic">
+                                                            Reason: {appointment.reasonForVisit || "N/A"}
+                                                        </p>
+                                                    </div>
+                                                    <Badge className="min-w-[80px] justify-center" variant={getStatusBadgeVariant(appointment.status)}>
+                                                        {appointment.status}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                        ))}
+                                        {apiAppointments.length === 0 && (
+                                            <div className="text-center py-4 text-slate-500">No appointments found</div>
+                                        )}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
-                        <RoleGuard allowedRoles={["admin", "doctor"]}>
+                        {/* <RoleGuard allowedRoles={["admin", "doctor"]}>
                             <Card className="bg-white border border-slate-200">
                                 <CardHeader>
                                     <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>
@@ -206,7 +269,48 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                     </div>
                                 </CardContent>
                             </Card>
+                        </RoleGuard> */}
+                        <RoleGuard allowedRoles={["admin", "doctor", 'staff']}>
+                            <Card className="bg-white border border-slate-200">
+                                <CardHeader>
+                                    <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {medicalRecordLoading ? (
+                                            <div className="text-center py-4">Loading medical records...</div>
+                                        ) : medicalRecordError ? (
+                                            <div className="text-center py-4 text-red-500">Error: {medicalRecordError}</div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {apiMedicalRecords.slice(0, 3).map((record) => (
+                                                    <div key={record._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                                            <div>
+                                                                <p className="font-semibold text-lg text-slate-800">{record.patientId.fullName}</p>
+                                                                <p className="text-sm text-slate-600 mt-1">{record.diagnosis}</p>
+                                                                <p className="text-xs text-slate-500 mt-0.5 italic">Treatment: {record.treatment || "N/A"}</p>
+                                                                <p className="text-xs text-slate-400 mt-0.5">Date: {new Date(record.recordDate).toLocaleDateString()}</p>
+                                                            </div>
+                                                            <div className="text-right mt-2">
+                                                                <Button variant="link" className="text-blue-600" onClick={() => router.push(`/${user?.id}/${user?.role}/appointments`)}>
+                                                                    View All Appointments →
+                                                                </Button>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {apiMedicalRecords.length === 0 && (
+                                                    <div className="text-center py-4 text-slate-500">No medical records found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </RoleGuard>
+
                     </div>
                 </div>
             )}

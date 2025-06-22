@@ -1,4 +1,3 @@
-// components/appointments/ViewAppointmentDialog.tsx
 "use client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Appointment } from "../api/types"

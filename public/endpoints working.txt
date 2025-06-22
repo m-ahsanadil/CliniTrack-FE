@@ -12,6 +12,8 @@ update-reports
 get-medical-records
 get-medical-records-by-id
 create-appointment
+get-appointement
+get-by-id-appointment
 create-invoices
 get-invoices
 get-invoice-by-id
@@ -43,7 +45,7 @@ create-medical-records
 update-medical-records
 get-medical-records
 get-medical-records-by-id
-
+get-appointments
 
 
 role:DOCTOR ENDPOINT WON'T WORK:
@@ -56,4 +58,5 @@ create-providers
 update-providers
 delete-providers
 create-appointments
+update-appointments
 delete-medical-records

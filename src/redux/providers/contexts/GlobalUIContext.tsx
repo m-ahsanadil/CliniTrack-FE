@@ -54,7 +54,7 @@ type GlobalUIContextType = {
   handleAddAppointment: () => void;
   handleEditAppointment: (appointment: any) => void;
   handleSaveAppointment: (appointmentData: any) => void;
-  handleDeleteAppointment: (appointmentId: number) => void;
+  handleDeleteAppointment: (appointmentId: number | string) => void;
 
   // Medical Record CRUD
   handleAddMedicalRecord: () => void;
@@ -165,7 +165,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const handleDeleteAppointment = (appointmentId: number) => {
+  const handleDeleteAppointment = (appointmentId: number | string) => {
     if (confirm("Are you sure you want to delete this appointment?")) {
       setAppointments(appointments.filter((a) => a.id !== appointmentId))
     }

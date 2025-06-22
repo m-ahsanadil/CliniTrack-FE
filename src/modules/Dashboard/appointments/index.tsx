@@ -14,27 +14,96 @@ import { Badge } from "@/components/ui/badge"
 // Import form components
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
-import { useAppSelector } from "@/src/redux/store/reduxHook"
+import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
 import { RoleGuard } from "@/components/role-guard"
-import { SetStateAction, useState } from "react"
+import { SetStateAction, useEffect, useState } from "react"
 import { ViewAppointmentDialog } from "./organisms/ViewAppointmentDialog"
+import { Appointment } from "./api/types"
+import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
+import { deleteAppointment, clearDeleteError } from "./api/slice"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
-    const [selectedAppointment, setSelectedAppointment] = useState(null)
-    const [isViewOpen, setIsViewOpen] = useState(false)
-    const { user } = useAppSelector(state => state.auth)
+    const dispatch = useAppDispatch();
+
+    // FIXED: Destructure Redux state properly
     const {
-        handleDeleteAppointment,
+        appointments: apiAppointments,
+        loading: appointmentsLoading,
+        error: appointmentsError,
+        count: appointmentsCount,
+        deleteLoading,
+        deleteError
+    } = useAppSelector(state => state.appointment);
+
+    const { user } = useAppSelector(state => state.auth);
+
+    // Custom hook for fetching appointments
+    useAppointmentsFetcher();
+
+    // FIXED: Local state management
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [deletingAppointmentId, setDeletingAppointmentId] = useState<string | null>(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+
+    const {
         handleAddAppointment,
         handleEditAppointment,
         filteredAppointments
     } = useGlobalUI();
 
-    const handleViewAppointment = (appointment: SetStateAction<null>) => {
-        setSelectedAppointment(appointment)
-        setIsViewOpen(true)
+    // FIXED: Proper type for the parameter
+    const handleViewAppointment = (appointment: Appointment) => {
+        setSelectedAppointment(appointment);
+        setIsViewOpen(true);
     }
+
+    // FIXED: Better error handling and loading state management
+    const handleDeleteAppointment = async (appointmentId: string) => {
+        // Clear any previous delete errors
+        if (deleteError) {
+            dispatch(clearDeleteError());
+        }
+
+        // Optional: Add confirmation dialog
+        const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
+        if (!confirmDelete) return;
+
+        try {
+            setDeletingAppointmentId(appointmentId);
+            await dispatch(deleteAppointment(appointmentId)).unwrap();
+            // Optional: Show success message
+            console.log("Appointment deleted successfully");
+        } catch (error) {
+            // Error is already handled by Redux state
+            console.error("Failed to delete appointment:", error);
+        } finally {
+            setDeletingAppointmentId(null);
+        }
+    }
+
+    // FIXED: Handle view dialog close properly
+    const handleCloseViewDialog = () => {
+        setIsViewOpen(false);
+        setSelectedAppointment(null);
+    }
+
+    // FIXED: Effect to handle delete errors
+    useEffect(() => {
+        if (deleteError) {
+            // You could show a toast notification here
+            console.error("Delete error:", deleteError);
+            // Clear the error after showing it
+            setTimeout(() => {
+                dispatch(clearDeleteError());
+            }, 5000);
+        }
+    }, [deleteError, dispatch]);
+
+    // FIXED: Determine which appointments to display
+    const appointmentsToDisplay = filteredAppointments && filteredAppointments.length > 0
+        ? filteredAppointments
+        : apiAppointments;
     return (
         <>
             <div className="space-y-6">
@@ -66,12 +135,12 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredAppointments.map((appointment) => (
-                                    <TableRow key={appointment.id} className="hover:bg-slate-50">
+                                {apiAppointments.map((appointment) => (
+                                    <TableRow key={appointment._id} className="hover:bg-slate-50">
                                         <TableCell className="font-medium text-slate-900">{appointment.patientName}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.date}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.time}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.doctor}</TableCell>
+                                        <TableCell className="text-slate-600">{new Date(appointment.appointmentDate).toLocaleDateString()}</TableCell>
+                                        <TableCell className="text-slate-600">{appointment.startTime}</TableCell>
+                                        <TableCell className="text-slate-600">{appointment.providerName}</TableCell>
                                         <TableCell className="text-slate-600">{appointment.type}</TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
@@ -95,7 +164,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleDeleteAppointment(appointment.id)}
+                                                        onClick={() => handleDeleteAppointment(appointment._id)}
                                                         className="text-red-600 hover:text-red-900"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
@@ -105,6 +174,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                         </TableCell>
                                     </TableRow>
                                 ))}
+
                             </TableBody>
                         </Table>
                     </CardContent>

@@ -77,6 +77,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     appointment={editingItem}
                     onSave={handleSaveAppointment}
                     patients={patients}
+                    providers={[]}
+                    currentUserId={''}
                 />
 
                 <MedicalRecordForm
@@ -93,7 +95,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     invoice={editingItem}
                     onSave={handleSaveInvoice}
                     patients={patients}
-                />
+                    providers={[]}
+                    currentUser={undefined} />
 
                 <ReportsModal
                     open={reportsModalOpen}
