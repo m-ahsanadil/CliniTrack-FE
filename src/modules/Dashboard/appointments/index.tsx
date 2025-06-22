@@ -22,6 +22,9 @@ import { ViewAppointmentDialog } from "./organisms/ViewAppointmentDialog"
 import { Appointment } from "./api/types"
 import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
 import { deleteAppointment, clearDeleteError } from "./api/slice"
+import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher"
+import { useReportsFetcher } from "../reports/api/useReportsFetcher"
+import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
     const dispatch = useAppDispatch();
@@ -40,6 +43,10 @@ export default function index({ dashboardId, role }: AppointmentProps) {
 
     // Custom hook for fetching appointments
     useAppointmentsFetcher();
+    useInvoiceFetcher();
+    useReportsFetcher();
+    usePatientsFetcher();
+
 
     // FIXED: Local state management
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);

@@ -78,7 +78,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {apipatients.map((patient) => (
+                                {apipatients.map((patient: Patient) => (
                                     <TableRow key={patient._id} className="hover:bg-slate-50">
                                         <TableCell className="font-medium text-slate-900">{patient.fullName}</TableCell>
                                         <TableCell className="text-slate-600">{patient.age}</TableCell>

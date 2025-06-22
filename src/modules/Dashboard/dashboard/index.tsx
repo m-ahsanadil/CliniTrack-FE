@@ -15,7 +15,7 @@ import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DoctorProfileDialog } from "../doctor/organisms/DoctorProfileDialog";
 import { DoctorProfileRequest } from "../doctor/api/types";
@@ -23,22 +23,83 @@ import { DashboardProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/dashboard
 import { fetchAllAppointments } from "../appointments/api/slice";
 import { fetchAllMedicalRecord } from "../medicalRecords/api/slice";
 import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher";
+import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher";
+import { usePatientsFetcher } from "../patients/api/usePatientsFetcher";
+import { useReportsFetcher } from "../reports/api/useReportsFetcher";
+import { Invoice } from "../billing/api/types";
 
 
 
 export default function index({ dashboardId, role }: DashboardProps) {
     const dispatch = useAppDispatch();
     const router = useRouter()
+
+    // Custom hook for fetching appointments
     useAppointmentsFetcher();
+    useInvoiceFetcher();
+    useReportsFetcher();
+    usePatientsFetcher();
 
-    const { user } = useAppSelector(state => state.auth)
     // Get appointments from Redux store
+    const { user } = useAppSelector(state => state.auth);
     const { appointments: apiAppointments, loading: appointmentsLoading, error: appointmentsError, count: appointmentsCount } = useAppSelector(state => state.appointment)
-    const { medicalRecords: apiMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError, count } = useAppSelector(state => state.medicalRecord);
-
-
-    const { patients, appointments, invoices, medicalRecords, handleAddAppointment, handleAddInvoice, handleAddPatient, handleAddMedicalRecord } = useGlobalUI();
+    const { medicalRecords: apiMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError, count: patientsCount } = useAppSelector(state => state.medicalRecord);
+    const { invoices, isLoadingInvoices, currentInvoice } = useAppSelector(state => state.invoice);
+    const { patients, appointments, medicalRecords, handleAddAppointment, handleAddInvoice, handleAddPatient, handleAddMedicalRecord } = useGlobalUI();
     const [showDoctorProfileDialog, setShowDoctorProfileDialog] = useState(false)
+
+    // Calculate revenue for current month with memoization for performance
+    const currentMonthRevenue = useMemo(() => {
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+
+        return invoices
+            .filter((invoice: Invoice) => {
+                // Filter by "Paid" status (case-sensitive)
+                if (invoice.status !== "Paid") return false;
+
+                // Filter by current month and year based on issueDate
+                const issueDate = new Date(invoice.issueDate);
+                return issueDate.getMonth() === currentMonth && issueDate.getFullYear() === currentYear;
+            })
+            .reduce((sum, invoice) => {
+                // Use totalAmount instead of total (which doesn't exist in Invoice interface)
+                return sum + (invoice.totalAmount || 0);
+            }, 0);
+    }, [invoices]);
+
+    // Calculate previous month revenue for comparison
+    const previousMonthRevenue = useMemo(() => {
+        const currentDate = new Date();
+        const previousMonth = currentDate.getMonth() - 1;
+        const previousYear = previousMonth < 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+        const adjustedPreviousMonth = previousMonth < 0 ? 11 : previousMonth;
+
+        return invoices
+            .filter((invoice: Invoice) => {
+                if (invoice.status !== "Paid") return false;
+
+                const issueDate = new Date(invoice.issueDate);
+                return issueDate.getMonth() === adjustedPreviousMonth && issueDate.getFullYear() === previousYear;
+            })
+            .reduce((sum, invoice) => sum + (invoice.totalAmount || 0), 0);
+    }, [invoices]);
+
+    // Calculate percentage change
+    const percentageChange = useMemo(() => {
+        if (previousMonthRevenue === 0) {
+            return currentMonthRevenue > 0 ? 100 : 0;
+        }
+        return ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100;
+    }, [currentMonthRevenue, previousMonthRevenue]);
+
+    // Format percentage change display
+    const formatPercentageChange = () => {
+        const roundedChange = Math.round(percentageChange);
+        const sign = roundedChange > 0 ? '+' : '';
+        return `${sign}${roundedChange}% from last month`;
+    };
 
     useEffect(() => {
         // Check if user is a doctor and show profile dialog
@@ -108,7 +169,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                 <Users className="h-4 w-4 text-blue-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-slate-900">{patients.length}</div>
+                                <div className="text-2xl font-bold text-slate-900">{patientsCount}</div>
                                 <p className="text-xs text-slate-500">Active patients in system</p>
                             </CardContent>
                         </Card>
@@ -138,8 +199,27 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                 </CardContent>
                             </Card>
                         </RoleGuard>
-
                         <RoleGuard allowedRoles={["admin"]}>
+                            <Card className="bg-white border border-slate-200">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
+                                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-slate-900">
+                                        ${currentMonthRevenue.toLocaleString('en-US', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        })}
+                                    </div>
+                                    <p className={`text-xs ${percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
+                                        }`}>
+                                        {formatPercentageChange()}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </RoleGuard>
+                        {/* <RoleGuard allowedRoles={["admin"]}>
                             <Card className="bg-white border border-slate-200">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
@@ -156,7 +236,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
                                     <p className="text-xs text-slate-500">+12% from last month</p>
                                 </CardContent>
                             </Card>
-                        </RoleGuard>
+                        </RoleGuard> */}
                     </div>
 
                     {/* Quick Actions */}
