@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { reportApi } from "./api";
-import { ReportsGetResponse } from "./types";
+import { Report, ReportsGetResponse } from "./types";
 
 // Async thunk for fetching all reports
 export const fetchAllReports = createAsyncThunk(
@@ -64,8 +64,8 @@ const reportSlice = createSlice({
       .addCase(fetchAllReports.fulfilled, (state, action: PayloadAction<ReportsGetResponse>) => {
         state.loading = false;
         state.success = action.payload.success;
-        state.reports = action.payload.data;
-        state.count = action.payload.count;
+        state.reports= action.payload.data as Report[]
+        state.count = action.payload.count || 0;
         state.error = null;
         state.lastFetchTime = Date.now();
       })
