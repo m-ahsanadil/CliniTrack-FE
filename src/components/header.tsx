@@ -21,6 +21,8 @@ import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { logout } from "../modules/Authentication/auth/api/slice"
+import { persistor } from "../redux/store/store"
+import { PURGE } from "redux-persist"
 
 
 
@@ -37,17 +39,34 @@ export default function Header() {
     const currentPage = pathname.split("/").pop() || "dashboard"
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
     const goToSettings = () => {
-        router.push(`/${user?.id}/${user?.role}/settings`) 
+        router.push(`/${user?.id}/${user?.role}/settings`)
     }
 
     const goToBilling = () => {
-        router.push(`/${user?.id}/${user?.role}/billing`) 
+        router.push(`/${user?.id}/${user?.role}/billing`)
     }
 
 
     const goToSupport = () => {
         router.push("/support")
     }
+
+    const handleLogout = async () => {
+        // Method 1: Dispatch logout action first, then purge
+        dispatch(logout());
+
+        // Clear persisted state
+        await persistor.purge();
+
+        // Clear any additional localStorage items
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+        }
+
+        // Redirect to login
+        router.push('/');
+    };
 
     return (
         // {/* Header */ }
@@ -119,10 +138,7 @@ export default function Header() {
                         <DropdownMenuItem onClick={goToBilling}>Billing</DropdownMenuItem>
                         <DropdownMenuItem onClick={goToSupport}>Support</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => {
-                            dispatch(logout());
-                            router.push("/auth");
-                        }}
+                        <DropdownMenuItem onClick={handleLogout}
                             className="text-red-600">
                             <LogOut className="mr-2 h-4 w-4" />
                             Sign Out
