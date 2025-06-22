@@ -14,7 +14,7 @@ export interface AppointmentRequest {
     appointmentDate: string;
     startTime: string;
     endTime: string;
-    duration: number; 
+    duration: number;
     timeZone: string;
     type: string;
     priority: string;
@@ -40,3 +40,57 @@ export interface AppointmentErrorResponse {
 
 // Combined response type
 export type AppointmentApiResponse = AppointmentResponse | AppointmentErrorResponse;
+
+export interface Appointment {
+    _id: string;
+    appointmentNumber: string;
+    location: {
+        facilityId: string;
+        facilityName: string;
+        roomNumber: string;
+        address: string;
+    }
+    patientId: {
+        _id: string;
+        fullName: string;
+    };
+    patientName: string;
+    providerId: {
+        _id: string;
+        name: string;
+    };
+    providerName: string;
+    departmentName: string;
+    appointmentDate: string;
+    startTime: string;
+    endTime: string;
+    duration: number;
+    timeZone: string;
+    type: string;
+    priority: string;
+    status: string;
+    reasonForVisit: string;
+    symptoms: string[];
+    notes: string;
+    createdBy: string;
+    updatedBy: string;
+    remindersSent: any[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
+export interface AppointmentGetResponse {
+    success: true;
+    count: number;
+    data: Appointment[]
+}
+
+export interface AppointmentGetErrorResponse {
+    success: false;
+    message: string;
+    data: string;
+}
+
+// Combined response type
+export type AppointmentGetApiResponse = AppointmentGetResponse | AppointmentGetErrorResponse;

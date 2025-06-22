@@ -1,15 +1,15 @@
-import { AppointmentApiResponse, AppointmentRequest } from "./types";
+import { AppointmentApiResponse, AppointmentGetApiResponse, AppointmentRequest } from "./types";
 import apiService from "@/src/redux/config/apiService";
 import { ENDPOINTS } from "@/src/redux/config/api";
 
-export const patientApi = {
+export const appointmentsApi = {
         // Create a new patient
-        createPatient: (appointmentData: AppointmentRequest): Promise<AppointmentApiResponse> => {
+        createAppointments: (appointmentData: AppointmentRequest): Promise<AppointmentApiResponse> => {
                 return apiService.post(ENDPOINTS.APPOINTMENT.CREATE, appointmentData);
         },
 
         // Get all Appointments
-        getAllAppointments: (): Promise<AppointmentApiResponse> => {
+        getAllAppointments: (): Promise<AppointmentGetApiResponse> => {
                 return apiService.get(ENDPOINTS.APPOINTMENT.GET_ALL);
         },
 
