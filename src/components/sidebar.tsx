@@ -6,7 +6,8 @@ import {
     Settings,
     Users,
     Home,
-    AlertTriangle
+    AlertTriangle,
+    BarChart3
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -86,6 +87,7 @@ export default function sidebar() {
 
         const roleSpecificItems = [
             { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"], href: `/${user.id}/${user.role}/medical-records` },
+            { id: "reports", label: "Reports", icon: BarChart3, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/reports` },
             { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"], href: `/${user.id}/${user.role}/billing` },
             // { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
             { id: "settings", label: "Settings", icon: Settings, roles: ["admin"], href: `/${user.id}/${user.role}/settings` },
