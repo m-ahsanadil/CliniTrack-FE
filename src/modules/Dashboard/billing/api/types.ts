@@ -1,5 +1,66 @@
-//POST
+export interface InvoiceService {
+  _id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Patient {
+  _id: string;
+  fullName: string;
+}
+
+export interface Provider {
+  _id: string;
+  name: string;
+}
+
+export interface Invoice {
+  _id: string;
+  invoiceNumber: string;
+  patientId: Patient;
+  providerId: Provider;
+  amount: number;
+  status: string;
+  issueDate: string;
+  dueDate: string;
+  services: InvoiceService[];
+  totalAmount: number;
+  notes: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+// POST REQUEST/RESPONSE INTERFACES
 export interface InvoicePostRequest {
+  invoiceNumber: string;
+  patientId: string;
+  providerId: string;
+  amount: number;
+  totalAmount: number;
+  status: "Pending" | "Paid" | "Overdue";
+  issueDate: string;
+  dueDate: string;
+  services: {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }[];
+  notes?: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+export interface InvoicePostResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
     invoiceNumber: string;
     patientId: string;
     providerId: string;
@@ -9,152 +70,68 @@ export interface InvoicePostRequest {
     issueDate: string;
     dueDate: string;
     services: {
-        description: string;
-        quantity: number;
-        unitPrice: number;
-        total: number;
+      _id: string;
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      total: number;
     }[];
     notes?: string;
     createdBy: string;
     updatedBy: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  };
 }
-
-
-export interface InvoicePostResponse {
-    success: boolean;
-    message: string;
-    data: {
-        _id: string;
-        invoiceNumber: string;
-        patientId: string;
-        providerId: string;
-        amount: number;
-        totalAmount: number;
-        status: "Pending" | "Paid" | "Overdue";
-        issueDate: string;
-        dueDate: string;
-        services: {
-            _id: string;
-            description: string;
-            quantity: number;
-            unitPrice: number;
-            total: number;
-        }[];
-        notes?: string;
-        createdBy: string;
-        updatedBy: string;
-        createdAt: string;
-        updatedAt: string;
-        __v: number;
-    };
-}
-
 
 export interface InvoicePostErrorResponse {
-    success: false;
-    message: string;
-    data: string;
+  success: false;
+  message: string;
+  data: string;
 }
 
-// Combined response type
 export type InvoicePostApiResponse = InvoicePostResponse | InvoicePostErrorResponse;
 
-// GET ALL
+// GET ALL INVOICES
 export interface InvoiceGetResponse {
-    success: boolean;
-    count: number;
-    data: {
-        _id: string;
-        invoiceNumber: string;
-        patientId: {
-            _id: string;
-            fullName: string;
-        };
-        providerId: {
-            _id: string;
-            name: string;
-        };
-        amount: number;
-        totalAmount: number;
-        status: "Pending" | "Paid" | "Overdue";
-        issueDate: string; // ISO Date string
-        dueDate: string;   // ISO Date string
-        services: {
-            _id: string;
-            description: string;
-            quantity: number;
-            unitPrice: number;
-            total: number;
-        }[];
-        notes?: string;
-        createdBy: string;
-        updatedBy: string;
-        createdAt: string;
-        updatedAt: string;
-        __v: number;
-    }[];
+  success: boolean;
+  count: number;
+  data: Invoice[];
 }
 
 export interface InvoiceGetErrorResponse {
-    success: false;
-    message: string;
-    data: string;
+  success: false;
+  message: string;
+  data: string;
 }
 
-// Combined response type
 export type InvoiceGetApiResponse = InvoiceGetResponse | InvoiceGetErrorResponse;
 
-
-
-
-// GET BY ID
+// GET INVOICE BY ID
 export interface InvoiceGetByIdResponse {
-    success: boolean;
-    data: {
-        _id: string;
-        invoiceNumber: string;
-        patientId: {
-            _id: string;
-            fullName: string;
-        };
-        providerId: {
-            _id: string;
-            name: string;
-        };
-        amount: number;
-        totalAmount: number;
-        status: "Pending" | "Paid" | "Overdue";
-        issueDate: string; // ISO string
-        dueDate: string;   // ISO string
-        services: {
-            _id: string;
-            description: string;
-            quantity: number;
-            unitPrice: number;
-            total: number;
-        }[];
-        notes?: string;
-        createdBy: string;
-        updatedBy: string;
-        createdAt: string;
-        updatedAt: string;
-        __v: number;
-
-    }
-
+  success: boolean;
+  data: Invoice;
 }
 
 export interface InvoiceGetByIdErrorResponse {
-    success: false;
-    message: string;
-    data: string;
+  success: false;
+  message: string;
+  data: string;
 }
 
-// Combined response type
 export type InvoiceGetByIdApiResponse = InvoiceGetByIdResponse | InvoiceGetByIdErrorResponse;
 
-// DELETE INVOICE BY ID
+// DELETE INVOICE
 export interface InvoiceDeleteResponse {
-    success: false;
-    message: string;
+  success: boolean;
+  message: string;
 }
+
+export interface InvoiceDeleteErrorResponse {
+  success: false;
+  message: string;
+  data?: string;
+}
+
+export type InvoiceDeleteApiResponse = InvoiceDeleteResponse | InvoiceDeleteErrorResponse;
