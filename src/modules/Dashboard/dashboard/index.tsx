@@ -27,6 +27,7 @@ import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher";
 import { usePatientsFetcher } from "../patients/api/usePatientsFetcher";
 import { useReportsFetcher } from "../reports/api/useReportsFetcher";
 import { Invoice } from "../billing/api/types";
+import { useMedicalRecordsFetcher } from "../medicalRecords/api/useMedicalRecord";
 
 
 
@@ -39,6 +40,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
     useInvoiceFetcher();
     useReportsFetcher();
     usePatientsFetcher();
+    useMedicalRecordsFetcher();
 
     // Get appointments from Redux store
     const { user } = useAppSelector(state => state.auth);

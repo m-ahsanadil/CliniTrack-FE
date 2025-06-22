@@ -18,16 +18,26 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { PatientsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/patients/page";
 import { usePatientsFetcher } from "./api/usePatientsFetcher";
 import { ViewPatientDialog } from "./organisms/ViewPatientssDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Patient } from "./api/types";
+import { clearDeleteError, deletePatient } from "./api/slice";
+import { useMedicalRecordsFetcher } from "../medicalRecords/api/useMedicalRecord";
+import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher";
+import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher";
+import { useReportsFetcher } from "../reports/api/useReportsFetcher";
 
 
 export default function index({ dashboardId, role }: PatientsProps) {
     const dispatch = useAppDispatch();
 
+    // Custom hook for fetching appointments
+    useAppointmentsFetcher();
+    useInvoiceFetcher();
+    useReportsFetcher();
     usePatientsFetcher();
+    useMedicalRecordsFetcher();
 
-    const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
+    const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount, deleteError, deleteLoading } = useAppSelector(state => state.patients)
     const { user } = useAppSelector(state => state.auth)
     const { setPatients, handleAddPatient, filteredPatients, handleEditPatient } = useGlobalUI();
     // FIXED: Local state management
@@ -42,10 +52,40 @@ export default function index({ dashboardId, role }: PatientsProps) {
     }
 
 
-    const handleDeletePatient = (patientId: string) => {
-        console.log('Deleting patient with ID:', patientId);
+    const handleDeletePatient = async (patientId: string) => {
+        // Clear any previous delete errors
+        if (deleteError) {
+            dispatch(clearDeleteError());
+        }
 
+        // Optional: Add confirmation dialog
+        const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
+        if (!confirmDelete) return;
+
+        try {
+            setDeletingPatientsId(patientId);
+            await dispatch(deletePatient(patientId)).unwrap();
+            // Optional: Show success message
+            console.log("Appointment deleted successfully");
+        } catch (error) {
+            // Error is already handled by Redux state
+            console.error("Failed to delete appointment:", error);
+        } finally {
+            setDeletingPatientsId(null);
+        }
     }
+
+    // FIXED: Effect to handle delete errors
+    useEffect(() => {
+        if (deleteError) {
+            // You could show a toast notification here
+            console.error("Delete error:", deleteError);
+            // Clear the error after showing it
+            setTimeout(() => {
+                dispatch(clearDeleteError());
+            }, 5000);
+        }
+    }, [deleteError, dispatch]);
 
     return (
         <>

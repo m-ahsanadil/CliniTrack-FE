@@ -31,3 +31,13 @@ export const reportApi = {
                 return apiService.delete(ENDPOINTS.REPORT.DELETE(id));
         }
 };
+
+
+
+// export const reportApi = {
+//         getAll: () => apiService.get(ENDPOINTS.REPORT.GET_ALL),
+//         getById: (id: string | number) => apiService.get(ENDPOINTS.REPORT.GET_BY_ID(id)),
+//         create: (payload: unknown) => apiService.post(ENDPOINTS.REPORT.CREATE, payload),
+//         update: (id: string | number, payload: unknown) => apiService.put(ENDPOINTS.REPORT.UPDATE(id), payload),
+//         delete: (id: string | number) => apiService.delete(ENDPOINTS.REPORT.DELETE(id)),
+// };

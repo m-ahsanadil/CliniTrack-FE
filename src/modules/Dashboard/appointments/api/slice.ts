@@ -8,7 +8,7 @@ export const fetchAllAppointments = createAsyncThunk(
   'appointment/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response: AppointmentGetApiResponse = await appointmentsApi.getAllAppointments();
+      const response: AppointmentGetApiResponse = await appointmentsApi.getAll();
       
       // Type guard to check if response is successful
       if (response.success) {
@@ -27,7 +27,7 @@ export const deleteAppointment = createAsyncThunk(
   'appointment/delete',
   async (appointmentId: string, { rejectWithValue }) => {
     try {
-      const response: AppointmentApiResponse = await appointmentsApi.deleteAppointment(appointmentId);
+      const response: AppointmentApiResponse = await appointmentsApi.delete(appointmentId);
       
       // Type guard to check if response is successful
       if (response.success) {

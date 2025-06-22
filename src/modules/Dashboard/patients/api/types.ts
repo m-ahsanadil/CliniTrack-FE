@@ -67,3 +67,11 @@ export interface PatientGetResponse {
   count: number;
   data: Patient[];
 }
+
+
+
+export interface PatientDeleteResponse {
+    success: false;
+    message: string;
+    data?: string;
+}

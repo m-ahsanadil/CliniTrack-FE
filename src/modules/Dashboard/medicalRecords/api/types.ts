@@ -1,40 +1,17 @@
-export interface MedicalRecordPostRequest {
-    patientId: string;
-    providerId: string;
-    diagnosis: string;
-    treatment: string;
-    prescription: string;
-    notes: string;
-    recordDate: string;
-    createdBy: string;
-    updatedBy: string;
+export interface PatientRef {
+    _id: string;
+    fullName: string;
 }
 
-export interface MedicalRecordPostResponse {
-    success: true;
-    message: string;
+export interface ProviderRef {
+    _id: string;
+    name: string;
 }
 
-export interface MedicalRecordPostErrorResponse {
-    success: false;
-    message: string;
-    data: string;
-}
-
-// Combined response type
-export type MedicalRecordPostApiResponse = MedicalRecordPostResponse | MedicalRecordPostErrorResponse;
-
-// GET ALL 
 export interface MedicalRecord {
     _id: string;
-    patientId: {
-        _id: string;
-        fullName: string;
-    };
-    providerId: {
-        _id: string;
-        name: string;
-    };
+    patientId: PatientRef;
+    providerId: ProviderRef;
     diagnosis: string;
     treatment: string;
     prescription: string;
@@ -48,10 +25,13 @@ export interface MedicalRecord {
 }
 
 export interface MedicalRecordGetResponse {
-    success: boolean;
+    success: true;
     count: number;
     data: MedicalRecord[];
 }
 
-// Combined response type
-export type MedicalRecordGetApiResponse = MedicalRecordGetResponse | MedicalRecordPostErrorResponse;
+export interface MedicalRecordDeleteResponse {
+    success: false;
+    message: string;
+    data?: string;
+}

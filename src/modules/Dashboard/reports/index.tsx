@@ -27,6 +27,10 @@ import { useState, useEffect } from "react"
 import { Report, ReportsGetResponse } from './api/types';
 import { fetchAllReports } from './api/slice';
 import { useReportsFetcher } from './api/useReportsFetcher';
+import { useAppointmentsFetcher } from '../appointments/api/useAppointmentsFetcher';
+import { useInvoiceFetcher } from '../billing/api/useInvoiceFetcher';
+import { useMedicalRecordsFetcher } from '../medicalRecords/api/useMedicalRecord';
+import { usePatientsFetcher } from '../patients/api/usePatientsFetcher';
 
 interface QuickReport {
     title: string;
@@ -44,7 +48,14 @@ interface ReportType {
 
 export default function Reports({ dashboardId, role }: ReportsProps) {
     const dispatch = useAppDispatch()
-    useReportsFetcher()
+
+    // Custom hook for fetching appointments
+    useAppointmentsFetcher();
+    useInvoiceFetcher();
+    useReportsFetcher();
+    usePatientsFetcher();
+    useMedicalRecordsFetcher();
+    
     const { user } = useAppSelector(state => state.auth)
     const { reports, loading } = useAppSelector(state => state.reports)
     const [dateRange, setDateRange] = useState<string>('last-30-days');
@@ -248,7 +259,7 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
                                 {quickReports.map((report, index) => {
                                     const IconComponent = report.icon;
                                     const canGenerate = report.roles.includes(user?.role || '');
-                                    
+
                                     return (
                                         <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                                             <div className={`inline-flex p-2 rounded-lg ${report.color} mb-3`}>

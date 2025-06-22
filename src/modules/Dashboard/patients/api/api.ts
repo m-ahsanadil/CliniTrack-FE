@@ -1,6 +1,6 @@
 import apiService from "@/src/redux/config/apiService";
 import { ENDPOINTS } from "@/src/redux/config/api";
-import { PatientGetResponse } from "./types";
+import { PatientDeleteResponse, PatientGetResponse } from "./types";
 
 export const patientsApi = {
         // Create a new patient
@@ -27,7 +27,7 @@ export const patientsApi = {
         },
 
         // Delete patient by ID
-        deletePatient: (id: string | number): Promise<PatientPostApiResponse> => {
+        deletePatient: (id: string | number): Promise<PatientDeleteResponse> => {
                 return apiService.delete(ENDPOINTS.PATIENT.DELETE(id));
         }
 };

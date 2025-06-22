@@ -89,12 +89,6 @@ export default function index({ dashboardId, role }: AppointmentProps) {
         }
     }
 
-    // FIXED: Handle view dialog close properly
-    const handleCloseViewDialog = () => {
-        setIsViewOpen(false);
-        setSelectedAppointment(null);
-    }
-
     // FIXED: Effect to handle delete errors
     useEffect(() => {
         if (deleteError) {
@@ -106,6 +100,14 @@ export default function index({ dashboardId, role }: AppointmentProps) {
             }, 5000);
         }
     }, [deleteError, dispatch]);
+
+    // FIXED: Handle view dialog close properly
+    const handleCloseViewDialog = () => {
+        setIsViewOpen(false);
+        setSelectedAppointment(null);
+    }
+
+
 
     // FIXED: Determine which appointments to display
     const appointmentsToDisplay = filteredAppointments && filteredAppointments.length > 0

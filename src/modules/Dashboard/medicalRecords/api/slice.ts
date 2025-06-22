@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { medicalRecordApi } from "./api";
-import { MedicalRecord } from "./types";
+import { MedicalRecord, MedicalRecordDeleteResponse } from "./types";
 
 // Define response type
 interface MedicalRecordGetResponse {
@@ -19,12 +19,30 @@ export const fetchAllMedicalRecord = createAsyncThunk(
       if (response.success) {
         return response as MedicalRecordGetResponse;
       } else {
-        return rejectWithValue(response.success || 'Failed to fetch medical records');
+        return rejectWithValue('Failed to fetch medical records');
       }
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || error.message || 'Failed to fetch medical records'
       );
+    }
+  }
+);
+
+export const deleteMedicalRecord = createAsyncThunk(
+  'medicalRecord/delete',
+  async (medicalRecordId: string, { rejectWithValue }) => {
+    try {
+      const response: MedicalRecordDeleteResponse = await medicalRecordApi.delete(medicalRecordId);
+
+      // Type guard to check if response is successful
+      if (response.success) {
+        return medicalRecordId; // Return the deleted medicalRecord ID
+      } else {
+        return rejectWithValue(response.message || 'Failed to delete medicalRecord');
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to delete medicalRecord');
     }
   }
 );
@@ -35,6 +53,8 @@ interface MedicalRecordState {
   error: string | null;
   count: number;
   success: boolean;
+  deleteLoading: boolean;
+  deleteError: string | null;
 }
 
 const initialState: MedicalRecordState = {
@@ -43,6 +63,8 @@ const initialState: MedicalRecordState = {
   error: null,
   count: 0,
   success: false,
+  deleteLoading: false,
+  deleteError: null,
 };
 
 const medicalRecordSlice = createSlice({
@@ -51,6 +73,9 @@ const medicalRecordSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    clearDeleteError: (state) => {
+      state.deleteError = null;
     },
     clearMedicalRecords: (state) => {
       state.medicalRecords = [];
@@ -76,9 +101,27 @@ const medicalRecordSlice = createSlice({
         state.medicalRecords = [];
         state.count = 0;
         state.success = false;
+      })
+      // Delete medicalRecord cases
+      .addCase(deleteMedicalRecord.pending, (state) => {
+        state.deleteLoading = true;
+        state.deleteError = null;
+      })
+      .addCase(deleteMedicalRecord.fulfilled, (state, action: PayloadAction<string>) => {
+        state.deleteLoading = false;
+        state.deleteError = null;
+        // Remove the deleted medicalRecord from the state
+        state.medicalRecords = state.medicalRecords.filter(
+          medicalRecord => medicalRecord._id !== action.payload
+        );
+        state.count = state.count - 1;
+      })
+      .addCase(deleteMedicalRecord.rejected, (state, action) => {
+        state.deleteLoading = false;
+        state.deleteError = action.payload as string;
       });
   },
 });
 
-export const { clearError, clearMedicalRecords } = medicalRecordSlice.actions;
+export const { clearError, clearMedicalRecords, clearDeleteError } = medicalRecordSlice.actions;
 export default medicalRecordSlice.reducer;
