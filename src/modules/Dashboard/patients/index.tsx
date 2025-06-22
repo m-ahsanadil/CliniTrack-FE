@@ -17,7 +17,7 @@ import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { PatientsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/patients/page";
 import { usePatientsFetcher } from "./api/usePatientsFetcher";
-import { ViewPatientDialog } from "./organisms/ViewPatientssDialog";
+import { ViewPatientDialog } from "./organisms/ViewPatientsDialog";
 import { useEffect, useState } from "react";
 import { Patient } from "./api/types";
 import { clearDeleteError, deletePatient } from "./api/slice";
