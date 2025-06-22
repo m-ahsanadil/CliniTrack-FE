@@ -66,7 +66,7 @@ type GlobalUIContextType = {
   handleAddInvoice: () => void;
   handleEditInvoice: (invoice: any) => void;
   handleSaveInvoice: (invoiceData: any) => void;
-  handleDeleteInvoice: (invoiceId: number) => void;
+  handleDeleteInvoice: (invoiceId: number | string) => void;
 };
 
 const GlobalUIContext = createContext<GlobalUIContextType | undefined>(undefined);
@@ -215,7 +215,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const handleDeleteInvoice = (invoiceId: number) => {
+  const handleDeleteInvoice = (invoiceId: number | string) => {
     if (confirm("Are you sure you want to delete this invoice?")) {
       setInvoices(invoices.filter((i) => i.id !== invoiceId))
     }
