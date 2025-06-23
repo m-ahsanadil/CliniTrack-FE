@@ -29,7 +29,7 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { useProviderFetcher } from "./api/useProviderFetcher"
 import { Provider } from "./api/types"
 import { ViewProviderDialog } from "./organisms/ViewProvidersDialog"
-import { fetchAllProviders } from "./api/slice"
+import { deleteProvider, fetchAllProviders } from "./api/slice"
 
 
 export default function index({ dashboardId, role }: ProviderProps) {

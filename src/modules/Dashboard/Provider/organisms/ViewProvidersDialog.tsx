@@ -11,8 +11,6 @@ type Props = {
 export const ViewProviderDialog = ({ provider, isOpen, onClose }: Props) => {
     if (!provider) return null
 
-    console.log(provider)
-
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

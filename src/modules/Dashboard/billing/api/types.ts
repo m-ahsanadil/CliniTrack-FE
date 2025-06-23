@@ -13,7 +13,7 @@ export interface Patient {
 
 export interface Provider {
   _id: string;
-  name: string;
+  fullName: string;
 }
 
 export interface Invoice {

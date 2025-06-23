@@ -10,7 +10,6 @@ type Props = {
 
 export const ViewInvoicesDialog = ({ invoice, isOpen, onClose }: Props) => {
     if (!invoice) return null
-
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -27,7 +26,7 @@ export const ViewInvoicesDialog = ({ invoice, isOpen, onClose }: Props) => {
                     <div><strong>Total Amount:</strong> ${invoice.totalAmount?.toFixed(2)}</div>
 
                     <div><strong>Patient Name:</strong> {invoice.patientId?.fullName || "Unknown"}</div>
-                    <div><strong>Provider Name:</strong> {invoice.providerId?.name || "Unknown"}</div>
+                    <div><strong>Provider Name:</strong> {invoice.providerId?.fullName || "Unknown"}</div>
                     <div><strong>Notes:</strong> {invoice.notes || "N/A"}</div>
 
                     <div><strong>Created By:</strong> {invoice.createdBy}</div>

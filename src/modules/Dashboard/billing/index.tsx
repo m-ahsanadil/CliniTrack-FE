@@ -145,7 +145,7 @@ export default function index({ dashboardId, role }: BillingProps) {
                                                 {invoice.patientId?.fullName || 'Unknown Patient'}
                                             </TableCell>
                                             <TableCell className="text-slate-600">
-                                                {invoice.providerId?.name || 'Unknown Provider'}
+                                                {invoice.providerId?.fullName || 'Unknown Provider'}
                                             </TableCell>
                                             <TableCell className="text-slate-600">
                                                 {formatDate(invoice.issueDate)}
