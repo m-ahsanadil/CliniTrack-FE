@@ -18,7 +18,8 @@ import {
     DollarSign,
     Clock,
     AlertCircle,
-    Lock
+    Lock,
+    Shield
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
@@ -31,6 +32,10 @@ import { useAppointmentsFetcher } from '../appointments/api/useAppointmentsFetch
 import { useInvoiceFetcher } from '../billing/api/useInvoiceFetcher';
 import { useMedicalRecordsFetcher } from '../medicalRecords/api/useMedicalRecord';
 import { usePatientsFetcher } from '../patients/api/usePatientsFetcher';
+import { useRouter } from 'next/navigation';
+import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
+import { formatDate } from "@/src/utils/dateFormatter"
+
 
 interface QuickReport {
     title: string;
@@ -47,16 +52,12 @@ interface ReportType {
 }
 
 export default function Reports({ dashboardId, role }: ReportsProps) {
-    const dispatch = useAppDispatch()
-
     // Custom hook for fetching appointments
-    useAppointmentsFetcher();
-    useInvoiceFetcher();
+    const dispatch = useAppDispatch()
     useReportsFetcher();
-    usePatientsFetcher();
-    useMedicalRecordsFetcher();
-    
-    const { user } = useAppSelector(state => state.auth)
+    const { user } = useAppSelector(state => state.auth);
+
+
     const { reports, loading } = useAppSelector(state => state.reports)
     const [dateRange, setDateRange] = useState<string>('last-30-days');
     const [reportType, setReportType] = useState<string>('overview');
@@ -151,16 +152,7 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
         });
     };
 
-    // Utility functions
-    const formatDate = (dateString: string): string => {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
+
 
     const getStatusColor = (status: string): string => {
         switch (status?.toLowerCase()) {
@@ -207,218 +199,220 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
     }, []);
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-                    <p className="text-gray-600 mt-1">Generate and manage your healthcare reports</p>
-                    {user?.role && (
-                        <Badge className="mt-2">
-                            {user.role.toUpperCase()} Access Level
-                        </Badge>
-                    )}
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+            <div className="p-6 space-y-6">
+                {/* Header */}
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+                        <p className="text-gray-600 mt-1">Generate and manage your healthcare reports</p>
+                        {user?.role && (
+                            <Badge className="mt-2">
+                                {user.role.toUpperCase()} Access Level
+                            </Badge>
+                        )}
+                    </div>
+                    <div className="flex gap-3">
+                        <Select value={dateRange} onValueChange={setDateRange}>
+                            <SelectTrigger className="w-40">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="last-7-days">Last 7 days</SelectItem>
+                                <SelectItem value="last-30-days">Last 30 days</SelectItem>
+                                <SelectItem value="last-90-days">Last 90 days</SelectItem>
+                                <SelectItem value="last-year">Last year</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button className="flex items-center gap-2">
+                            <Filter className="h-4 w-4" />
+                            Filters
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <Select value={dateRange} onValueChange={setDateRange}>
-                        <SelectTrigger className="w-40">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="last-7-days">Last 7 days</SelectItem>
-                            <SelectItem value="last-30-days">Last 30 days</SelectItem>
-                            <SelectItem value="last-90-days">Last 90 days</SelectItem>
-                            <SelectItem value="last-year">Last year</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button className="flex items-center gap-2">
-                        <Filter className="h-4 w-4" />
-                        Filters
-                    </Button>
-                </div>
-            </div>
 
-            {/* Main Content */}
-            <Tabs defaultValue="generate" className="space-y-6">
-                <TabsList>
-                    <TabsTrigger value="generate">Generate Reports</TabsTrigger>
-                    <TabsTrigger value="recent">Recent Reports</TabsTrigger>
-                </TabsList>
+                {/* Main Content */}
+                <Tabs defaultValue="generate" className="space-y-6">
+                    <TabsList>
+                        <TabsTrigger value="generate">Generate Reports</TabsTrigger>
+                        <TabsTrigger value="recent">Recent Reports</TabsTrigger>
+                    </TabsList>
 
-                {/* Generate Reports Tab */}
-                <TabsContent value="generate" className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <BarChart3 className="h-5 w-5" />
-                                Quick Report Generation
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {quickReports.map((report, index) => {
-                                    const IconComponent = report.icon;
-                                    const canGenerate = report.roles.includes(user?.role || '');
-
-                                    return (
-                                        <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                                            <div className={`inline-flex p-2 rounded-lg ${report.color} mb-3`}>
-                                                <IconComponent className="h-5 w-5" />
-                                            </div>
-                                            <h3 className="font-semibold text-gray-900 mb-2">{report.title}</h3>
-                                            <p className="text-sm text-gray-600 mb-4">{report.description}</p>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full"
-                                                onClick={() => handleGenerateReport(report.title)}
-                                                disabled={!canGenerate}
-                                            >
-                                                {canGenerate ? (
-                                                    "Generate Report"
-                                                ) : (
-                                                    <>
-                                                        <Lock className="h-3 w-3 mr-2" />
-                                                        Restricted Access
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Custom Report Builder */}
-                    {permissions.canCreateReports && (
+                    {/* Generate Reports Tab */}
+                    <TabsContent value="generate" className="space-y-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Custom Report Builder</CardTitle>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BarChart3 className="h-5 w-5" />
+                                    Quick Report Generation
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-2 block">Report Type</label>
-                                        <Select value={reportType} onValueChange={setReportType}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {reportTypes.map((type) => (
-                                                    <SelectItem key={type.value} value={type.value}>
-                                                        {type.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-2 block">Format</label>
-                                        <Select defaultValue="pdf">
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="pdf">PDF</SelectItem>
-                                                <SelectItem value="excel">Excel</SelectItem>
-                                                <SelectItem value="csv">CSV</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-2 block">Report Name</label>
-                                        <Input placeholder="Enter report name" />
-                                    </div>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {quickReports.map((report, index) => {
+                                        const IconComponent = report.icon;
+                                        const canGenerate = report.roles.includes(user?.role || '');
+
+                                        return (
+                                            <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                <div className={`inline-flex p-2 rounded-lg ${report.color} mb-3`}>
+                                                    <IconComponent className="h-5 w-5" />
+                                                </div>
+                                                <h3 className="font-semibold text-gray-900 mb-2">{report.title}</h3>
+                                                <p className="text-sm text-gray-600 mb-4">{report.description}</p>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => handleGenerateReport(report.title)}
+                                                    disabled={!canGenerate}
+                                                >
+                                                    {canGenerate ? (
+                                                        "Generate Report"
+                                                    ) : (
+                                                        <>
+                                                            <Lock className="h-3 w-3 mr-2" />
+                                                            Restricted Access
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <Button
-                                    className="flex items-center gap-2"
-                                    onClick={() => handleGenerateReport('Custom Report')}
-                                >
-                                    <FileText className="h-4 w-4" />
-                                    Generate Custom Report
-                                </Button>
                             </CardContent>
                         </Card>
-                    )}
-                </TabsContent>
 
-                {/* Recent Reports Tab */}
-                <TabsContent value="recent">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <CardTitle>Recent Reports</CardTitle>
-                                <Button onClick={handleFetchReports} disabled={loading}>
-                                    {loading ? 'Loading...' : 'Refresh'}
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {loading ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                                    <p className="text-gray-600">Loading reports...</p>
+                        {/* Custom Report Builder */}
+                        {permissions.canCreateReports && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Custom Report Builder</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-2 block">Report Type</label>
+                                            <Select value={reportType} onValueChange={setReportType}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {reportTypes.map((type) => (
+                                                        <SelectItem key={type.value} value={type.value}>
+                                                            {type.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-2 block">Format</label>
+                                            <Select defaultValue="pdf">
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="pdf">PDF</SelectItem>
+                                                    <SelectItem value="excel">Excel</SelectItem>
+                                                    <SelectItem value="csv">CSV</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-700 mb-2 block">Report Name</label>
+                                            <Input placeholder="Enter report name" />
+                                        </div>
+                                    </div>
+                                    <Button
+                                        className="flex items-center gap-2"
+                                        onClick={() => handleGenerateReport('Custom Report')}
+                                    >
+                                        <FileText className="h-4 w-4" />
+                                        Generate Custom Report
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </TabsContent>
+
+                    {/* Recent Reports Tab */}
+                    <TabsContent value="recent">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex justify-between items-center">
+                                    <CardTitle>Recent Reports</CardTitle>
+                                    <Button onClick={handleFetchReports} disabled={loading}>
+                                        {loading ? 'Loading...' : 'Refresh'}
+                                    </Button>
                                 </div>
-                            ) : filteredReports.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reports Found</h3>
-                                    <p className="text-gray-600">No reports are available for your role.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {filteredReports.map((report: Report) => (
-                                        <div key={report._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-2 bg-blue-50 rounded-lg">
-                                                    <FileText className="h-5 w-5 text-blue-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                                                    <p className="text-sm text-gray-600">{report.description}</p>
-                                                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                                                        <span>Type: {report.reportType}</span>
-                                                        <span>Generated: {formatDate(report.createdAt)}</span>
-                                                        <span>By: {report.generatedByUserId?.username || report.createdBy}</span>
+                            </CardHeader>
+                            <CardContent>
+                                {loading ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                        <p className="text-gray-600">Loading reports...</p>
+                                    </div>
+                                ) : filteredReports.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reports Found</h3>
+                                        <p className="text-gray-600">No reports are available for your role.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {filteredReports.map((report: Report) => (
+                                            <div key={report._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-2 bg-blue-50 rounded-lg">
+                                                        <FileText className="h-5 w-5 text-blue-600" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-semibold text-gray-900">{report.title}</h3>
+                                                        <p className="text-sm text-gray-600">{report.description}</p>
+                                                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                                            <span>Type: {report.reportType}</span>
+                                                            <span>Generated: {formatDate(report.createdAt)}</span>
+                                                            <span>By: {report.generatedByUserId?.username || report.createdBy}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Badge className={getStatusColor(report.status)}>
-                                                    {report.status}
-                                                </Badge>
-                                                {report.status?.toLowerCase() === 'generated' && (
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleDownloadReport(report._id)}
-                                                        >
-                                                            <Download className="h-4 w-4 mr-2" />
-                                                            Download
-                                                        </Button>
-                                                        {permissions.canDeleteReports && (
+                                                <div className="flex items-center gap-3">
+                                                    <Badge className={getStatusColor(report.status)}>
+                                                        {report.status}
+                                                    </Badge>
+                                                    {report.status?.toLowerCase() === 'generated' && (
+                                                        <div className="flex gap-2">
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => handleDeleteReport(report._id)}
-                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => handleDownloadReport(report._id)}
                                                             >
-                                                                Delete
+                                                                <Download className="h-4 w-4 mr-2" />
+                                                                Download
                                                             </Button>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                            {permissions.canDeleteReports && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteReport(report._id)}
+                                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                >
+                                                                    Delete
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </ProtectedRoleGuard>
     )
 }

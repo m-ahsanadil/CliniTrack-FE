@@ -1,4 +1,4 @@
-export interface Address {
+export interface ProviderAddress {
     street: string;
     city: string;
     state: string;
@@ -6,167 +6,66 @@ export interface Address {
     country: string;
 }
 
-export interface EmergencyContact {
-    name: string;
-    relationship: string;
-    phone: string;
-    email: string;
-}
-
-export interface Medication {
-    name: string;
-    dosage: string;
-    frequency: string;
-    prescribedBy: string;
-    startDate: string;
-    _id?: string;
-}
-
-export interface Insurance {
-    provider: string;
-    policyNumber: string;
-    groupNumber: string;
-    subscriberId: string;
-    relationshipToSubscriber: string;
-    effectiveDate: string;
-    expirationDate: string;
-}
-
-export interface PatientRequest {
-    patientId: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    gender: string;
-    ssn: string;
-    phone: string;
-    email: string;
-    address: Address;
-    emergencyContact: EmergencyContact;
-    allergies: string[];
-    chronicConditions: string[];
-    currentMedications: Medication[];
-    insurance: Insurance;
-    status: string;
-    registrationDate: string;
-    preferredLanguage: string;
-    createdBy: string;
-    updatedBy: string;
-}
-
-// ✅ Response Patient Object (full data from backend)
-export interface Patient {
+export interface Provider {
     _id: string;
-    patientId: string;
-    firstName: string;
-    lastName: string;
-    fullName: string;
-    dateOfBirth: string;
-    age: number;
-    gender: string;
-    ssn: string;
+    providerId: string;
+    name: string;
+    specialty: string;
     phone: string;
     email: string;
-    address: Address;
-    emergencyContact: EmergencyContact;
-    allergies: string[];
-    chronicConditions: string[];
-    currentMedications: Medication[];
-    insurance: Insurance;
+    address: ProviderAddress;
+    licenseNumber: string;
+    npiNumber: string;
+    clinicAffiliation: string;
     status: string;
-    registrationDate: string;
-    preferredLanguage: string;
-    tags: string[];
     createdBy: string;
     updatedBy: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: string; // ISO timestamp
+    updatedAt: string; // ISO timestamp
     __v: number;
 }
 
-// ✅ Success Response
-export interface PatientPostResponse {
+export interface ProviderRequest extends Omit<Provider, '_id' | 'createdAt' | 'updatedAt' | '__v'> {
+
+}
+
+export interface ProviderPostResponse {
     success: true;
     message: string;
-    data: Patient;
+    data: Provider;
 }
 
-export interface PatientPostErrorResponse {
+export interface ProviderPostErrorResponse {
     success: false;
     message: string;
     data: string;
 }
 
-// Combined response type
-export type PatientPostApiResponse = PatientPostResponse | PatientPostErrorResponse;
+export type ProviderPostApiResponse = ProviderPostResponse | ProviderPostErrorResponse;
 
-// GET ALL 
-export interface PatientsGetResponse {
-    success: boolean;
+
+// GET ALL PROVIDER TYPES
+export interface ProviderGet extends Provider {
+
+}
+
+export interface ProviderGetResponse {
+    success: true;
     count: number;
-    data: {
-        _id: string;
-        patientId: string;
-        firstName: string;
-        lastName: string;
-        fullName: string;
-        dateOfBirth: string; // ISO date string
-        age: number;
-        gender: "Male" | "Female" | "Other";
-        ssn: string;
-        phone: string;
-        email: string;
-        address: {
-            street: string;
-            city: string;
-            state: string;
-            zipCode: string;
-            country: string;
-        };
-        emergencyContact: {
-            name: string;
-            relationship: string;
-            phone: string;
-            email: string;
-        };
-        insurance: {
-            provider: string;
-            policyNumber: string;
-            groupNumber: string;
-            subscriberId: string;
-            relationshipToSubscriber: string;
-            effectiveDate: string;   // ISO date string
-            expirationDate: string;  // ISO date string
-        };
-        allergies: string[];
-        chronicConditions: string[];
-        currentMedications: {
-            _id: string;
-            name: string;
-            dosage: string;
-            frequency: string;
-            prescribedBy: string;
-            startDate: string;
-        }[];
-        status: "Active" | "Inactive";
-        registrationDate: string; // ISO date string
-        preferredLanguage: string;
-        tags: string[];
-        createdBy: string;
-        updatedBy: string;
-        createdAt: string; // ISO date string
-        updatedAt: string; // ISO date string
-        __v: number;
-    }[];
+    data: ProviderGet[];
 }
 
-export interface PatientsGetErrorResponse {
+export interface ProviderGetErrorResponse {
     success: false;
     message: string;
     data: string;
 }
 
-// Combined response type
-export type PatientsGetApiResponse = PatientsGetResponse | PatientsGetErrorResponse;
+export type ProviderGetApiResponse = ProviderGetResponse | ProviderGetErrorResponse;
 
-// GET BY ID 
+export interface ProviderGetByIdResponse {
+    success: boolean;
+    data: Provider;
+}
+
+export type ProviderGetApiByIdResponse = ProviderGetByIdResponse | ProviderGetErrorResponse;

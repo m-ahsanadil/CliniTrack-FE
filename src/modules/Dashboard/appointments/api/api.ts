@@ -1,4 +1,4 @@
-import { AppointmentApiResponse, AppointmentGetApiResponse, AppointmentPostApiResponse, AppointmentRequest } from "./types";
+import { AppointmentApiResponse, AppointmentData, AppointmentGetApiResponse, AppointmentPostApiResponse, AppointmentRequest, AppointmentUpdateResponse } from "./types";
 import apiService from "@/src/redux/config/apiService";
 import { ENDPOINTS } from "@/src/redux/config/api";
 
@@ -19,8 +19,8 @@ export const appointmentsApi = {
         },
 
         // Update Appointment by ID
-        update: (id: string | number, AppointmentData: AppointmentRequest): Promise<AppointmentApiResponse> => {
-                return apiService.put(ENDPOINTS.APPOINTMENT.UPDATE(id), AppointmentData);
+        update: (id: string | number, appointmentData: AppointmentData): Promise<AppointmentUpdateResponse> => {
+                return apiService.put(ENDPOINTS.APPOINTMENT.UPDATE(id), appointmentData);
         },
 
         // Delete Appointment by ID

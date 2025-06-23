@@ -36,3 +36,31 @@ export interface ReportsGetResponse {
   count: number;
   message?: string;
 }
+
+// When sending a request to create/update a report
+export interface ReportRequest {
+  title: string;
+  description: string;
+  reportDate: string;
+  reportType: string;
+  generatedByUserId: string; // just the user ID (not full object)
+  dataFilters: DataFilters;
+  status: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+// API response for POST / PUT / GET by ID / DELETE
+export interface ReportPostResponse {
+  success: true;
+  message: string;
+  data: Report;
+}
+
+export interface ReportErrorResponse {
+  success: false;
+  message: string;
+  data?: string;
+}
+
+export type ReportApiResponse = ReportPostResponse | ReportErrorResponse;

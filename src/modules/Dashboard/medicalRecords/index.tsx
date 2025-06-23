@@ -31,19 +31,14 @@ import { clearDeleteError, deleteMedicalRecord } from "./api/slice"
 import { useEffect, useState } from "react"
 import { MedicalRecord } from "./api/types"
 import { ViewMedicalRecordDialog } from "./organisms/ViewMedicalRecordDialog"
-
-// Helper function to format date
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
+import { useRouter } from "next/navigation"
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { formatDate } from "@/src/utils/dateFormatter"
 
 export default function index({ dashboardId, role }: MedicalRecordProps) {
     const dispatch = useAppDispatch();
-    const { user } = useAppSelector(state => state.auth)
+    const { user, token } = useAppSelector(state => state.auth);
+    const router = useRouter();
 
     // Custom hook for fetching appointments
     useAppointmentsFetcher();
@@ -101,7 +96,8 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     }
 
     return (
-        <>
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+
             <RoleGuard
                 allowedRoles={["admin", "doctor"]}
                 fallback={
@@ -251,6 +247,6 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-        </>
+        </ProtectedRoleGuard>
     )
 }

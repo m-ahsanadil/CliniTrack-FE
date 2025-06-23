@@ -12,8 +12,8 @@ import {
   InvoiceGetByIdResponse,
   InvoiceGetByIdErrorResponse,
   InvoiceGetByIdApiResponse,
-  InvoiceDeleteResponse,
-  InvoiceDeleteErrorResponse,
+  // InvoiceDeleteResponse,
+  // InvoiceDeleteErrorResponse,
   InvoiceDeleteApiResponse
 } from "./types";
 
@@ -44,30 +44,30 @@ export const fetchAllInvoices = createAsyncThunk<
 );
 
 // Async thunk for getting invoice by ID
-export const getInvoiceById = createAsyncThunk<
-  InvoiceGetByIdResponse,
-  string | number,
-  { rejectValue: InvoiceGetByIdErrorResponse }
->(
-  'billing/getInvoiceById',
-  async (id: string | number, { rejectWithValue }) => {
-    try {
-      const response: InvoiceGetByIdApiResponse = await invoiceApi.getById(id);
+// export const getInvoiceById = createAsyncThunk<
+//   InvoiceGetByIdResponse,
+//   string | number,
+//   { rejectValue: InvoiceGetByIdErrorResponse }
+// >(
+//   'billing/getInvoiceById',
+//   async (id: string | number, { rejectWithValue }) => {
+//     try {
+//       const response: InvoiceGetByIdApiResponse = await invoiceApi.getById(id);
       
-      if (!response.success) {
-        return rejectWithValue(response as InvoiceGetByIdErrorResponse);
-      }
+//       if (!response.success) {
+//         return rejectWithValue(response as InvoiceGetByIdErrorResponse);
+//       }
       
-      return response as InvoiceGetByIdResponse;
-    } catch (error: any) {
-      return rejectWithValue({
-        success: false,
-        message: error.message || 'Failed to fetch invoice',
-        data: error.response?.data || 'Unknown error'
-      });
-    }
-  }
-);
+//       return response as InvoiceGetByIdResponse;
+//     } catch (error: any) {
+//       return rejectWithValue({
+//         success: false,
+//         message: error.message || 'Failed to fetch invoice',
+//         data: error.response?.data || 'Unknown error'
+//       });
+//     }
+//   }
+// );
 
 // Async thunk for creating invoice
 export const createInvoice = createAsyncThunk<
@@ -123,29 +123,16 @@ export const updateInvoice = createAsyncThunk<
 
 // Async thunk for deleting invoice
 export const deleteInvoice = createAsyncThunk<
-  InvoiceDeleteResponse & { deletedId: string | number },
-  string | number,
-  { rejectValue: InvoiceDeleteErrorResponse }
->(
-  'billing/deleteInvoice',
-  async (id: string | number, { rejectWithValue }) => {
-    try {
-      const response: InvoiceDeleteApiResponse = await invoiceApi.delete(id);
-      
-      if (!response.success) {
-        return rejectWithValue(response as InvoiceDeleteErrorResponse);
-      }
-      
-      return { ...(response as InvoiceDeleteResponse), deletedId: id };
-    } catch (error: any) {
-      return rejectWithValue({
-        success: false,
-        message: error.message || 'Failed to delete invoice',
-        data: error.response?.data || 'Unknown error'
-      });
-    }
+  InvoiceDeleteApiResponse,
+  string | number
+>("invoice/delete", async (id, thunkAPI) => {
+  try {
+    const response = await invoiceApi.delete(id);
+    return response;
+  } catch (error: any) {
+    return thunkAPI.rejectWithValue(error?.response?.data || "Delete failed");
   }
-);
+});
 
 // Async thunk for marking invoice as paid
 export const markInvoiceAsPaid = createAsyncThunk<
@@ -186,7 +173,7 @@ interface BillingState {
   isLoadingCurrentInvoice: boolean;
   isCreatingInvoice: boolean;
   isUpdatingInvoice: boolean;
-  isDeletingInvoice: boolean;
+  // isDeletingInvoice: boolean;
   isMarkingAsPaid: boolean;
   
   // Error states
@@ -194,13 +181,13 @@ interface BillingState {
   getCurrentInvoiceError: string | null;
   createInvoiceError: string | null;
   updateInvoiceError: string | null;
-  deleteInvoiceError: string | null;
+  // deleteInvoiceError: string | null;
   markAsPaidError: string | null;
   
   // Success states
   createInvoiceSuccess: boolean;
   updateInvoiceSuccess: boolean;
-  deleteInvoiceSuccess: boolean;
+  // deleteInvoiceSuccess: boolean;
   markAsPaidSuccess: boolean;
 }
 
@@ -217,7 +204,7 @@ const initialState: BillingState = {
   isLoadingCurrentInvoice: false,
   isCreatingInvoice: false,
   isUpdatingInvoice: false,
-  isDeletingInvoice: false,
+  // isDeletingInvoice: false,
   isMarkingAsPaid: false,
   
   // Error states
@@ -225,15 +212,16 @@ const initialState: BillingState = {
   getCurrentInvoiceError: null,
   createInvoiceError: null,
   updateInvoiceError: null,
-  deleteInvoiceError: null,
+  // deleteInvoiceError: null,
   markAsPaidError: null,
   
   // Success states
   createInvoiceSuccess: false,
   updateInvoiceSuccess: false,
-  deleteInvoiceSuccess: false,
+  // deleteInvoiceSuccess: false,
   markAsPaidSuccess: false,
 };
+
 
 const billingSlice = createSlice({
   name: "billing",
@@ -259,10 +247,10 @@ const billingSlice = createSlice({
     },
     
     // Clear delete invoice states
-    clearDeleteInvoiceState: (state) => {
-      state.deleteInvoiceError = null;
-      state.deleteInvoiceSuccess = false;
-    },
+    // clearDeleteInvoiceState: (state) => {
+    //   state.deleteInvoiceError = null;
+    //   state.deleteInvoiceSuccess = false;
+    // },
     
     // Clear mark as paid states
     clearMarkAsPaidState: (state) => {
@@ -282,7 +270,7 @@ const billingSlice = createSlice({
       state.getCurrentInvoiceError = null;
       state.createInvoiceError = null;
       state.updateInvoiceError = null;
-      state.deleteInvoiceError = null;
+      // state.deleteInvoiceError = null;
       state.markAsPaidError = null;
     },
     
@@ -303,9 +291,9 @@ const billingSlice = createSlice({
       state.updateInvoiceError = null;
     },
     
-    clearDeleteInvoiceError: (state) => {
-      state.deleteInvoiceError = null;
-    },
+    // clearDeleteInvoiceError: (state) => {
+    //   state.deleteInvoiceError = null;
+    // },
     
     clearMarkAsPaidError: (state) => {
       state.markAsPaidError = null;
@@ -334,23 +322,23 @@ const billingSlice = createSlice({
       })
       
       // Get Invoice By ID
-      .addCase(getInvoiceById.pending, (state) => {
-        state.isLoadingCurrentInvoice = true;
-        state.getCurrentInvoiceError = null;
-      })
-      .addCase(getInvoiceById.fulfilled, (state, action: PayloadAction<InvoiceGetByIdResponse>) => {
-        state.isLoadingCurrentInvoice = false;
-        state.getCurrentInvoiceError = null;
-        state.currentInvoice = action.payload.data;
-      })
-      .addCase(getInvoiceById.rejected, (state, action) => {
-        state.isLoadingCurrentInvoice = false;
-        if (action.payload) {
-          state.getCurrentInvoiceError = action.payload.message;
-        } else {
-          state.getCurrentInvoiceError = action.error.message || 'Failed to fetch invoice';
-        }
-      })
+      // .addCase(getInvoiceById.pending, (state) => {
+      //   state.isLoadingCurrentInvoice = true;
+      //   state.getCurrentInvoiceError = null;
+      // })
+      // .addCase(getInvoiceById.fulfilled, (state, action: PayloadAction<InvoiceGetByIdResponse>) => {
+      //   state.isLoadingCurrentInvoice = false;
+      //   state.getCurrentInvoiceError = null;
+      //   state.currentInvoice = action.payload.data;
+      // })
+      // .addCase(getInvoiceById.rejected, (state, action) => {
+      //   state.isLoadingCurrentInvoice = false;
+      //   if (action.payload) {
+      //     state.getCurrentInvoiceError = action.payload.message;
+      //   } else {
+      //     state.getCurrentInvoiceError = action.error.message || 'Failed to fetch invoice';
+      //   }
+      // })
       
       // Create Invoice
       .addCase(createInvoice.pending, (state) => {
@@ -410,7 +398,7 @@ const billingSlice = createSlice({
           state.currentInvoice = {
             ...state.currentInvoice,
             ...action.payload.data,
-          } as Invoice;
+          } as unknown as Invoice;
         }
       })
       .addCase(updateInvoice.rejected, (state, action) => {
@@ -424,32 +412,32 @@ const billingSlice = createSlice({
       })
       
       // Delete Invoice
-      .addCase(deleteInvoice.pending, (state) => {
-        state.isDeletingInvoice = true;
-        state.deleteInvoiceError = null;
-        state.deleteInvoiceSuccess = false;
-      })
-      .addCase(deleteInvoice.fulfilled, (state, action: PayloadAction<InvoiceDeleteResponse & { deletedId: string | number }>) => {
-        state.isDeletingInvoice = false;
-        state.deleteInvoiceSuccess = true;
-        state.deleteInvoiceError = null;
-        // Remove the invoice from the list
-        state.invoices = state.invoices.filter(invoice => invoice._id !== action.payload.deletedId);
-        state.totalCount = Math.max(0, state.totalCount - 1);
-        // Clear current invoice if it was deleted
-        if (state.currentInvoice && state.currentInvoice._id === action.payload.deletedId) {
-          state.currentInvoice = null;
-        }
-      })
-      .addCase(deleteInvoice.rejected, (state, action) => {
-        state.isDeletingInvoice = false;
-        state.deleteInvoiceSuccess = false;
-        if (action.payload) {
-          state.deleteInvoiceError = action.payload.message;
-        } else {
-          state.deleteInvoiceError = action.error.message || 'Failed to delete invoice';
-        }
-      })
+      // .addCase(deleteInvoice.pending, (state) => {
+      //   state.isDeletingInvoice = true;
+      //   state.deleteInvoiceError = null;
+      //   state.deleteInvoiceSuccess = false;
+      // })
+      // .addCase(deleteInvoice.fulfilled, (state, action: PayloadAction<InvoiceDeleteResponse & { deletedId: string | number }>) => {
+      //   state.isDeletingInvoice = false;
+      //   state.deleteInvoiceSuccess = true;
+      //   state.deleteInvoiceError = null;
+      //   // Remove the invoice from the list
+      //   state.invoices = state.invoices.filter(invoice => invoice._id !== action.payload.deletedId);
+      //   state.totalCount = Math.max(0, state.totalCount - 1);
+      //   // Clear current invoice if it was deleted
+      //   if (state.currentInvoice && state.currentInvoice._id === action.payload.deletedId) {
+      //     state.currentInvoice = null;
+      //   }
+      // })
+      // .addCase(deleteInvoice.rejected, (state, action) => {
+      //   state.isDeletingInvoice = false;
+      //   state.deleteInvoiceSuccess = false;
+      //   if (action.payload) {
+      //     state.deleteInvoiceError = action.payload.message;
+      //   } else {
+      //     state.deleteInvoiceError = action.error.message || 'Failed to delete invoice';
+      //   }
+      // })
       
       // Mark Invoice as Paid
       .addCase(markInvoiceAsPaid.pending, (state) => {
@@ -476,7 +464,7 @@ const billingSlice = createSlice({
           state.currentInvoice = {
             ...state.currentInvoice,
             ...action.payload.data,
-          } as Invoice;
+          } as unknown as Invoice;
         }
       })
       .addCase(markInvoiceAsPaid.rejected, (state, action) => {
@@ -495,7 +483,7 @@ export const {
   clearAllStates,
   clearCreateInvoiceState, 
   clearUpdateInvoiceState,
-  clearDeleteInvoiceState,
+  // clearDeleteInvoiceState,
   clearMarkAsPaidState,
   clearCurrentInvoice,
   clearAllErrors,
@@ -503,7 +491,7 @@ export const {
   clearGetCurrentInvoiceError,
   clearCreateInvoiceError,
   clearUpdateInvoiceError,
-  clearDeleteInvoiceError,
+  // clearDeleteInvoiceError,
   clearMarkAsPaidError
 } = billingSlice.actions;
 

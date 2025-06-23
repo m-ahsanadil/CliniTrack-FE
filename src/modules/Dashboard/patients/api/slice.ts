@@ -7,7 +7,7 @@ export const fetchAllPatients = createAsyncThunk(
   'patient/fetchAll',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await patientsApi.getAllPatients();
+      const response = await patientsApi.getAll();
 
       // Type guard to check if response is successful
       if (response.success) {
@@ -26,7 +26,7 @@ export const deletePatient = createAsyncThunk(
   'patient/delete',
   async (patientId: string, { rejectWithValue }) => {
     try {
-      const response = await patientsApi.deletePatient(patientId);
+      const response = await patientsApi.delete(patientId);
 
       // Type guard to check if response is successful
       if (response.success) {
@@ -47,8 +47,8 @@ interface PatientState {
   error: string | null;
   count: number;
   success: boolean;
-  deleteLoading: boolean;
-  deleteError: string | null;
+  // deleteLoading: boolean;
+  // deleteError: string | null;
 }
 
 const initialState: PatientState = {
@@ -57,8 +57,8 @@ const initialState: PatientState = {
   error: null,
   count: 0,
   success: false,
-  deleteLoading: false,
-  deleteError: null,
+  // deleteLoading: false,
+  // deleteError: null,
 };
 
 const patientSlice = createSlice({
@@ -68,9 +68,9 @@ const patientSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    clearDeleteError: (state) => {
-      state.deleteError = null;
-    },
+    // clearDeleteError: (state) => {
+    //   state.deleteError = null;
+    // },
     // clearCreateError: (state) => {
     //   state.createError = null;
     // },
@@ -108,29 +108,29 @@ const patientSlice = createSlice({
       })
       
       // Delete patient cases
-      .addCase(deletePatient.pending, (state) => {
-        state.deleteLoading = true;
-        state.deleteError = null;
-      })
-      .addCase(deletePatient.fulfilled, (state, action: PayloadAction<string>) => {
-        state.deleteLoading = false;
-        state.deleteError = null;
-        // Remove the deleted patient from the state
-        state.patients = state.patients.filter(
-          patient => patient._id !== action.payload
-        );
-        state.count = state.count - 1;
-      })
-      .addCase(deletePatient.rejected, (state, action) => {
-        state.deleteLoading = false;
-        state.deleteError = action.payload as string;
-      })
+      // .addCase(deletePatient.pending, (state) => {
+      //   state.deleteLoading = true;
+      //   state.deleteError = null;
+      // })
+      // .addCase(deletePatient.fulfilled, (state, action: PayloadAction<string>) => {
+      //   state.deleteLoading = false;
+      //   state.deleteError = null;
+      //   // Remove the deleted patient from the state
+      //   state.patients = state.patients.filter(
+      //     patient => patient._id !== action.payload
+      //   );
+      //   state.count = state.count - 1;
+      // })
+      // .addCase(deletePatient.rejected, (state, action) => {
+      //   state.deleteLoading = false;
+      //   state.deleteError = action.payload as string;
+      // })
   },
 });
 
 export const { 
   clearError, 
-  clearDeleteError, 
+  // clearDeleteError, 
   // clearCreateError, 
   // clearUpdateError, 
   clearPatients 

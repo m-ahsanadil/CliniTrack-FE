@@ -1,22 +1,28 @@
 
-import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
-import { useEffect } from "react";
+import {  useAppSelector } from "@/src/redux/store/reduxHook";
 import { fetchAllAppointments } from "./slice";
+import { useRoleBasedFetcher } from "@/src/redux/hook/useRoleBasedFetcher";
 
 export const useAppointmentsFetcher = () => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
   const { appointments } = useAppSelector(state => state.appointment);
 
-  useEffect(() => {
-    if (appointments.length === 0) {
-      dispatch(fetchAllAppointments());
-    }
+  // useEffect(() => {
+  //   if (appointments.length === 0) {
+  //     dispatch(fetchAllAppointments());
+  //   }
 
-    const handleFocus = () => {
-      dispatch(fetchAllAppointments());
-    };
+  //   const handleFocus = () => {
+  //     dispatch(fetchAllAppointments());
+  //   };
 
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, []);
+  //   window.addEventListener("focus", handleFocus);
+  //   return () => window.removeEventListener("focus", handleFocus);
+  // }, []);
+  useRoleBasedFetcher({
+    allowedRoles: ['admin', 'staff', 'doctor'],
+    dataLength: appointments.length,
+    fetchAction: fetchAllAppointments,
+    resourceName: 'Medical Records'
+  });
 };

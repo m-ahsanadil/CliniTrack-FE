@@ -7,7 +7,7 @@ export const fetchAllReports = createAsyncThunk(
   'report/fetchAllReports',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await reportApi.getAllReport();
+      const response = await reportApi.getAll();
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || error.message || 'Failed to fetch reports');

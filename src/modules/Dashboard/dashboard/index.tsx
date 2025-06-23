@@ -5,6 +5,7 @@ import {
     Plus,
     DollarSign,
     TrendingUp,
+    Shield,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -28,22 +29,21 @@ import { usePatientsFetcher } from "../patients/api/usePatientsFetcher";
 import { useReportsFetcher } from "../reports/api/useReportsFetcher";
 import { Invoice } from "../billing/api/types";
 import { useMedicalRecordsFetcher } from "../medicalRecords/api/useMedicalRecord";
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 
 
 
 export default function index({ dashboardId, role }: DashboardProps) {
+    const { user } = useAppSelector(state => state.auth);
+    const router = useRouter();
     const dispatch = useAppDispatch();
-    const router = useRouter()
 
     // Custom hook for fetching appointments
     useAppointmentsFetcher();
     useInvoiceFetcher();
-    useReportsFetcher();
     usePatientsFetcher();
-    useMedicalRecordsFetcher();
 
     // Get appointments from Redux store
-    const { user } = useAppSelector(state => state.auth);
     const { appointments: apiAppointments, loading: appointmentsLoading, error: appointmentsError, count: appointmentsCount } = useAppSelector(state => state.appointment)
     const { medicalRecords: apiMedicalRecords, loading: medicalRecordLoading, error: medicalRecordError, count: patientsCount } = useAppSelector(state => state.medicalRecord);
     const { invoices, isLoadingInvoices, currentInvoice } = useAppSelector(state => state.invoice);
@@ -140,8 +140,7 @@ export default function index({ dashboardId, role }: DashboardProps) {
 
     const todaysAppointments = getTodaysAppointments();
     return (
-        <>
-
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
             {/* Doctor Profile Dialog */}
             {showDoctorProfileDialog ? (
                 <DoctorProfileDialog
@@ -396,6 +395,6 @@ export default function index({ dashboardId, role }: DashboardProps) {
                     </div>
                 </div>
             )}
-        </>
+        </ProtectedRoleGuard>
     )
 }

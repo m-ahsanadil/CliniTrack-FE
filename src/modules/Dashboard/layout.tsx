@@ -77,8 +77,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     appointment={editingItem}
                     onSave={handleSaveAppointment}
                     patients={patients}
-                    providers={[]}
-                    currentUserId={''}
+                    mode={'create'}
                 />
 
                 <MedicalRecordForm

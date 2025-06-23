@@ -29,7 +29,7 @@ export interface AppointmentRequest {
 
 export interface AppointmentResponse {
     success: true;
-    message: string; 
+    message: string;
 }
 
 export interface AppointmentErrorResponse {
@@ -140,3 +140,65 @@ export interface AppointmentPostErrorResponse {
 
 // Combined response type
 export type AppointmentPostApiResponse = AppointmentPostResponse | AppointmentPostErrorResponse;
+
+interface Location {
+    facilityId: string;
+    facilityName: string;
+    roomNumber: string;
+    address: string;
+}
+interface Location {
+    facilityId: string;
+    facilityName: string;
+    roomNumber: string;
+    address: string;
+}
+
+export interface AppointmentData {
+    location: Location;
+    _id: string;
+    appointmentNumber: string;
+    patientId: string;
+    patientName: string;
+    providerId: string;
+    providerName: string;
+    departmentName: string;
+    appointmentDate: string; // ISO date string
+    startTime: string;
+    endTime: string;
+    duration: number;
+    timeZone: string;
+    type: string;
+    priority: string;
+    status: string;
+    reasonForVisit: string;
+    symptoms: string[];
+    notes: string;
+    createdBy: string;
+    updatedBy: string;
+    remindersSent: any[]; // Array type not specified in the example
+    createdAt: string; // ISO date string
+    updatedAt: string; // ISO date string
+    __v: number;
+}
+
+export interface AppointmentUpdateResponse {
+    success: boolean;
+    message: string;
+    data: AppointmentData;
+}
+
+
+// DELETE Appointment
+export interface AppointmentDeleteResponse {
+    success: boolean;
+    message: string;
+}
+
+export interface AppointmentDeleteErrorResponse {
+    success: false;
+    message: string;
+    data?: string;
+}
+
+export type AppointmentDeleteApiResponse = AppointmentDeleteResponse | AppointmentDeleteErrorResponse;

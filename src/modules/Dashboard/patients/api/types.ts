@@ -68,10 +68,61 @@ export interface PatientGetResponse {
   data: Patient[];
 }
 
+export interface PatientGetErrorResponse {
+  success: false;
+  message: string;
+  data?: string;
+}
+
+export type PatientGetApiResponse = PatientGetResponse | PatientGetErrorResponse;
+
+export interface PatientPostRequest {
+  patientId: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string; // ISO date string
+  gender: string;
+  ssn: string;
+  phone: string;
+  email: string;
+  address: Address;
+  emergencyContact: EmergencyContact;
+  allergies: string[];
+  chronicConditions: string[];
+  currentMedications: Omit<Medication, "_id">[]; // when creating, _id isn't required
+  insurance: Insurance;
+  status: string;
+  registrationDate: string; // ISO date string
+  preferredLanguage: string;
+  createdBy: string;
+  updatedBy: string;
+}
 
 
+
+
+// DELETE Patient
 export interface PatientDeleteResponse {
-    success: false;
-    message: string;
-    data?: string;
+  success: boolean;
+  message: string;
+}
+
+export interface PatientDeleteErrorResponse {
+  success: false;
+  message: string;
+  data?: string;
+}
+
+export type PatientDeleteApiResponse = PatientDeleteResponse | PatientDeleteErrorResponse;
+
+export interface PatientPostApiResponse {
+  success: boolean;
+  message?: string;
+  data: Patient;
+}
+
+// GET by ID — returns a single Patient
+export interface PatientGetByIdResponse {
+  success: boolean;
+  data: Patient;
 }

@@ -1,4 +1,3 @@
-import storage from 'redux-persist/lib/storage';
 import { configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 
@@ -7,10 +6,11 @@ import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, R
 // import reduxStorage from "./storage";
 import { REDUX_PERSIST_KEY } from "../constants";
 import rootReducer from "./rootReducer";
+import { Storage } from "./ssrStorage";
 
 const persistConfig = {
     key: REDUX_PERSIST_KEY,
-    storage: storage,
+    storage: Storage,
     whitelist: ["auth", 'doctor', 'invoice'],
     blacklist: [],
     debug: false,

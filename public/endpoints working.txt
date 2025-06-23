@@ -1,22 +1,22 @@
 role:STAFF ENDPOINT WORK:
+get-invoices
+get-invoice-by-id
+get-medical-records-by-id
+get-medical-records
+get-appointement
 get-provider,
+get-reports
+get-reports-by-id
+get-by-id-appointment
 get-provider-by-id
 get-patients
 get-patients-by-id
 create-patients
 update-patients
-get-reports
-get-reports-by-id
 create-reports
 update-reports
-get-medical-records
-get-medical-records-by-id
 create-appointment
-get-appointement
-get-by-id-appointment
 create-invoices
-get-invoices
-get-invoice-by-id
 update-invoice
 
 

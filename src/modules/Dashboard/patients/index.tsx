@@ -4,6 +4,7 @@ import {
     Edit,
     Trash2,
     Eye,
+    Shield,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,30 +21,22 @@ import { usePatientsFetcher } from "./api/usePatientsFetcher";
 import { ViewPatientDialog } from "./organisms/ViewPatientsDialog";
 import { useEffect, useState } from "react";
 import { Patient } from "./api/types";
-import { clearDeleteError, deletePatient } from "./api/slice";
-import { useMedicalRecordsFetcher } from "../medicalRecords/api/useMedicalRecord";
-import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher";
-import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher";
-import { useReportsFetcher } from "../reports/api/useReportsFetcher";
+import { deletePatient, fetchAllPatients } from "./api/slice";
+import { useRouter } from "next/navigation";
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 
 
 export default function index({ dashboardId, role }: PatientsProps) {
-    const dispatch = useAppDispatch();
 
     // Custom hook for fetching appointments
-    useAppointmentsFetcher();
-    useInvoiceFetcher();
-    useReportsFetcher();
     usePatientsFetcher();
-    useMedicalRecordsFetcher();
-
-    const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount, deleteError, deleteLoading } = useAppSelector(state => state.patients)
-    const { user } = useAppSelector(state => state.auth)
+    const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
     const { setPatients, handleAddPatient, filteredPatients, handleEditPatient } = useGlobalUI();
-    // FIXED: Local state management
+
+    const dispatch = useAppDispatch();
     const [selectedPatients, setSelectedPatients] = useState<Patient | null>(null);
-    const [deletingPatientsId, setDeletingPatientsId] = useState<string | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
+
 
     // FIXED: Proper type for the parameter
     const handleViewPatients = (patient: Patient) => {
@@ -53,42 +46,12 @@ export default function index({ dashboardId, role }: PatientsProps) {
 
 
     const handleDeletePatient = async (patientId: string) => {
-        // Clear any previous delete errors
-        if (deleteError) {
-            dispatch(clearDeleteError());
-        }
-
-        // Optional: Add confirmation dialog
-        const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
-        if (!confirmDelete) return;
-
-        try {
-            setDeletingPatientsId(patientId);
-            await dispatch(deletePatient(patientId)).unwrap();
-            // Optional: Show success message
-            console.log("Appointment deleted successfully");
-        } catch (error) {
-            // Error is already handled by Redux state
-            console.error("Failed to delete appointment:", error);
-        } finally {
-            setDeletingPatientsId(null);
-        }
+        await dispatch(deletePatient(patientId)).unwrap();
+        dispatch(fetchAllPatients());
     }
 
-    // FIXED: Effect to handle delete errors
-    useEffect(() => {
-        if (deleteError) {
-            // You could show a toast notification here
-            console.error("Delete error:", deleteError);
-            // Clear the error after showing it
-            setTimeout(() => {
-                dispatch(clearDeleteError());
-            }, 5000);
-        }
-    }, [deleteError, dispatch]);
-
     return (
-        <>
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -167,6 +130,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-        </>
+        </ProtectedRoleGuard>
+
     )
 }

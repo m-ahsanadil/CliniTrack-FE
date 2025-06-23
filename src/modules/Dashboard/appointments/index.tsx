@@ -5,6 +5,7 @@ import {
     Edit,
     Trash2,
     Eye,
+    Shield,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 
 // Import form components
-import { getStatusBadgeVariant } from "@/src/constants"
+import { Appointments, getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
@@ -21,43 +22,28 @@ import { SetStateAction, useEffect, useState } from "react"
 import { ViewAppointmentDialog } from "./organisms/ViewAppointmentDialog"
 import { Appointment } from "./api/types"
 import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
-import { deleteAppointment, clearDeleteError } from "./api/slice"
-import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher"
-import { useReportsFetcher } from "../reports/api/useReportsFetcher"
-import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
+import { deleteAppointment, fetchAllAppointments } from "./api/slice"
+import { useRouter } from "next/navigation"
+import AppointmentForm from "@/components/appointment-form"
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
     const dispatch = useAppDispatch();
-
+    useAppointmentsFetcher()
+    // FIXED: Local state management
+    const [updateAppointmentFormOpen, setUpdateAppointmentFormOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<Appointment | null>(null);
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    
     // FIXED: Destructure Redux state properly
+    const { handleAddAppointment } = useGlobalUI();
     const {
         appointments: apiAppointments,
         loading: appointmentsLoading,
         error: appointmentsError,
-        count: appointmentsCount,
-        deleteLoading,
-        deleteError
+        count: appointmentsCount
     } = useAppSelector(state => state.appointment);
-
-    const { user } = useAppSelector(state => state.auth);
-
-    // Custom hook for fetching appointments
-    useAppointmentsFetcher();
-    useInvoiceFetcher();
-    useReportsFetcher();
-    usePatientsFetcher();
-
-
-    // FIXED: Local state management
-    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-    const [deletingAppointmentId, setDeletingAppointmentId] = useState<string | null>(null);
-    const [isViewOpen, setIsViewOpen] = useState(false);
-
-    const {
-        handleAddAppointment,
-        handleEditAppointment,
-        filteredAppointments
-    } = useGlobalUI();
 
     // FIXED: Proper type for the parameter
     const handleViewAppointment = (appointment: Appointment) => {
@@ -67,39 +53,9 @@ export default function index({ dashboardId, role }: AppointmentProps) {
 
     // FIXED: Better error handling and loading state management
     const handleDeleteAppointment = async (appointmentId: string) => {
-        // Clear any previous delete errors
-        if (deleteError) {
-            dispatch(clearDeleteError());
-        }
-
-        // Optional: Add confirmation dialog
-        const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
-        if (!confirmDelete) return;
-
-        try {
-            setDeletingAppointmentId(appointmentId);
-            await dispatch(deleteAppointment(appointmentId)).unwrap();
-            // Optional: Show success message
-            console.log("Appointment deleted successfully");
-        } catch (error) {
-            // Error is already handled by Redux state
-            console.error("Failed to delete appointment:", error);
-        } finally {
-            setDeletingAppointmentId(null);
-        }
+        await dispatch(deleteAppointment(appointmentId)).unwrap();
+        dispatch(fetchAllAppointments());
     }
-
-    // FIXED: Effect to handle delete errors
-    useEffect(() => {
-        if (deleteError) {
-            // You could show a toast notification here
-            console.error("Delete error:", deleteError);
-            // Clear the error after showing it
-            setTimeout(() => {
-                dispatch(clearDeleteError());
-            }, 5000);
-        }
-    }, [deleteError, dispatch]);
 
     // FIXED: Handle view dialog close properly
     const handleCloseViewDialog = () => {
@@ -107,14 +63,18 @@ export default function index({ dashboardId, role }: AppointmentProps) {
         setSelectedAppointment(null);
     }
 
+    const handleEditAppointment = (appointment: Appointment) => {
+        setEditingItem(appointment)
+        setUpdateAppointmentFormOpen(true)
+    }
 
+    const handleUpdatedAppointment = () => {
 
-    // FIXED: Determine which appointments to display
-    const appointmentsToDisplay = filteredAppointments && filteredAppointments.length > 0
-        ? filteredAppointments
-        : apiAppointments;
+    }
+
     return (
-        <>
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -194,6 +154,13 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-        </>
+            <AppointmentForm
+                open={updateAppointmentFormOpen}
+                appointment={editingItem}
+                onOpenChange={setUpdateAppointmentFormOpen}
+                mode={"edit"}
+                onSave={handleUpdatedAppointment}
+            />
+        </ProtectedRoleGuard>
     )
 }

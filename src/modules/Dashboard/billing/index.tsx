@@ -5,7 +5,8 @@ import {
     Edit,
     Trash2,
     Eye,
-    Shield,
+    Shield
+    , CreditCard
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,36 +18,32 @@ import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { BillingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/billing/page"
-import { useAppSelector } from "@/src/redux/store/reduxHook"
+import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { useInvoiceFetcher } from "./api/useInvoiceFetcher"
 import { Invoice } from "./api/types"
 import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher"
 import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
 import { useReportsFetcher } from "../reports/api/useReportsFetcher"
 import { ViewInvoicesDialog } from "./organisms/ViewBillingDialog"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { deleteInvoice, fetchAllInvoices } from "./api/slice"
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { formatDate } from "@/src/utils/dateFormatter"
+
 
 export default function index({ dashboardId, role }: BillingProps) {
+    const dispatch = useAppDispatch();
+
     // Custom hook for fetching appointments
-    useAppointmentsFetcher();
     useInvoiceFetcher();
-    useReportsFetcher();
-    usePatientsFetcher();
 
     const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-
-    const { user } = useAppSelector(state => state.auth);
+    const [paymentLoading, setPaymentLoading] = useState<string | null>(null) // Track which invoice is being processed
+ 
     const { invoices, isLoadingInvoices, getInvoicesError, totalCount } = useAppSelector(state => state.invoice)
-    const { handleAddInvoice, filteredInvoices, handleEditInvoice, handleDeleteInvoice } = useGlobalUI();
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+    const { handleAddInvoice, filteredInvoices, handleEditInvoice } = useGlobalUI();
 
 
     // Helper function to get first service description
@@ -76,13 +73,27 @@ export default function index({ dashboardId, role }: BillingProps) {
         );
     }
 
+    const handleMarkAsPaid = async (invoiceId: string) => {
+        console.log(invoiceId)
+        setPaymentLoading(invoiceId)
+    }
+
     const handleViewInvoices = (billing: Invoice) => {
         setSelectedInvoice(billing);
         setIsViewOpen(true);
     }
 
+    const handleDeleteInvoice = async (invoiceId: string) => {
+        await dispatch(deleteInvoice(invoiceId))
+            .unwrap()
+            .then(() => {
+                dispatch(fetchAllInvoices()); // Replaces old data in Redux with updated one
+            });
+    }
+
     return (
-        <>
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+
             <RoleGuard
                 allowedRoles={["admin", "staff"]}
                 fallback={
@@ -176,6 +187,23 @@ export default function index({ dashboardId, role }: BillingProps) {
                                                     >
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
+                                                    {/* NEW: Mark as Paid Button - Only show for unpaid invoices */}
+                                                    {invoice.status !== 'paid' && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleMarkAsPaid(invoice._id)}
+                                                            disabled={paymentLoading === invoice._id}
+                                                            className="text-green-600 hover:text-green-900 hover:bg-green-50"
+                                                            title="Mark as Paid"
+                                                        >
+                                                            {paymentLoading === invoice._id ? (
+                                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                                                            ) : (
+                                                                <CreditCard className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    )}
                                                     <RoleGuard allowedRoles={["admin"]}>
                                                         <Button
                                                             variant="ghost"
@@ -203,6 +231,6 @@ export default function index({ dashboardId, role }: BillingProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-        </>
+        </ProtectedRoleGuard>
     )
 }

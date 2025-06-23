@@ -1,6 +1,7 @@
 "use client";
 
 import { Appointments, Invoices, MedicalRecords, Patients } from "@/src/constants";
+import { Appointment } from "@/src/modules/Dashboard/appointments/api/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type GlobalUIContextType = {
@@ -52,7 +53,7 @@ type GlobalUIContextType = {
 
   // Appointment CRUD
   handleAddAppointment: () => void;
-  handleEditAppointment: (appointment: any) => void;
+  handleEditAppointment: (appointment: Appointment) => void;
   handleSaveAppointment: (appointmentData: any) => void;
   handleDeleteAppointment: (appointmentId: number | string) => void;
 
@@ -76,11 +77,11 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState(Patients);
+  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [appointments, setAppointments] = useState(Appointments);
   const [medicalRecords, setMedicalRecords] = useState(MedicalRecords);
   const [invoices, setInvoices] = useState(Invoices);
   const [patientFormOpen, setPatientFormOpen] = useState(false);
-  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
@@ -150,7 +151,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setAppointmentFormOpen(true)
   }
 
-  const handleEditAppointment = (appointment: { id: number; patientId: number; patientName: string; date: string; time: string; doctor: string; type: string; duration: string; status: string; notes: string }) => {
+  const handleEditAppointment = (appointment: Appointment) => {
     setEditingItem(appointment)
     setAppointmentFormOpen(true)
   }

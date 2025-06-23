@@ -7,7 +7,8 @@ import {
     Users,
     Home,
     AlertTriangle,
-    BarChart3
+    BarChart3,
+    UserCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -81,6 +82,7 @@ export default function sidebar() {
         const baseItems = [
             { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/dashboard` },
             { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/patients` },
+            { id: "providers", label: "Providers", icon: UserCheck, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/providers` },
             { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/appointments` },
         ]
 

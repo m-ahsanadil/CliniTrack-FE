@@ -27,6 +27,9 @@ export const useRoleBasedFetcher = ({
 
             const handleFocus = () => {
                 dispatch(fetchAction());
+                // if (Date.now() - lastFetchedAt > 60 * 1000) {
+                //     dispatch(fetchAction());
+                // }
             };
 
             window.addEventListener("focus", handleFocus);
