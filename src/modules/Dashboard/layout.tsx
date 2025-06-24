@@ -4,12 +4,12 @@ import Sidebar from '@/src/components/sidebar';
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 
 // Import form components
-import PatientForm from "@/components/patient-form"
-import AppointmentForm from "@/components/appointment-form"
-import MedicalRecordForm from "@/components/medical-record-form"
-import InvoiceForm from "@/components/invoice-form"
+import PatientForm from "@/src/components/patient-form"
+import AppointmentForm from "@/src/components/appointment-form"
+import MedicalRecordForm from "@/src/components/medical-record-form"
+import InvoiceForm from "@/src/components/invoice-form"
 
-import ReportsModal from "@/components/reports-modal"
+import ReportsModal from "@/src/modules/Dashboard/reports/organisms/reports-modal"
 import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
 // import { useAppSelector } from '@/src/redux/store/reduxHook';

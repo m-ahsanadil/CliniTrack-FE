@@ -35,6 +35,7 @@ import { usePatientsFetcher } from '../patients/api/usePatientsFetcher';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
 import { formatDate } from "@/src/utils/dateFormatter"
+import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 
 
 interface QuickReport {
@@ -55,10 +56,10 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
     // Custom hook for fetching appointments
     const dispatch = useAppDispatch()
     useReportsFetcher();
+    const { reportsModalOpen, setReportsModalOpen } = useGlobalUI();
+    const { reports, loading } = useAppSelector(state => state.reports)
     const { user } = useAppSelector(state => state.auth);
 
-
-    const { reports, loading } = useAppSelector(state => state.reports)
     const [dateRange, setDateRange] = useState<string>('last-30-days');
     const [reportType, setReportType] = useState<string>('overview');
 
@@ -69,6 +70,7 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
         canViewFinancialReports: ['admin', 'staff'].includes(user?.role || ''),
         canViewMedicalReports: ['admin', 'doctor'].includes(user?.role || '')
     };
+    // console.log(reports);
 
     // Quick reports configuration
     const quickReports: QuickReport[] = [
@@ -173,8 +175,9 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
             console.log('Permission denied: Cannot create reports');
             return;
         }
-        console.log(`Generating report: ${reportTitle}`);
-        // API call implementation
+
+        console.log(`Opening report modal for: ${reportTitle}`);
+        setReportsModalOpen(true);
     };
 
     const handleDownloadReport = (reportId: string): void => {
@@ -276,6 +279,15 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
                                                         </>
                                                     )}
                                                 </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => setReportsModalOpen(true)}
+                                                >
+                                                    Generate Report
+                                                </Button>
+
                                             </div>
                                         );
                                     })}

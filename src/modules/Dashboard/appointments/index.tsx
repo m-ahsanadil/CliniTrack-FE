@@ -24,7 +24,7 @@ import { Appointment } from "./api/types"
 import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
 import { deleteAppointment, fetchAllAppointments } from "./api/slice"
 import { useRouter } from "next/navigation"
-import AppointmentForm from "@/components/appointment-form"
+import AppointmentForm from "@/src/components/appointment-form"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 
 export default function index({ dashboardId, role }: AppointmentProps) {

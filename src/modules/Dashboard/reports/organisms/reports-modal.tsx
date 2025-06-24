@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -10,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { CalendarIcon, Download, BarChart3 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useGenerateReport } from "../api/hook/useGenerateReport"
 
 interface ReportsModalProps {
   open: boolean
@@ -20,84 +20,24 @@ interface ReportsModalProps {
 }
 
 export default function ReportsModal({ open, onOpenChange, patients, appointments, invoices }: ReportsModalProps) {
-  const [reportType, setReportType] = useState("")
-  const [dateRange, setDateRange] = useState("month")
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
-  const [generatedReport, setGeneratedReport] = useState<any>(null)
-
-  const generateReport = () => {
-    let reportData: any = {}
-
-    switch (reportType) {
-      case "revenue":
-        reportData = {
-          title: "Revenue Report",
-          data: {
-            totalRevenue: invoices.reduce((sum, inv) => sum + inv.amount, 0),
-            paidInvoices: invoices.filter((inv) => inv.status === "Paid").length,
-            pendingInvoices: invoices.filter((inv) => inv.status === "Pending").length,
-            overdueInvoices: invoices.filter((inv) => inv.status === "Overdue").length,
-            averageInvoiceAmount:
-              invoices.length > 0 ? invoices.reduce((sum, inv) => sum + inv.amount, 0) / invoices.length : 0,
-            monthlyBreakdown: [
-              { month: "Jan", revenue: 12500 },
-              { month: "Feb", revenue: 15200 },
-              { month: "Mar", revenue: 18900 },
-              { month: "Apr", revenue: 16700 },
-            ],
-          },
-        }
-        break
-      case "patients":
-        reportData = {
-          title: "Patient Report",
-          data: {
-            totalPatients: patients.length,
-            activePatients: patients.filter((p) => p.status === "Active").length,
-            newPatients: Math.floor(patients.length * 0.2),
-            patientsByAge: {
-              "0-18": Math.floor(patients.length * 0.15),
-              "19-35": Math.floor(patients.length * 0.35),
-              "36-55": Math.floor(patients.length * 0.3),
-              "55+": Math.floor(patients.length * 0.2),
-            },
-            commonConditions: [
-              { condition: "Hypertension", count: 15 },
-              { condition: "Diabetes", count: 12 },
-              { condition: "Asthma", count: 8 },
-              { condition: "Arthritis", count: 6 },
-            ],
-          },
-        }
-        break
-      case "appointments":
-        reportData = {
-          title: "Appointment Report",
-          data: {
-            totalAppointments: appointments.length,
-            confirmedAppointments: appointments.filter((a) => a.status === "Confirmed").length,
-            pendingAppointments: appointments.filter((a) => a.status === "Pending").length,
-            cancelledAppointments: appointments.filter((a) => a.status === "Cancelled").length,
-            appointmentsByType: {
-              Consultation: appointments.filter((a) => a.type === "Consultation").length,
-              "Follow-up": appointments.filter((a) => a.type === "Follow-up").length,
-              "Check-up": appointments.filter((a) => a.type === "Check-up").length,
-              Treatment: appointments.filter((a) => a.type === "Treatment").length,
-            },
-            doctorSchedule: [
-              { doctor: "Dr. Smith", appointments: 25 },
-              { doctor: "Dr. Johnson", appointments: 20 },
-              { doctor: "Dr. Brown", appointments: 18 },
-              { doctor: "Dr. Wilson", appointments: 15 },
-            ],
-          },
-        }
-        break
-    }
-
-    setGeneratedReport(reportData)
-  }
+  // const [reportType, setReportType] = useState("")
+  // const [dateRange, setDateRange] = useState("month")
+  // const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  // const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  // const [generatedReport, setGeneratedReport] = useState<any>(null)
+  const {
+    reportType,
+    setReportType,
+    dateRange,
+    setDateRange,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    generateReport,
+    generatedReport,
+  } = useGenerateReport(patients, appointments, invoices)
+  
 
   const exportReport = (format: string) => {
     // In a real app, this would generate and download the actual file
@@ -220,7 +160,7 @@ export default function ReportsModal({ open, onOpenChange, patients, appointment
                     <CardContent className="p-4">
                       <div className="text-center">
                         <p className="text-2xl font-bold text-green-400">
-                          ${generatedReport.data.totalRevenue.toLocaleString()}
+                          ${generatedReport.data?.totalRevenue.toLocaleString()}
                         </p>
                         <p className="text-sm text-slate-400">Total Revenue</p>
                       </div>
@@ -263,15 +203,15 @@ export default function ReportsModal({ open, onOpenChange, patients, appointment
                     <CardContent className="space-y-4">
                       <div className="flex justify-between">
                         <span>Total Patients:</span>
-                        <span className="font-bold">{generatedReport.data.totalPatients}</span>
+                        <span className="font-bold">{generatedReport?.data.totalPatients}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Active Patients:</span>
-                        <span className="font-bold text-green-400">{generatedReport.data.activePatients}</span>
+                        <span className="font-bold text-green-400">{generatedReport?.data.activePatients}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>New Patients (This Month):</span>
-                        <span className="font-bold text-blue-400">{generatedReport.data.newPatients}</span>
+                        <span className="font-bold text-blue-400">{generatedReport?.data.newPatients}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -301,7 +241,7 @@ export default function ReportsModal({ open, onOpenChange, patients, appointment
                     <CardContent className="space-y-4">
                       <div className="flex justify-between">
                         <span>Total Appointments:</span>
-                        <span className="font-bold">{generatedReport.data.totalAppointments}</span>
+                        <span className="font-bold">{generatedReport?.data.totalAppointments}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Confirmed:</span>

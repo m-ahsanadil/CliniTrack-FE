@@ -1,8 +1,9 @@
+
 "use client"
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Upload, X } from "lucide-react"
+import patientIdGenerator from "../utils/patientIdGenerator"
 
 interface PatientFormProps {
   open: boolean
@@ -41,7 +43,7 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ ...formData, profileImage, id: patient?.id || Date.now() })
+    onSave({ ...formData, profileImage, id: patientId })
     onOpenChange(false)
   }
 
@@ -52,6 +54,21 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
       reader.onload = (e) => setProfileImage(e.target?.result as string)
       reader.readAsDataURL(file)
     }
+  }
+
+  const [patientId, setPatientId] = useState(patient?.id || "")
+  useEffect(() => {
+    if (open && !patient) {
+      const newId = patientIdGenerator.generate()
+      setPatientId(newId)
+    } else if (patient) {
+      setPatientId(patient.id) // existing patient
+    }
+  }, [open, patient])
+
+  const handleRegenerateId = () => {
+    const newId = patientIdGenerator.generate()
+    setPatientId(newId)
   }
 
   return (
@@ -69,7 +86,7 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
               <AvatarFallback>
                 {formData.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: any[]) => n[0])
                   .join("")}
               </AvatarFallback>
             </Avatar>
@@ -88,6 +105,35 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
                 </Button>
               )}
             </div>
+          </div>
+
+          {/* Patient ID Display */}
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="flex-1">
+              <Label className="text-sm text-white">Patient ID (Auto-generated)</Label>
+              <Input
+                type="text"
+                value={patientId}
+                readOnly
+                className="bg-slate-700 border-slate-600"
+              />
+            </div>
+
+            {!patient && (
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-gray-300">
+                  Next Preview: {patientIdGenerator.previewNextId()}
+                </span>
+                <Button
+                  type="button"
+                  onClick={handleRegenerateId}
+                  className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                >
+                  Regenerate ID
+                </Button>
+
+              </div>
+            )}
           </div>
 
           {/* Basic Information */}
