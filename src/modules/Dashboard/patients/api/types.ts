@@ -23,7 +23,7 @@ interface Insurance {
   expirationDate: string; // ISO date string
 }
 
-interface Medication {
+export interface Medication {
   _id: string;
   name: string;
   dosage: string;
