@@ -1,46 +1,49 @@
+import { UserRole } from "@/src/enum";
+
+export interface UserInfo {
+    id: string;
+    username: string;
+    email: string;
+    role: UserRole;
+    createdAt: string; // ISO string format
+    updatedAt: string;
+}
+
 export interface LoginRequest {
     usernameOrEmail: string;
     password: string;
 }
 
-export interface User {
-    id: string;
-    username: string;
-    email: string;
-    password?: string;
-    role: "doctor" | "staff" | "admin";
-    department?: string
-}
 
-export interface DecodedToken {
-    sub: string; // user id
-    email: string;
-    role: "doctor" | "staff" | "admin";
-    username?: string;
-    iat?: number;
-    exp?: number;
-    department?: string;
-}
+// export interface DecodedToken {
+//     sub: string; // user id
+//     email: string;
+//     role: "doctor" | "staff" | "admin";
+//     username?: string;
+//     iat?: number;
+//     exp?: number;
+//     department?: string;
+// }
 
 export interface LoginResponse {
-    success: true;
+    success: boolean;
     message: string;
-    token: string
-    user: User;
+    token: string;
+    user: UserInfo;
 }
 
 // Error response
-interface LoginErrorResponse {
+export interface LoginErrorResponse {
     success: false;
     message: string;
-    data: string;
+    errors: string[];
 }
 
 // Combined response type
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 
 
-export interface RegisterRequest extends Omit<User, "id"> { }
+export interface RegisterRequest extends Omit<UserInfo, "id"> { }
 
 
 export interface RegisterResponse {
