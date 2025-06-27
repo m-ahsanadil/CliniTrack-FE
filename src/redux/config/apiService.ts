@@ -1,7 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
-import { store } from '../store/store';
+import { persistor, store } from '../store/store';
+import { logout } from '@/src/modules/Authentication/auth/api/slice';
+
 
 class ApiService {
     private axiosInstance: AxiosInstance;
@@ -18,10 +20,10 @@ class ApiService {
         });
 
         this.setupInterceptors()
-
     }
 
     private setupInterceptors() {
+
         // Request interceptor for API calls
         this.axiosInstance.interceptors.request.use(
             async (config) => {
@@ -45,30 +47,43 @@ class ApiService {
                     delete config.params.bustCache
                 }
 
-                console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`, config.params || config.data)
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log(`📤 ${config.method?.toUpperCase()} ${config.url}`, {
+                        params: config.params,
+                        data: config.data,
+                    });
+                }
 
                 return config;
             },
             (error) => {
-                console.error('Request interceptor error:', error)
-                return Promise.reject(error)
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error('❌ Request Error:', error);
+                } return Promise.reject(error)
             }
         );
 
         // Response interceptor for API calls
         this.axiosInstance.interceptors.response.use(
             (response: AxiosResponse) => {
-                console.log(`📥 ${response.status} ${response.config.url}`, response.data)
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log(`📥 ${response.status} ${response.config.url}`, response.data);
+                }
                 return response
             },
             async (error: AxiosError) => {
-                const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error('❌ Axios Error:', {
+                        url: error.config?.url,
+                        status: error.response?.status,
+                        message: error.message || error.message,
+                        data: error.response?.data,
+                    });
+                }
 
-                // Handle 401 Unauthorized errors
-                if (error.response?.status === 401 && !originalRequest._retry) {
-                    // Could implement token refresh logic here
-                    // originalRequest._retry = true;
-                    // After refreshing token, retry the original request
+                // Handle 401 Unauthorized errors - Auto logout
+                if (error.response?.status === 401) {
+                    await this.handleUnauthorized();
                 }
 
                 return Promise.reject(error);
@@ -76,11 +91,36 @@ class ApiService {
         );
     }
 
+    private async handleUnauthorized() {
+        try {
+            console.log('🚪 Unauthorized access detected, logging out user...');
+
+            // Dispatch logout action
+            store.dispatch(logout());
+
+            // Clear persisted state
+            if (persistor) {
+                await persistor.purge();
+            }
+
+            // Redirect to login page
+            // Note: You might need to handle routing differently based on your setup
+            if (typeof window !== 'undefined') {
+                window.location.href = '/';
+                // Or if using Next.js router:
+                // const { default: Router } = await import('next/router');
+                // Router.push('/');
+            }
+
+        } catch (logoutError) {
+            console.error('Error during auto logout:', logoutError);
+        }
+    }
+
     // HTTP method helpers
     async get<T>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
         try {
             const response = await this.axiosInstance.get<T>(url, config);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -92,7 +132,6 @@ class ApiService {
     async post<T>(url: string, data?: unknown, config: AxiosRequestConfig = {}): Promise<T> {
         try {
             const response = await this.axiosInstance.post<T>(url, data, config);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -103,7 +142,6 @@ class ApiService {
     async put<T>(url: string, data?: unknown, config: AxiosRequestConfig = {}): Promise<T> {
         try {
             const response = await this.axiosInstance.put<T>(url, data, config);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -114,7 +152,6 @@ class ApiService {
     async delete<T>(url: string, config: AxiosRequestConfig = {}): Promise<T> {
         try {
             const response = await this.axiosInstance.delete<T>(url, config);
-            console.log(response.data);
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -147,7 +184,6 @@ class ApiService {
 
     private handleError(error: unknown) {
         if (axios.isAxiosError(error)) {
-            console.log(error);
             throw {
                 status: error.response?.status,
                 message: error.response?.data?.message || error.message,
