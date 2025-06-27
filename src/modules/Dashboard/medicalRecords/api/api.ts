@@ -1,32 +1,26 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
 import apiService from "@/src/redux/config/apiService";
-import {
-  MedicalRecordPostRequest,
-  MedicalRecordPostApiResponse,
-  MedicalRecordGetResponse,
-  MedicalRecordGetApiResponse,
-  MedicalRecordUpdateRequest,
-  MedicalRecordDeleteResponse
-} from "./types";
+import { MedicalRecordDeleteResponse, MedicalRecordGetAll, MedicalRecordGetAllApiResponse, MedicalRecordGetAllResponse, MedicalRecordPost, MedicalRecordPostApiResponse, MedicalRecordPostResponse } from "./types";
+
 
 export const medicalRecordApi = {
   // Create a new Medical Record
-  create: (payload: MedicalRecordPostRequest): Promise<MedicalRecordPostApiResponse> => {
+  create: (payload: MedicalRecordPost): Promise<MedicalRecordPostApiResponse> => {
     return apiService.post(ENDPOINTS.MEDICAL_RECORDS.CREATE, payload);
   },
 
   // Get all Medical Records
-  getAll: (): Promise<MedicalRecordGetResponse> => {
+  getAll: (): Promise<MedicalRecordGetAllApiResponse> => {
     return apiService.get(ENDPOINTS.MEDICAL_RECORDS.GET_ALL);
   },
 
   // Get a single Medical Record by ID
-  getById: (id: string | number): Promise<MedicalRecordGetApiResponse> => {
+  getById: (id: string | number): Promise<MedicalRecordGetAllResponse> => {
     return apiService.get(ENDPOINTS.MEDICAL_RECORDS.GET_BY_ID(id));
   },
 
   // Update Medical Record by ID
-  update: (id: string | number, payload: MedicalRecordUpdateRequest): Promise<MedicalRecordPostApiResponse> => {
+  update: (id: string | number, payload: MedicalRecordPost): Promise<MedicalRecordPostApiResponse> => {
     return apiService.put(ENDPOINTS.MEDICAL_RECORDS.UPDATE(id), payload);
   },
 

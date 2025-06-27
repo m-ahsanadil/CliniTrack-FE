@@ -22,18 +22,15 @@ import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { MedicalRecordProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/medical-records/page"
-import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher"
-import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher"
-import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
-import { useReportsFetcher } from "../reports/api/useReportsFetcher"
 import { useMedicalRecordsFetcher } from "./api/useMedicalRecord"
 import { clearDeleteError, deleteMedicalRecord } from "./api/slice"
 import { useEffect, useState } from "react"
-import { MedicalRecord } from "./api/types"
 import { ViewMedicalRecordDialog } from "./organisms/ViewMedicalRecordDialog"
 import { useRouter } from "next/navigation"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { formatDate } from "@/src/utils/dateFormatter"
+import MedicalRecordForm from "@/src/components/medical-record-form"
+import { MedicalRecordGetAll } from "./api/types"
 
 export default function index({ dashboardId, role }: MedicalRecordProps) {
     const dispatch = useAppDispatch();
@@ -41,19 +38,20 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     const router = useRouter();
 
     // Custom hook for fetching appointments
-    useAppointmentsFetcher();
-    useInvoiceFetcher();
-    useReportsFetcher();
-    usePatientsFetcher();
     useMedicalRecordsFetcher();
 
-    const { handleAddMedicalRecord, filteredMedicalRecords, handleEditMedicalRecord } = useGlobalUI();
-    const { medicalRecords: apiMedicalRecord, deleteError, deleteLoading } = useAppSelector(state => state.medicalRecord);
+    const { handleAddMedicalRecord, filteredMedicalRecords } = useGlobalUI();
+    const { medicalRecords: apiMedicalRecord, deleteError, deleteLoading, count: medicalCount } = useAppSelector(state => state.medicalRecord);
+    const { basicInfo: patientsBasicInfo } = useAppSelector(state => state.patients);
+    const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider);
 
     // FIXED: Local state management
-    const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecord | null>(null);
+    const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecordGetAll | null>(null);
     const [deletingMedicalRecordId, setDeletingMedicalRecordId] = useState<string | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<MedicalRecordGetAll | null>(null);
+    const [formOpen, setFormOpen] = useState(false);
+
 
     const handleDeleteMedicalRecord = async (medicalRecordId: string) => {
         // Clear any previous delete errors
@@ -69,10 +67,8 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
             setDeletingMedicalRecordId(medicalRecordId);
             await dispatch(deleteMedicalRecord(medicalRecordId)).unwrap();
             // Optional: Show success message
-            console.log("Appointment deleted successfully");
         } catch (error) {
             // Error is already handled by Redux state
-            console.error("Failed to delete appointment:", error);
         } finally {
             setDeletingMedicalRecordId(null);
         }
@@ -82,7 +78,6 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     useEffect(() => {
         if (deleteError) {
             // You could show a toast notification here
-            console.error("Delete error:", deleteError);
             // Clear the error after showing it
             setTimeout(() => {
                 dispatch(clearDeleteError());
@@ -90,10 +85,15 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
         }
     }, [deleteError, dispatch]);
 
-    const handleViewMedicalRecord = (medicalRecord: MedicalRecord) => {
-        setSelectedMedicalRecord(medicalRecord);
+    const handleViewMedicalRecord = (record: MedicalRecordGetAll) => {
+        setSelectedMedicalRecord(record);
         setIsViewOpen(true);
     }
+
+    const handleEditMedicalRecord = (record: MedicalRecordGetAll) => {
+        setSelectedRecord(record);
+        setFormOpen(true);
+    };
 
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
@@ -135,12 +135,19 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {apiMedicalRecord.map((record) => (
+                                        {medicalCount === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center text-slate-500 py-6">
+                                                    No medical record found. Please add a new medical record to get started.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                        {apiMedicalRecord.map((record: MedicalRecordGetAll) => (
                                             <TableRow key={record._id} className="hover:bg-slate-50">
                                                 <TableCell className="font-medium text-slate-900">
                                                     <div className="flex items-center space-x-2">
                                                         <User className="h-4 w-4 text-slate-400" />
-                                                        <span>{record.patientId.fullName}</span>
+                                                        <span>{record.patientId?.fullName}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-slate-600">
@@ -150,7 +157,7 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-slate-600">
-                                                    {record.providerId.name}
+                                                    {record.providerId?.name}
                                                 </TableCell>
                                                 <TableCell className="text-slate-600">
                                                     <Tooltip>
@@ -246,6 +253,22 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                 medicalRecord={selectedMedicalRecord}
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
+            />
+            {/* <MedicalRecordForm
+                open={medicalRecordFormOpen}
+                onOpenChange={setMedicalRecordFormOpen}
+                mode={"edit"}
+                patients={patientsBasicInfo}
+                provider={providerBasicInfo}
+            /> */}
+            <MedicalRecordForm
+                open={formOpen}
+                onOpenChange={setFormOpen}
+                record={selectedRecord || undefined}
+                mode="edit"
+                onSave={() => setFormOpen(false)}
+                patients={patientsBasicInfo}
+                provider={providerBasicInfo}
             />
         </ProtectedRoleGuard>
     )

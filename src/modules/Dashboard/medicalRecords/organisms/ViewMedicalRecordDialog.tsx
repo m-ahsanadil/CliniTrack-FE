@@ -1,9 +1,9 @@
 "use client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { MedicalRecord } from "../api/types"
+import { MedicalRecordGetAll } from "../api/types"
 
 type Props = {
-    medicalRecord: MedicalRecord | null
+    medicalRecord: MedicalRecordGetAll | null
     isOpen: boolean
     onClose: () => void
 }
@@ -25,13 +25,13 @@ export const ViewMedicalRecordDialog = ({ medicalRecord, isOpen, onClose }: Prop
                     
                     {/* Patient Information */}
                     <div className="col-span-2 mt-4"><strong>Patient Information:</strong></div>
-                    <div><strong>Patient ID:</strong> {medicalRecord.patientId._id}</div>
-                    <div><strong>Patient Name:</strong> {medicalRecord.patientId.fullName}</div>
+                    <div><strong>Patient ID:</strong> {medicalRecord.patientId?._id}</div>
+                    <div><strong>Patient Name:</strong> {medicalRecord.patientId?.fullName}</div>
                     
                     {/* Provider Information */}
                     <div className="col-span-2 mt-4"><strong>Provider Information:</strong></div>
-                    <div><strong>Provider ID:</strong> {medicalRecord.providerId._id}</div>
-                    <div><strong>Provider Name:</strong> {medicalRecord.providerId.name}</div>
+                    <div><strong>Provider ID:</strong> {medicalRecord.providerId?._id}</div>
+                    <div><strong>Provider Name:</strong> {medicalRecord.providerId?.name}</div>
                     
                     {/* Medical Details */}
                     <div className="col-span-2 mt-4"><strong>Medical Details:</strong></div>
