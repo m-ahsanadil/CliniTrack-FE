@@ -2,6 +2,7 @@
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { fetchAllProviders } from "./slice";
 import { useRoleBasedFetcher } from "@/src/redux/hook/useRoleBasedFetcher";
+import { UserRole } from "@/src/enum";
 
 export const useProviderFetcher = () => {
     const dispatch = useAppDispatch();
@@ -20,7 +21,7 @@ export const useProviderFetcher = () => {
     //     return () => window.removeEventListener("focus", handleFocus);
     // }, []);
     useRoleBasedFetcher({
-        allowedRoles: ['admin', 'staff', 'doctor'],
+        allowedRoles: [UserRole.ADMIN, UserRole.STAFF, UserRole.DOCTOR],
         dataLength: provider?.length || 0,
         fetchAction: fetchAllProviders,
         resourceName: 'Providers'

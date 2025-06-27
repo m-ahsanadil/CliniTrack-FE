@@ -2,6 +2,7 @@
 import {  useAppSelector } from "@/src/redux/store/reduxHook";
 import { fetchAllAppointments } from "./slice";
 import { useRoleBasedFetcher } from "@/src/redux/hook/useRoleBasedFetcher";
+import { UserRole } from "@/src/enum";
 
 export const useAppointmentsFetcher = () => {
   // const dispatch = useAppDispatch();
@@ -20,7 +21,7 @@ export const useAppointmentsFetcher = () => {
   //   return () => window.removeEventListener("focus", handleFocus);
   // }, []);
   useRoleBasedFetcher({
-    allowedRoles: ['admin', 'staff', 'doctor'],
+    allowedRoles: [UserRole.ADMIN, UserRole.STAFF, UserRole.DOCTOR],
     dataLength: appointments.length,
     fetchAction: fetchAllAppointments,
     resourceName: 'Medical Records'
