@@ -55,6 +55,8 @@ export const ENDPOINTS = {
 
     // Appointment endpoints
     APPOINTMENT: {
+        GET_COUNT: `/appointments/count`,
+        GET_STATS: `/appointments/stats`,
         GET_ALL: `/appointments`, // GET
         GET_BY_ID: (id: string | number) => `/appointments/${id}`, // GET
         CREATE: `/appointments`, // POST
