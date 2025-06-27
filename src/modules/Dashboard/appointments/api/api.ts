@@ -13,6 +13,16 @@ export const appointmentsApi = {
                 return apiService.get(ENDPOINTS.APPOINTMENT.GET_ALL);
         },
 
+        // Get Total Count
+        getCount: () => {
+                return apiService.get(ENDPOINTS.APPOINTMENT.GET_COUNT)
+        },
+
+        // Get stats
+        getStats: () => {
+                return apiService.get(ENDPOINTS.APPOINTMENT.GET_STATS)
+        },
+
         // Get a single Appointment by ID
         getById: (id: string | number): Promise<AppointmentApiResponse> => {
                 return apiService.get(ENDPOINTS.APPOINTMENT.GET_BY_ID(id));
