@@ -13,24 +13,24 @@ import { loginApi, registerApi } from "./api/api";
 import { demoAccounts, mockUsers } from "@/src/constants";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { useRouter } from "next/navigation";
-import { setCredentials } from "./api/slice";
-import { LoginApiResponse, User } from "./api/types";
+import { setCredentials, setError, setLoading } from "./api/slice";
+import { LoginApiResponse, LoginErrorResponse, UserInfo } from "./api/types";
 import decodeJWTWithWebAPI from "@/src/utils/decodedToken";
-import { DoctorProfileDialog } from "../../Dashboard/doctor/organisms/DoctorProfileDialog";
-import { DoctorProfileRequest } from "../../Dashboard/doctor/api/types";
+import { UserRole, UserRoleValues } from "@/src/enum";
+
 
 export default function index() {
-    const { user } = useAppSelector(state => state.auth)
-    const dispatch = useAppDispatch();
     const router = useRouter();
-    const { isLoading } = useAuth()
+    const dispatch = useAppDispatch();
+    const { loginLoading, loginError } = useAppSelector(state => state.auth)
+    // const { isLoading } = useAuth()
     const [activeTab, setActiveTab] = useState("login");
     const [showPassword, setShowPassword] = useState(false)
-    const [error, setError] = useState("")
     const [loginData, setLoginData] = useState({
         email: "",
         password: "",
     })
+
 
     const [registerData, setRegisterData] = useState({
         username: "",
@@ -40,74 +40,56 @@ export default function index() {
     })
 
     const handleLogin = async (e: FormEvent) => {
-        e.preventDefault()
-        setError("")
+        e.preventDefault();
+        dispatch(setError(null));
+        dispatch(setLoading(true));
 
         if (!loginData.email || !loginData.password) {
-            setError("Please fill in all fields")
-            return
+            dispatch(setError("Please fill in all fields"));
+            dispatch(setLoading(false));
+            return;
         }
-
-
-        // 👉 Check if the user is a demo/mock user
+        // Check if it's a demo user
         const demoUser = mockUsers[loginData.email];
-
         if (demoUser && demoUser.password === loginData.password) {
             dispatch(setCredentials({
-                token: "demo-token", // fake token
+                token: "demo-token",
                 user: {
                     id: demoUser.id,
                     email: demoUser.email,
                     username: demoUser.name,
-                    password: "",
                     role: demoUser.role,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                 }
             }));
-            router.push(`/${demoUser.id}/${demoUser.role}/dashboard`)
+            dispatch(setLoading(false));
+            router.push(`/${demoUser.id}/${demoUser.role}/dashboard`);
             return;
         }
 
         try {
-            // Pass both email and password as an object
             const response: LoginApiResponse = await loginApi.login({
                 usernameOrEmail: loginData.email,
                 password: loginData.password
-            })
+            });
 
             if (response.success) {
-                const decodedToken = decodeJWTWithWebAPI(response.token);
-
-                // ✅ Add null check for decodedToken
-                if (!decodedToken) {
-                    setError("Invalid token received");
-                    return;
-                }
-
-                // ✅ Check for required fields
-                if (!decodedToken.id || !decodedToken.role) {
-                    setError("Token missing required information");
-                    console.log('Decoded token:', decodedToken); // Debug log
-                    return;
-                }
-                const user: User = {
-                    id: decodedToken.id,
-                    email: decodedToken?.email,
-                    username: decodedToken.username || decodedToken.email?.split('@')[0] || 'user',
-                    role: decodedToken.role,
-                    department: decodedToken?.department,
-                };
-                dispatch(setCredentials({
-                    token: response.token,
-                    user: user
-                }));
-                router.push(`/${user.id}/${user.role}/dashboard`)
+                const user = response.user;
+                dispatch(setCredentials({ token: response.token, user }));
+                dispatch(setLoading(false));
+                router.push(`/${user.id}/${user.role}/dashboard`);
+            } else {
+                const errorMessage = response.errors?.[0] || response.message;
+                dispatch(setError(errorMessage));
+                dispatch(setLoading(false));
             }
-        } catch (error) {
-            console.log('Login error:', error)
-            setError("Invalid email or password")
-        }
 
-    }
+        } catch (error) {
+            dispatch(setError("Login failed. Please try again."));
+            dispatch(setLoading(false));
+        }
+    };
 
     const handleRegister = async (e: FormEvent) => {
         e.preventDefault()
@@ -124,7 +106,7 @@ export default function index() {
                 username: registerData.username,
                 email: registerData.email,
                 password: registerData.password,
-                role: registerData.role as "doctor" | "staff" | "admin"
+                role: registerData.role as UserRole
             })
 
             if (response.success) {
@@ -133,7 +115,7 @@ export default function index() {
             }
 
         } catch (error) {
-            console.log('Register error:', error)
+
             setError("Invalid fields")
         }
 
@@ -183,12 +165,12 @@ export default function index() {
                                         </Label>
                                         <Input
                                             id="email"
-                                            type="email"
+                                            type="text"
                                             placeholder="Enter your email"
                                             value={loginData.email}
                                             onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                                             className="h-12"
-                                            disabled={isLoading}
+                                            disabled={loginLoading}
                                         />
                                     </div>
 
@@ -204,7 +186,7 @@ export default function index() {
                                                 value={loginData.password}
                                                 onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                                                 className="h-12 pr-12"
-                                                disabled={isLoading}
+                                                disabled={loginLoading}
                                             />
                                             <Button
                                                 type="button"
@@ -222,19 +204,19 @@ export default function index() {
                                         </div>
                                     </div>
 
-                                    {error && (
+                                    {loginError && (
                                         <Alert variant="destructive">
                                             <AlertCircle className="h-4 w-4" />
-                                            <AlertDescription>{error}</AlertDescription>
+                                            <AlertDescription>{loginError}</AlertDescription>
                                         </Alert>
                                     )}
 
                                     <Button
                                         type="submit"
                                         className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white"
-                                        disabled={isLoading}
+                                        disabled={loginLoading}
                                     >
-                                        {isLoading ? "Signing In..." : "Sign In"}
+                                        {loginLoading ? "Signing In..." : "Sign In"}
                                     </Button>
                                 </form>
 
@@ -277,9 +259,11 @@ export default function index() {
                                             className="h-12 w-full rounded-md border border-slate-300 bg-white px-4 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="">Select Role</option>
-                                            <option value="doctor">Doctor</option>
-                                            <option value="staff">Staff</option>
-                                            <option value="admin">Admin</option>
+                                            {UserRoleValues.filter(role => role !== UserRole.PATIENT).map((role) => (
+                                                <option key={role} value={role}>
+                                                    {role.charAt(0).toUpperCase() + role.slice(1)} {/* Capitalize for display */}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
