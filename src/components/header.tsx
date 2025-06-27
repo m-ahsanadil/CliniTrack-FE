@@ -3,6 +3,10 @@ import {
     Menu,
     Search,
     LogOut,
+    FileText,
+    User,
+    CreditCard,
+    HelpCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,8 +64,7 @@ export default function Header() {
 
         // Clear any additional localStorage items
         if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
+            // localStorage.removeItem('token');
         }
 
         // Redirect to login
@@ -69,85 +72,151 @@ export default function Header() {
     };
 
     return (
-        // {/* Header */ }
-        <header className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm" >
-            <div className="flex items-center space-x-4">
-                <Button
-                    variant="ghost"
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="text-slate-600 hover:text-slate-900"
-                >
-                    <Menu className="h-6 w-6" />
-                </Button>
-                <div>
-                    <h1 className="text-lg font-semibold text-slate-900 capitalize">
-                        {currentPage
-                            .replace(/([A-Z])/g, " $1")
-                            .replace(/-/g, " ") // handle kebab-case routes
-                            .replace(/\b\w/g, (char) => char.toUpperCase())}
-                    </h1>
-                </div>
-            </div>
+  <header className="bg-white border-b border-slate-200 shadow-sm">
+    {/* Main Header Row */}
+    <div className="flex items-center justify-between px-4 py-3">
+        {/* Left Section: Menu + Title */}
+        <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="text-slate-600 hover:text-slate-900 p-2"
+            >
+                <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-base md:text-lg font-semibold text-slate-900 capitalize truncate">
+                {currentPage
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+            </h1>
+        </div>
 
-            <div className="flex items-center space-x-4">
-                <RoleGuard allowedRoles={["admin"]}>
-                    {currentPage === "dashboard" && (
+        {/* Right Section: Action Icons */}
+        <div className="flex items-center space-x-1">
+            {/* Generate Report - Icon on mobile, button on desktop */}
+            <RoleGuard allowedRoles={["admin"]}>
+                {currentPage === "dashboard" && (
+                    <>
+                        {/* Mobile: Icon Button */}
+                        <Button
+                            size="sm"
+                            onClick={() => setReportsModalOpen(true)}
+                            className="md:hidden bg-indigo-600 hover:bg-indigo-700 text-white p-2"
+                        >
+                            <FileText className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* Desktop: Text Button */}
                         <Button
                             onClick={() => setReportsModalOpen(true)}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="hidden md:flex bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2"
                         >
+                            <FileText className="h-4 w-4 mr-2" />
                             Generate Report
                         </Button>
-                    )}
-                </RoleGuard>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                    <Input
-                        type="search"
-                        placeholder="Search..."
-                        className="pl-10 w-64 border-slate-300"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
-                    <Bell className="h-5 w-5" />
-                </Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={user?.password || "/placeholder-user.jpg"} />
-                                <AvatarFallback className="bg-blue-600 text-white">
-                                    {user?.username
-                                        ?.split(" ")
-                                        .map((n) => n[0])
-                                        .join("") || "U"}
-                                </AvatarFallback>
-                            </Avatar>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <div className="px-2 py-1.5">
-                            <p className="text-sm font-medium">{user?.username}</p>
-                            <p className="text-xs text-slate-500">{user?.email}</p>
-                            <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
-                        </div>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={goToSettings}>Profile Settings</DropdownMenuItem>
-                        <DropdownMenuItem onClick={goToBilling}>Billing</DropdownMenuItem>
-                        <DropdownMenuItem onClick={goToSupport}>Support</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}
-                            className="text-red-600">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
+                    </>
+                )}
+            </RoleGuard>
 
-                </DropdownMenu>
-            </div>
-        </header>
+            {/* Search Button */}
+            <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-slate-600 hover:text-slate-900 p-2"
+                onClick={() => {
+                    // Toggle search bar or open search modal
+                    console.log('Toggle search');
+                }}
+            >
+                <Search className="h-4 w-4" />
+            </Button>
 
+            {/* Notifications */}
+            <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-slate-600 hover:text-slate-900 p-2 relative"
+            >
+                <Bell className="h-4 w-4" />
+                {/* Notification badge */}
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+            </Button>
+
+            {/* User Menu */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="p-1 rounded-full">
+                        <Avatar className="h-7 w-7">
+                            <AvatarImage src={user?.username || "/placeholder-user.jpg"} />
+                            <AvatarFallback className="bg-blue-600 text-white text-xs">
+                                {user?.username
+                                    ?.split(" ")
+                                    .map((n) => n[0])
+                                    .join("") || "U"}
+                            </AvatarFallback>
+                        </Avatar>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                    <div className="px-3 py-2">
+                        <p className="text-sm font-medium truncate">{user?.username}</p>
+                        <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize mt-1">
+                            {user?.role}
+                        </span>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={goToSettings}>
+                        <User className="mr-2 h-4 w-4" />
+                        Profile Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={goToBilling}>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Billing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={goToSupport}>
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Support
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    </div>
+
+    {/* Desktop Search Bar - Full Width */}
+    <div className="hidden md:block px-4 pb-3">
+        <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Input
+                type="search"
+                placeholder="Search anything..."
+                className="pl-10 w-full border-slate-300 bg-slate-50 focus:bg-white"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+    </div>
+
+    {/* Mobile Search Bar - Expandable (hidden by default) */}
+    <div className="md:hidden px-4 pb-3 border-t border-slate-100 bg-slate-50" style={{display: 'none'}} id="mobile-search">
+        <div className="relative pt-3">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Input
+                type="search"
+                placeholder="Search..."
+                className="pl-10 w-full border-slate-300"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+    </div>
+</header>
     )
 }
