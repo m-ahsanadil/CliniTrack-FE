@@ -11,14 +11,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, CalendarIcon, Upload, X } from "lucide-react"
+import { Calendar, CalendarIcon, Loader2, Upload, X } from "lucide-react"
 import patientIdGenerator from "../utils/patientIdGenerator"
-import { Medication, Patient } from "../modules/Dashboard/patients/api/types"
+import { Medication, Patient, PatientPostRequest } from "../modules/Dashboard/patients/api/types"
 import { generateId } from "../utils/idGenerator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { Gender, GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
+import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
 
 interface PatientFormProps {
   open: boolean
@@ -28,57 +29,8 @@ interface PatientFormProps {
   onSave: (patient: Patient) => void
 }
 
-interface PatientData {
-  // Basic patient information
-  patientId: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: string;
-  ssn: string;
-  phone: string;
-  email: string;
-  preferredLanguage: string;
 
-  // Address information
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-
-  // Emergency contact
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
-    email: string;
-  };
-
-  // Insurance information
-  insurance: {
-    provider: string;
-    policyNumber: string;
-    groupNumber: string;
-    subscriberId: string;
-    relationshipToSubscriber: string;
-    effectiveDate: string;
-    expirationDate: string;
-  };
-
-  // Medical information
-  allergies: string[];
-  chronicConditions: string[];
-  currentMedications: Medication[];
-
-  // Optional fields for form management
-  status: string;
-  tags: string[];
-}
-// Initial form state
-const initialFormState: PatientData = {
+const initialFormState: PatientPostRequest = {
   patientId: "",
   firstName: "",
   lastName: "",
@@ -114,89 +66,107 @@ const initialFormState: PatientData = {
   chronicConditions: [],
   currentMedications: [],
   status: "",
-  tags: []
+  registrationDate: "",
+  createdBy: "",
+  updatedBy: ""
 }
 
-
 export default function PatientForm({ mode, open, onOpenChange, patient, onSave }: PatientFormProps) {
-  const dispatch = useAppDispatch();
-  const [formData, setFormData] = useState<PatientData>(initialFormState)
-  const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(undefined);
-
+  const dispatch = useAppDispatch()
   const { createError, createLoading, createSuccess, updateError, updateLoading, updateSuccess } = useAppSelector(state => state.patients)
+  const [formData, setFormData] = useState<PatientPostRequest>(initialFormState)
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(undefined)
+  const [medicationInput, setMedicationInput] = useState<string>("")
 
   useEffect(() => {
     if (mode === 'edit' && patient) {
-      console.log('Patient structure:', patient);
-
       setFormData({
-        // Basic information
-        patientId: patient?.patientId || "",
-        firstName: patient?.firstName || "",
-        lastName: patient?.lastName || "",
-        dateOfBirth: patient?.dateOfBirth || "",
-        gender: patient?.gender || Gender.UNKNOWN,
-        ssn: patient?.ssn || "",
-        phone: patient?.phone || "",
-        email: patient?.email || "",
-        preferredLanguage: patient?.preferredLanguage || Language.ENGLISH,
-
-        // Address
+        patientId: patient.patientId || "",
+        firstName: patient.firstName || "",
+        lastName: patient.lastName || "",
+        dateOfBirth: patient.dateOfBirth || "",
+        gender: patient.gender || Gender.UNKNOWN,
+        ssn: patient.ssn || "",
+        phone: patient.phone || "",
+        email: patient.email || "",
+        preferredLanguage: patient.preferredLanguage || Language.ENGLISH,
         address: {
-          street: patient?.address?.street || "",
-          city: patient?.address?.city || "",
-          state: patient?.address?.state || "",
-          zipCode: patient?.address?.zipCode || "",
-          country: patient?.address?.country || "",
+          street: patient.address?.street || "",
+          city: patient.address?.city || "",
+          state: patient.address?.state || "",
+          zipCode: patient.address?.zipCode || "",
+          country: patient.address?.country || "",
         },
-
-        // Emergency contact
         emergencyContact: {
-          name: patient?.emergencyContact?.name || "",
-          relationship: patient?.emergencyContact?.relationship || Relationship.OTHER,
-          phone: patient?.emergencyContact?.phone || "",
-          email: patient?.emergencyContact?.email || "",
+          name: patient.emergencyContact?.name || "",
+          relationship: patient.emergencyContact?.relationship || Relationship.OTHER,
+          phone: patient.emergencyContact?.phone || "",
+          email: patient.emergencyContact?.email || "",
         },
-
-        // Insurance
         insurance: {
-          provider: patient?.insurance?.provider || "",
-          policyNumber: patient?.insurance?.policyNumber || "",
-          groupNumber: patient?.insurance?.groupNumber || "",
-          subscriberId: patient?.insurance?.subscriberId || "",
-          relationshipToSubscriber: patient?.insurance?.relationshipToSubscriber || Relationship.SELF,
-          effectiveDate: patient?.insurance?.effectiveDate || "",
-          expirationDate: patient?.insurance?.expirationDate || "",
+          provider: patient.insurance?.provider || "",
+          policyNumber: patient.insurance?.policyNumber || "",
+          groupNumber: patient.insurance?.groupNumber || "",
+          subscriberId: patient.insurance?.subscriberId || "",
+          relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || Relationship.SELF,
+          effectiveDate: patient.insurance?.effectiveDate || "",
+          expirationDate: patient.insurance?.expirationDate || "",
         },
-
-        // Medical information
-        allergies: patient?.allergies || [],
-        chronicConditions: patient?.chronicConditions || [],
-        currentMedications: patient?.currentMedications || [],
-
-        // Status and tags
-        status: patient?.status || PatientStatus.ACTIVE,
-        tags: patient?.tags || [],
+        allergies: patient.allergies || [],
+        chronicConditions: patient.chronicConditions || [],
+        currentMedications: patient.currentMedications?.map((med: { name: any; dosage: any; frequency: any; prescribedBy: any; startDate: any }) => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          prescribedBy: med.prescribedBy,
+          startDate: med.startDate
+        })) || [],
+        status: patient.status || PatientStatus.ACTIVE,
+        registrationDate: patient.registrationDate || new Date().toISOString(),
+        createdBy: patient.createdBy || "",
+        updatedBy: patient.updatedBy || ""
       })
-      // Set profile image
-      setProfileImage(patient?.profileImage || null);
-
-      // Set birth date
-      if (patient?.dateOfBirth) {
-        setSelectedBirthDate(new Date(patient.dateOfBirth));
+      setProfileImage(patient.profileImage || null)
+      if (patient.dateOfBirth) {
+        setSelectedBirthDate(parseISO(patient.dateOfBirth))
       }
     } else if (mode === 'create') {
-      // Reset form for create mode
-      setFormData(initialFormState);
-      setProfileImage(null);
-      setSelectedBirthDate(undefined);
-
-      // Generate initial patient ID for create mode
-      const newId = generateId({ prefix: "P", suffix: "CLINIC" });
-      setFormData(prev => ({ ...prev, patientId: newId }));
+      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
+      setFormData({
+        ...initialFormState,
+        patientId: newId,
+        registrationDate: new Date().toISOString(),
+        createdBy: "current_user_id", // Replace with actual user ID
+        updatedBy: "current_user_id" // Replace with actual user ID
+      })
+      setProfileImage(null)
+      setSelectedBirthDate(undefined)
     }
   }, [mode, patient])
+
+  useEffect(() => {
+    if (createSuccess || updateSuccess) {
+      onSave({ ...formData, profileImage } as Patient)
+      setFormData(initialFormState)
+      setProfileImage(null)
+      setSelectedBirthDate(undefined)
+      dispatch(clearCreateSuccess())
+      dispatch(clearUpdateSuccess())
+      onOpenChange(false)
+    }
+  }, [createSuccess, updateSuccess, dispatch, onSave, onOpenChange])
+
+  useEffect(() => {
+    if (createError || updateError) {
+      console.error(mode === 'edit' ? updateError : createError)
+      // Optionally show error toast/notification here
+    }
+    return () => {
+      dispatch(clearCreateError())
+      dispatch(clearUpdateError())
+    }
+  }, [createError, updateError, dispatch, mode])
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -208,33 +178,60 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
   }
 
   const regenerateId = () => {
-    // Only allow regeneration in create mode
     if (mode === 'create') {
-      const newId = generateId({ prefix: "P", suffix: "CLINIC" });
-      setFormData({ ...formData, patientId: newId });
+      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
+      setFormData({ ...formData, patientId: newId })
     }
-  };
-
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    onSave({
+
+    const submissionData: PatientPostRequest = {
       ...formData,
-      profileImage,
-    })
-    onOpenChange(false)
+      dateOfBirth: selectedBirthDate ? selectedBirthDate.toISOString() : formData.dateOfBirth,
+      updatedBy: "current_user_id", // Replace with actual user ID
+      registrationDate: mode === 'create' ? new Date().toISOString() : formData.registrationDate
+    }
+
+    if (mode === 'edit' && patient?._id) {
+      dispatch(updatePatients({
+        id: patient._id,
+        patientData: submissionData
+      }))
+    } else {
+      dispatch(createPatients(submissionData))
+    }
   }
 
-  // Get current loading state and error based on mode
-  const isLoading = mode === 'edit' ? updateLoading : createLoading;
-  const currentError = mode === 'edit' ? updateError : createError;
+  const handleMedicationChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const medications = e.target.value.split("\n").map(item => {
+      const [name, dosage, frequency, prescribedBy, startDate] = item.split(",").map(s => s.trim())
+      return {
+        name: name || "",
+        dosage: dosage || "",
+        frequency: frequency || "",
+        prescribedBy: prescribedBy || "",
+        startDate: startDate || new Date().toISOString()
+      }
+    }).filter(med => med.name)
+    setFormData({ ...formData, currentMedications: medications })
+  }
 
+  const isLoading = mode === 'edit' ? updateLoading : createLoading
+  const currentError = mode === 'edit' ? updateError : createError
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-700">
         <DialogHeader>
           <DialogTitle>{mode === 'edit' ? "Edit Patient" : "Add New Patient"}</DialogTitle>
         </DialogHeader>
+
+        {currentError && (
+          <div className="text-red-500 text-sm mb-4">
+            Error: {currentError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Image */}
@@ -277,11 +274,13 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 className="bg-slate-700 border-slate-600"
                 placeholder="p-001"
                 required
+                disabled={isLoading}
               />
             </div>
             {mode === 'create' && (
               <button
                 type="button"
+                disabled={isLoading}
                 onClick={regenerateId}
                 className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
               >
@@ -302,6 +301,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -327,13 +327,18 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
-                    <Calendar mode="single" selected={selectedBirthDate} onSelect={setSelectedBirthDate} initialFocus />
+                    <Calendar
+                      mode="single"
+                      selected={selectedBirthDate}
+                      onSelect={(date: Date | undefined) => setSelectedBirthDate(date)}
+                      initialFocus
+                    />
                   </PopoverContent>
                 </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender *</Label>
-                <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+                <Select value={formData.gender} disabled={isLoading} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
@@ -351,6 +356,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="ssn"
                   value={formData.ssn}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({ ...formData, ssn: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                   placeholder="XXX-XX-XXXX"
@@ -361,6 +367,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Select
                   value={formData.preferredLanguage}
                   onValueChange={(value) => setFormData({ ...formData, preferredLanguage: value })}
+                  disabled={isLoading}
                 >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select language" />
@@ -389,6 +396,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -397,6 +405,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   id="email"
                   type="email"
                   value={formData.email}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                 />
@@ -413,6 +422,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="street"
                   value={formData.address.street}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     address: { ...formData.address, street: e.target.value }
@@ -426,6 +436,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   <Input
                     id="city"
                     value={formData.address.city}
+                    disabled={isLoading}
                     onChange={(e) => setFormData({
                       ...formData,
                       address: { ...formData.address, city: e.target.value }
@@ -438,6 +449,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   <Input
                     id="state"
                     value={formData.address.state}
+                    disabled={isLoading}
                     onChange={(e) => setFormData({
                       ...formData,
                       address: { ...formData.address, state: e.target.value }
@@ -450,6 +462,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   <Input
                     id="zipCode"
                     value={formData.address.zipCode}
+                    disabled={isLoading}
                     onChange={(e) => setFormData({
                       ...formData,
                       address: { ...formData.address, zipCode: e.target.value }
@@ -463,6 +476,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="country"
                   value={formData.address.country}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     address: { ...formData.address, country: e.target.value }
@@ -483,6 +497,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="emergencyName"
                   value={formData.emergencyContact.name}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     emergencyContact: { ...formData.emergencyContact, name: e.target.value }
@@ -494,6 +509,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="emergencyRelationship">Relationship</Label>
                 <Select
                   value={formData.emergencyContact.relationship}
+                  disabled={isLoading}
                   onValueChange={(value) => setFormData({
                     ...formData,
                     emergencyContact: { ...formData.emergencyContact, relationship: value }
@@ -516,6 +532,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="emergencyPhone"
                   value={formData.emergencyContact.phone}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     emergencyContact: { ...formData.emergencyContact, phone: e.target.value }
@@ -527,6 +544,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="emergencyEmail">Email Address</Label>
                 <Input
                   id="emergencyEmail"
+                  disabled={isLoading}
                   type="email"
                   value={formData.emergencyContact.email}
                   onChange={(e) => setFormData({
@@ -548,6 +566,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="insuranceProvider"
                   value={formData.insurance.provider}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     insurance: { ...formData.insurance, provider: e.target.value }
@@ -560,6 +579,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="policyNumber"
                   value={formData.insurance.policyNumber}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     insurance: { ...formData.insurance, policyNumber: e.target.value }
@@ -572,6 +592,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="groupNumber"
                   value={formData.insurance.groupNumber}
+                  disabled={isLoading}
                   onChange={(e) => setFormData({
                     ...formData,
                     insurance: { ...formData.insurance, groupNumber: e.target.value }
@@ -583,6 +604,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="relationshipToSubscriber">Relationship to Subscriber</Label>
                 <Select
                   value={formData.insurance.relationshipToSubscriber}
+                  disabled={isLoading}
                   onValueChange={(value) => setFormData({
                     ...formData,
                     insurance: { ...formData.insurance, relationshipToSubscriber: value }
@@ -607,6 +629,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="effectiveDate"
                   type="date"
+                  disabled={isLoading}
                   value={formData.insurance.effectiveDate}
                   onChange={(e) => setFormData({
                     ...formData,
@@ -620,6 +643,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Input
                   id="expirationDate"
                   type="date"
+                  disabled={isLoading}
                   value={formData.insurance.expirationDate}
                   onChange={(e) => setFormData({
                     ...formData,
@@ -639,6 +663,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="allergies">Allergies</Label>
                 <Textarea
                   id="allergies"
+                  disabled={isLoading}
                   value={Array.isArray(formData.allergies) ? formData.allergies.join(", ") : ""}
                   onChange={(e) => setFormData({
                     ...formData,
@@ -652,6 +677,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="chronicConditions">Chronic Conditions</Label>
                 <Textarea
                   id="chronicConditions"
+                  disabled={isLoading}
                   value={Array.isArray(formData.chronicConditions) ? formData.chronicConditions.join(", ") : ""}
                   onChange={(e) => setFormData({
                     ...formData,
@@ -665,11 +691,9 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="currentMedications">Current Medications</Label>
                 <Textarea
                   id="currentMedications"
-                  value={Array.isArray(formData.currentMedications) ? formData.currentMedications.join(", ") : ""}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    currentMedications: e.target.value.split(",").map(item => item.trim()).filter(item => item)
-                  })}
+                  disabled={isLoading}
+                  value={medicationInput}
+                  onChange={handleMedicationChange}
                   className="bg-slate-700 border-slate-600"
                   placeholder="Enter current medications separated by commas"
                 />
@@ -684,6 +708,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
               <div className="space-y-2">
                 <Label htmlFor="status">Patient Status</Label>
                 <Select
+                  disabled={isLoading}
                   value={formData.status}
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
                 >
@@ -699,28 +724,32 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags</Label>
-                <Input
-                  id="tags"
-                  value={Array.isArray(formData.tags) ? formData.tags.join(", ") : ""}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    tags: e.target.value.split(",").map(item => item.trim()).filter(item => item)
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="Enter tags separated by commas"
-                />
-              </div>
             </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              {patient ? "Update Patient" : "Add Patient"}
+            <Button
+              disabled={isLoading}
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === 'edit' ? 'Updating...' : 'Saving...'}
+                </>
+              ) : (
+                <>
+                  {mode === 'edit' ? 'Update Patient' : 'Save Patient'}
+                </>
+              )}
             </Button>
           </div>
         </form>
