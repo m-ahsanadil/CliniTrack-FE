@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
     Plus,
     Edit,
@@ -21,12 +22,7 @@ import { BillingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/billing/pag
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { useInvoiceFetcher } from "./api/useInvoiceFetcher"
 import { Invoice } from "./api/types"
-import { useAppointmentsFetcher } from "../appointments/api/useAppointmentsFetcher"
-import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
-import { useReportsFetcher } from "../reports/api/useReportsFetcher"
 import { ViewInvoicesDialog } from "./organisms/ViewBillingDialog"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { deleteInvoice, fetchAllInvoices } from "./api/slice"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { formatDate } from "@/src/utils/dateFormatter"
@@ -41,8 +37,8 @@ export default function index({ dashboardId, role }: BillingProps) {
     const [isViewOpen, setIsViewOpen] = useState<boolean>(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentLoading, setPaymentLoading] = useState<string | null>(null) // Track which invoice is being processed
- 
-    const { invoices, isLoadingInvoices, getInvoicesError, totalCount } = useAppSelector(state => state.invoice)
+
+    const { invoices, isLoadingInvoices, getInvoicesError, totalCount: invoiceCount } = useAppSelector(state => state.invoice)
     const { handleAddInvoice, filteredInvoices, handleEditInvoice } = useGlobalUI();
 
 
@@ -74,7 +70,6 @@ export default function index({ dashboardId, role }: BillingProps) {
     }
 
     const handleMarkAsPaid = async (invoiceId: string) => {
-        console.log(invoiceId)
         setPaymentLoading(invoiceId)
     }
 
@@ -110,7 +105,7 @@ export default function index({ dashboardId, role }: BillingProps) {
                             <h2 className="text-2xl font-bold text-slate-900">Billing & Invoices</h2>
                             <p className="text-slate-600">
                                 Manage patient billing and payment records
-                                {totalCount > 0 && <span className="ml-2">({totalCount} total)</span>}
+                                {invoiceCount > 0 && <span className="ml-2">({invoiceCount} total)</span>}
                             </p>                    </div>
                         <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
                             <Plus className="mr-2 h-4 w-4" />
@@ -136,6 +131,13 @@ export default function index({ dashboardId, role }: BillingProps) {
                                 </TableHeader>
 
                                 <TableBody>
+                                    {invoiceCount === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="text-center text-slate-500 py-6">
+                                                No Invoice found. Please add a new Invoice to get started.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                     {invoices.map((invoice: Invoice) => (
                                         <TableRow key={invoice._id} className="hover:bg-slate-50">
                                             <TableCell className="font-medium text-slate-900">

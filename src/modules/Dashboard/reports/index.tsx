@@ -70,7 +70,6 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
         canViewFinancialReports: ['admin', 'staff'].includes(user?.role || ''),
         canViewMedicalReports: ['admin', 'doctor'].includes(user?.role || '')
     };
-    // console.log(reports);
 
     // Quick reports configuration
     const quickReports: QuickReport[] = [
@@ -172,25 +171,20 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
 
     const handleGenerateReport = (reportTitle: string): void => {
         if (!permissions.canCreateReports) {
-            console.log('Permission denied: Cannot create reports');
             return;
         }
 
-        console.log(`Opening report modal for: ${reportTitle}`);
         setReportsModalOpen(true);
     };
 
     const handleDownloadReport = (reportId: string): void => {
-        console.log(`Downloading report: ${reportId}`);
         // API call implementation
     };
 
     const handleDeleteReport = (reportId: string): void => {
         if (!permissions.canDeleteReports) {
-            console.log('Permission denied: Cannot delete reports');
             return;
         }
-        console.log(`Deleting report: ${reportId}`);
         // API call implementation
     };
 

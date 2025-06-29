@@ -42,7 +42,6 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
     // Redux selectors
     const { user } = useAppSelector(state => state.auth);
     const { list: doctorsList, loading, error, lastFetched } = useAppSelector(state => state.doctor);
-    console.log(doctorsList);
 
     // Local state - minimized to only what's truly needed locally
     const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
@@ -122,7 +121,6 @@ const DoctorProfile: FC<DoctorProfileProps> = ({ dashboardId, role, doctorId }) 
 
                 dispatch(fetchDoctorsSuccess(doctors));
             } catch (error) {
-                console.error("Failed to fetch profile:", error);
                 dispatch(fetchDoctorsFailure(error?.message || "Failed to load profile data"));
 
                 toast({

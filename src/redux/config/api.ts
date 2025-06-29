@@ -29,6 +29,7 @@ export const ENDPOINTS = {
     // Patient endpoints
     PATIENT: {
         GET_ALL: `/patients`, // GET
+        GET_BASIC_INFO: `/patients/basic-info`,
         GET_BY_ID: (id: string | number) => `/patients/${id}`, // GET
         CREATE: `/patients`, // POST
         UPDATE: (id: string | number) => `/patients/${id}`, // PUT
@@ -38,6 +39,7 @@ export const ENDPOINTS = {
     // Provider endpoints
     PROVIDER: {
         GET_ALL: `/providers`, // GET
+        GET_BASIC_INFO: `/providers/basic-info`,
         GET_BY_ID: (id: string | number) => `/providers/${id}`, // GET
         CREATE: `/providers`, // POST
         UPDATE: (id: string | number) => `/providers/${id}`, // PUT

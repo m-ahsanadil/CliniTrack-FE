@@ -98,8 +98,19 @@ export interface PatientPostRequest {
   updatedBy: string;
 }
 
+export interface PatientPostResponse {
+  success: boolean;
+  message?: string;
+  data: Patient;
+}
 
+export interface PatientPostErrorResponse {
+  success: false;
+  message: string;
+  errors?: string[];
+}
 
+export type PatientPostApiResponse = PatientPostResponse | PatientPostErrorResponse;
 
 // DELETE Patient
 export interface PatientDeleteResponse {
@@ -115,14 +126,23 @@ export interface PatientDeleteErrorResponse {
 
 export type PatientDeleteApiResponse = PatientDeleteResponse | PatientDeleteErrorResponse;
 
-export interface PatientPostApiResponse {
-  success: boolean;
-  message?: string;
-  data: Patient;
-}
-
 // GET by ID — returns a single Patient
 export interface PatientGetByIdResponse {
   success: boolean;
   data: Patient;
+}
+
+export interface PatientBasicInfo {
+  _id: string;
+  patientId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+}
+
+export interface PatientBasicInfoResponse {
+  success: boolean;
+  count: number;
+  message?: string
+  data: PatientBasicInfo[];
 }

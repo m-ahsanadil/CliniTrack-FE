@@ -69,3 +69,18 @@ export interface ProviderGetByIdResponse {
 }
 
 export type ProviderGetApiByIdResponse = ProviderGetByIdResponse | ProviderGetErrorResponse;
+
+
+export interface ProviderBasicInfo {
+    _id: string;
+    providerId: string;
+    name: string;
+    specialty: string;
+}
+
+export interface ProviderBasicInfoResponse {
+    success: boolean;
+    count: number;
+    message?: string
+    data: ProviderBasicInfo[];
+}

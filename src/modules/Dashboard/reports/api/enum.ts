@@ -17,12 +17,12 @@ export enum FilterStatus {
 }
 
 // You might also want to add other clinic-related enums here
-export enum UserRole {
-  ADMIN = "admin",
-  DOCTOR = "doctor",
-  NURSE = "nurse",
-  RECEPTIONIST = "receptionist"
-}
+// export enum UserRole {
+//   ADMIN = "admin",
+//   DOCTOR = "doctor",
+//   NURSE = "nurse",
+//   RECEPTIONIST = "receptionist"
+// }
 
 export enum AppointmentStatus {
   SCHEDULED = "Scheduled",

@@ -24,7 +24,7 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { MedicalRecordProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/medical-records/page"
 import { useMedicalRecordsFetcher } from "./api/useMedicalRecord"
 import { clearDeleteError, deleteMedicalRecord } from "./api/slice"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { ViewMedicalRecordDialog } from "./organisms/ViewMedicalRecordDialog"
 import { useRouter } from "next/navigation"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
@@ -95,9 +95,13 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
         setFormOpen(true);
     };
 
-    return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+    const handleSave = useCallback(() => {
+        setFormOpen(false);
+    }, []);
 
+
+    return (  
+        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
             <RoleGuard
                 allowedRoles={["admin", "doctor"]}
                 fallback={
@@ -266,7 +270,7 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                 onOpenChange={setFormOpen}
                 record={selectedRecord || undefined}
                 mode="edit"
-                onSave={() => setFormOpen(false)}
+                onSave={handleSave}
                 patients={patientsBasicInfo}
                 provider={providerBasicInfo}
             />

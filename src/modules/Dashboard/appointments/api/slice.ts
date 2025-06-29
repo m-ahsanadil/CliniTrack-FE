@@ -1,6 +1,6 @@
 // slice.ts
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import { Appointment, AppointmentGetApiResponse, AppointmentGetResponse, AppointmentApiResponse, AppointmentData, AppointmentUpdateResponse, AppointmentDeleteApiResponse } from "./types";
+import { Appointment, AppointmentGetApiResponse, AppointmentGetResponse, AppointmentApiResponse, AppointmentData, AppointmentUpdateResponse, AppointmentDeleteApiResponse, AppointmentRequest } from "./types";
 import { appointmentsApi } from "./api";
 
 // Async thunk for fetching all appointments
@@ -25,13 +25,12 @@ export const fetchAllAppointments = createAsyncThunk(
 // Async thunk for updating an appointment
 export const updateAppointment = createAsyncThunk(
   'appointment/update',
-  async ({ id, appointmentData }: { id: string | number, appointmentData: AppointmentData }, { rejectWithValue }) => {
+  async ({ id, appointmentData }: { id: string | number, appointmentData: AppointmentRequest }, { rejectWithValue }) => {
     try {
       const response: AppointmentUpdateResponse = await appointmentsApi.update(id, appointmentData);
 
-      // Type guard to check if response is successful
       if (response.success) {
-        return { id, updatedAppointment: response.data }; // Return both ID and updated data
+        return { id, updatedAppointment: response.data }; // response.data is AppointmentData
       } else {
         return rejectWithValue(response.message || 'Failed to update appointment');
       }
@@ -122,10 +121,11 @@ const appointmentSlice = createSlice({
         state.updateLoading = true;
         state.updateError = null;
       })
-      // .addCase(updateAppointment.fulfilled, (state, action: PayloadAction<{ id: string | number, updatedAppointment: Appointment }>) => {
-      //   state.updateLoading = false;
-      //   state.updateError = null;
-      // })
+      .addCase(updateAppointment.fulfilled, (state, action) => {
+        // Remove the manual PayloadAction typing - let TypeScript infer it
+        state.updateLoading = false;
+        state.updateError = null;
+      })
       .addCase(updateAppointment.rejected, (state, action) => {
         state.updateLoading = false;
         state.updateError = action.payload as string;

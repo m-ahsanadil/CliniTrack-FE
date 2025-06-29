@@ -29,7 +29,7 @@ export const appointmentsApi = {
         },
 
         // Update Appointment by ID
-        update: (id: string | number, appointmentData: AppointmentData): Promise<AppointmentUpdateResponse> => {
+        update: (id: string | number, appointmentData: AppointmentRequest): Promise<AppointmentUpdateResponse> => {
                 return apiService.put(ENDPOINTS.APPOINTMENT.UPDATE(id), appointmentData);
         },
 

@@ -105,7 +105,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
 
   const filteredMedicalRecords = medicalRecords.filter(
     (record) =>
-      record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (record.patientName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       record.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.doctor.toLowerCase().includes(searchTerm.toLowerCase()),
   )
@@ -182,7 +182,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setMedicalRecordFormOpen(true)
   }
 
-  const handleSaveMedicalRecord = (recordData: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string }; prescriptions: string[]; symptoms: string[]; notes: string }) => {
+  const handleSaveMedicalRecord = (recordData: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string; }; prescriptions: string[]; symptoms: string[]; notes: string; }) => {
     if (editingItem) {
       setMedicalRecords(
         medicalRecords.map((r) => (r.id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),

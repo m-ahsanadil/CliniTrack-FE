@@ -27,10 +27,10 @@ import { Edit, Loader2, UserPlus } from 'lucide-react'
 import { DoctorProfileRequest, ProviderAdminProfileRequest } from '../api/types'
 import { doctorProfileSchema } from '@/src/validation/schemas'
 import { countries, specialties, statusOptions } from '@/src/constants'
-import { User } from '@/src/modules/Authentication/auth/api/types'
 import { useAppDispatch, useAppSelector } from '@/src/redux/store/reduxHook'
 import { ProviderAdminProfileApi } from '../api/api'
 import { clearDoctors } from '../api/slice'
+import { ProviderStatusValues } from '@/src/enum'
 
 // interface DoctorProfile extends DoctorProfileRequest {
 //     id?: string
@@ -404,28 +404,23 @@ export const DoctorProfileDialog: React.FC<DoctorProfileDialogProps> = ({
                             </div>
 
                             {isEditMode && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="status">Status *</Label>
-                                    <Select
-                                        value={watch('status')}
-                                        onValueChange={(value) => setValue('status', value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {statusOptions.map((status) => (
-                                                <SelectItem key={status.value} value={status.value}>
-                                                    {status.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.status && (
-                                        <p className="text-sm text-red-500">{errors.status.message}</p>
-                                    )}
-                                </div>
+                                <Select
+                                    value={watch('status')}
+                                    onValueChange={(value) => setValue('status', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ProviderStatusValues.map((status) => (
+                                            <SelectItem key={status} value={status}>
+                                                {status}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             )}
+
                         </div>
                     </div>
 

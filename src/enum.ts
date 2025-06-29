@@ -85,6 +85,20 @@ export enum AppointmentStatus {
   NO_SHOW = 'No-show',
 }
 
+export enum DepartmentName {
+  GENERAL_MEDICINE = 'General Medicine',
+  CARDIOLOGY = 'Cardiology',
+  DERMATOLOGY = 'Dermatology',
+  ORTHOPEDICS = 'Orthopedics',
+  PEDIATRICS = 'Pediatrics',
+  GYNECOLOGY = 'Gynecology',
+  NEUROLOGY = 'Neurology',
+  PSYCHIATRY = 'Psychiatry',
+  EMERGENCY = 'Emergency Medicine',
+  RADIOLOGY = 'Radiology',
+}
+
+export const DepartmentNameValues = Object.values(DepartmentName)
 export const AppointmentTypeValues = Object.values(AppointmentType);
 export const AppointmentPriorityValues = Object.values(AppointmentPriority);
 export const AppointmentStatusValues = Object.values(AppointmentStatus);
@@ -113,14 +127,17 @@ export enum Gender {
 
 export enum Language {
   ENGLISH = 'English',
-  URDU = 'Urdu',
   SPANISH = 'Spanish',
-  ARABIC = 'Arabic',
   FRENCH = 'French',
+  GERMAN = 'German',
+  CHINESE = 'Chinese',
+  URDU = 'Urdu',
+  ARABIC = 'Arabic',
   OTHER = 'Other',
 }
 
 export enum Relationship {
+  BROTHER = 'Brother',
   SELF = 'Self',
   SPOUSE = 'Spouse',
   PARENT = 'Parent',
@@ -128,6 +145,8 @@ export enum Relationship {
   SIBLING = 'Sibling',
   FRIEND = 'Friend',
   OTHER = 'Other',
+  HUSBAND = 'Husband',
+  FATHER = 'Father',
 }
 
 export const GenderValues = Object.values(Gender);

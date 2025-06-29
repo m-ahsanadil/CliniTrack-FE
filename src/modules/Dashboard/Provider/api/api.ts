@@ -1,11 +1,16 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
 import apiService from "@/src/redux/config/apiService";
-import { Provider, ProviderGetApiResponse, ProviderPostApiResponse, ProviderRequest } from "./types";
+import { Provider, ProviderBasicInfoResponse, ProviderGetApiResponse, ProviderPostApiResponse, ProviderRequest } from "./types";
 
 export const providerApi = {
         getAll: (): Promise<ProviderGetApiResponse> => {
                 return apiService.get(ENDPOINTS.PROVIDER.GET_ALL
                 )
+        },
+
+        // Getting basic info
+        getBasicInfo: (): Promise<ProviderBasicInfoResponse> => {
+                return apiService.get(ENDPOINTS.PROVIDER.GET_BASIC_INFO);
         },
 
         getById: (id: string | number): Promise<{ success: boolean; data: Provider }> => {

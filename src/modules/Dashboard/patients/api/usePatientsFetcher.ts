@@ -6,7 +6,6 @@ import { useRoleBasedFetcher } from "@/src/redux/hook/useRoleBasedFetcher";
 import { UserRole } from "@/src/enum";
 
 export const usePatientsFetcher = () => {
-    const dispatch = useAppDispatch();
     const { patients, count } = useAppSelector(state => state.patients);
 
     // useEffect(() => {

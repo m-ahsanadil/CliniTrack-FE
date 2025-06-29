@@ -12,6 +12,7 @@ import InvoiceForm from "@/src/components/invoice-form"
 import ReportsModal from "@/src/modules/Dashboard/reports/organisms/reports-modal"
 import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
+import { useAppSelector } from '@/src/redux/store/reduxHook';
 // import { useAppSelector } from '@/src/redux/store/reduxHook';
 // import { notFound } from 'next/navigation';
 
@@ -24,9 +25,17 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     //     notFound() // This will show your custom not-found.tsx
     // }
 
+
+    // SELECTING DATA FROM THE REDUX
+    const provider = useAppSelector(state => state.provider.provider)
+    const patients = useAppSelector(state => state.patients.patients)
+    const { basicInfo: patientBasicInfo } = useAppSelector(state => state.patients)
+    const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider)
+
+
     const {
         isSidebarOpen, setIsSidebarOpen,
-        patients,
+        // patients,
         appointments,
         invoices,
         patientFormOpen, setPatientFormOpen,
@@ -69,6 +78,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     onOpenChange={setPatientFormOpen}
                     patient={editingItem}
                     onSave={handleSavePatient}
+                    mode={'create'}
                 />
 
                 <AppointmentForm
@@ -76,7 +86,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     onOpenChange={setAppointmentFormOpen}
                     appointment={editingItem}
                     onSave={handleSaveAppointment}
-                    patients={patients}
+                    patients={patientBasicInfo}
+                    providers={providerBasicInfo}
                     mode={'create'}
                 />
 
@@ -85,7 +96,9 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     onOpenChange={setMedicalRecordFormOpen}
                     record={editingItem}
                     onSave={handleSaveMedicalRecord}
-                    patients={patients}
+                    patients={patientBasicInfo}
+                    provider={providerBasicInfo}
+                    mode={'create'}
                 />
 
                 <InvoiceForm
@@ -94,15 +107,18 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     invoice={editingItem}
                     onSave={handleSaveInvoice}
                     patients={patients}
-                    providers={[]}
-                    currentUser={undefined} />
+                    providers={provider}
+                    mode={'create'}
+                    currentUser={undefined}
+                />
 
                 <ReportsModal
                     open={reportsModalOpen}
                     onOpenChange={setReportsModalOpen}
-                    patients={patients}
+                    // patients={patients}
                     appointments={appointments}
                     invoices={invoices}
+                    patients={[]}
                 />
 
                 <CalendarView

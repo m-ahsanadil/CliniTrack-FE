@@ -14,17 +14,6 @@ export interface LoginRequest {
     password: string;
 }
 
-
-// export interface DecodedToken {
-//     sub: string; // user id
-//     email: string;
-//     role: "doctor" | "staff" | "admin";
-//     username?: string;
-//     iat?: number;
-//     exp?: number;
-//     department?: string;
-// }
-
 export interface LoginResponse {
     success: boolean;
     message: string;
