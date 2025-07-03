@@ -13,18 +13,14 @@ import ReportsModal from "@/src/modules/Dashboard/reports/organisms/reports-moda
 import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
 import { useAppSelector } from '@/src/redux/store/reduxHook';
-// import { useAppSelector } from '@/src/redux/store/reduxHook';
+import { useRoleValidation } from '@/src/redux/hook/useRoleValidation';
+import { DashboardLoading } from '@/src/components/Loading';
 // import { notFound } from 'next/navigation';
 
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
-    // const { user } = useAppSelector(state => state.auth)
-
-    // // Trigger not-found if user verification fails
-    // if (!user?.id || !user?.role) {
-    //     notFound() // This will show your custom not-found.tsx
-    // }
-
+    const { loginLoading, user } = useAppSelector(state => state.auth)
+    const { isValidating, isAuthorized } = useRoleValidation();
 
     // SELECTING DATA FROM THE REDUX
     const provider = useAppSelector(state => state.provider.provider)
@@ -52,6 +48,19 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         handleEditAppointment,
         handleSaveAppointment
     } = useGlobalUI();
+
+    // Show loading while validation is happening OR while still loading
+    if (isValidating || loginLoading) {
+        return <DashboardLoading />;
+    }
+
+    // Don't render anything if not authorized (redirect will happen)
+    if (!isAuthorized || !user) {
+        return null;
+    }
+
+    console.log('✅ Rendering dashboard content');
+
     return (
         <div className="flex h-screen bg-slate-50">
             <Sidebar />
