@@ -7,6 +7,14 @@ export const ENDPOINTS = {
         LOGIN: `/auth/login`, // POST
     },
 
+    DASHBOARD: {
+        GET_ADMIN: '/dashboards/admin',
+        GET_DOCTOR: '/dashboards/doctor',
+        GET_STAFF: '/dashboards/staff',
+        GET_STATS: '/dashboards/stats',
+        GET_COUNT: '/dashboards/count'
+    },
+
     // Invoice endpoints
     INVOICE: {
         GET_ALL: `/invoices`, // GET
