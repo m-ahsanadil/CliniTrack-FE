@@ -167,7 +167,7 @@ export const useLogin = () => {
                             username: response.user.username,
                             email: response.user.email,
                             role: response.user.role,
-                            department: response.user.department ,
+                            department: response.user.department,
                             avatar: response.user.avatar,
                         });
                         setIsNavigating(true);
@@ -181,10 +181,11 @@ export const useLogin = () => {
                             description: errorMessage,
                         })
                     }
-                } catch (apiError: any) {
-                    // Network or other API errors
-                    const errorMessage = apiError?.message || "Network error occurred";
+                } catch (error: any) {
+                    const errorMessage = error?.message || "An unexpected error occurred";
+
                     dispatch(setError(errorMessage));
+
                     toast({
                         variant: "destructive",
                         title: "Login Failed",
@@ -195,7 +196,6 @@ export const useLogin = () => {
                 }
             }
         } catch (error: any) {
-            console.error('Login error:', error);
             const errorMessage = error?.message || "An unexpected error occurred";
             dispatch(setError(errorMessage));
             toast({
