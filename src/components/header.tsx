@@ -161,7 +161,7 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                     <div className="px-3 py-2">
-                        <p className="text-sm font-medium truncate">{user?.username}</p>
+                        <p className="text-sm font-medium truncate">{user?.fullName}</p>
                         <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize mt-1">
                             {user?.role}

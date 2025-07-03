@@ -39,6 +39,7 @@ import { fetchAllAppointments } from "../appointments/api/slice";
 import { fetchAllInvoices } from "../billing/api/slice";
 import { fetchAllPatients } from "../patients/api/slice";
 import { shallowEqual } from "react-redux";
+import { useMedicalRecordsFetcher } from "../medicalRecords/api/useMedicalRecord";
 
 // Memoized components for better performance
 const StatsCard = memo(({ title, value, subtitle, icon: Icon, iconColor }: { title: string, value: number | string, icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>, subtitle: string, iconColor: string }) => (
@@ -149,6 +150,7 @@ function Dashboard({ dashboardId, role }: DashboardProps) {
 
     // Call hooks
     useAppointmentsFetcher();
+    useMedicalRecordsFetcher();
     useInvoiceFetcher();
     usePatientsFetcher();
 
@@ -258,11 +260,11 @@ function Dashboard({ dashboardId, role }: DashboardProps) {
                 <div className="space-y-6">
                     {/* Welcome Message */}
                     <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-                        <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.username}!</h2>
+                        <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.fullName}!</h2>
                         <p className="opacity-90">{welcomeMessage}</p>
-                        {/* {user?.department && (
+                        {user?.department && (
                             <p className="text-sm opacity-75 mt-1">Department: {user.department}</p>
-                        )} */}
+                        )}
                     </div>
 
                     {/* Stats Cards */}
