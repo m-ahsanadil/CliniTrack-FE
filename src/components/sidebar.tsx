@@ -8,7 +8,9 @@ import {
     Home,
     AlertTriangle,
     BarChart3,
-    UserCheck
+    UserCheck,
+    Loader2,
+    WifiOff
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -16,20 +18,137 @@ import { Button } from "@/components/ui/button"
 import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import Link from "next/link"
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "../redux/store/reduxHook"
 import { useEffect, useState } from "react"
+import { useDashboardData } from "../modules/Dashboard/dashboard/api/hook/useDashboardData";
+import { UserRole } from "../enum";
 
+const MENU_MAP: Record<string, { icon: any; path: string }> = {
+    "Dashboard": { icon: Home, path: "dashboard" },
+    "Patients": { icon: Users, path: "patients" },
+    "Providers": { icon: UserCheck, path: "providers" },
+    "Appointments": { icon: Calendar, path: "appointments" },
+    "Medical Records": { icon: FileText, path: "medical-records" },
+    "Reports": { icon: BarChart3, path: "reports" },
+    "Billing": { icon: Receipt, path: "billing" },
+    "Settings": { icon: Settings, path: "settings" },
+};
+
+// Skeleton Components
+const Skeleton = ({ className }: { className?: string }) => (
+    <div className={`animate-pulse bg-slate-700 rounded ${className}`} />
+);
+
+const SidebarHeaderSkeleton = () => (
+    <div className="flex-shrink-0 p-6 border-b border-slate-700">
+        <Skeleton className="h-6 w-32 mb-2 bg-slate-600" />
+        <Skeleton className="h-4 w-40 mb-3 bg-slate-700" />
+
+        {/* Role Badge Skeleton */}
+        <div className="mt-3">
+            <Skeleton className="h-6 w-20 rounded-full bg-slate-600" />
+        </div>
+
+        {/* User Info Skeleton */}
+        <div className="mt-3 space-y-1">
+            <Skeleton className="h-3 w-24 bg-slate-700" />
+            <Skeleton className="h-3 w-20 bg-slate-700" />
+        </div>
+    </div>
+);
+
+const SidebarNavigationSkeleton = () => (
+    <nav className="flex-1 overflow-y-auto p-4">
+        <ul className="space-y-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+                <li key={i}>
+                    <div className="flex items-center p-2 rounded-md">
+                        <Skeleton className="h-4 w-4 mr-3 bg-slate-600" />
+                        <Skeleton className="h-4 w-24 bg-slate-600" />
+                    </div>
+                </li>
+            ))}
+        </ul>
+    </nav>
+);
+
+// Error State Component
+const SidebarErrorState = ({
+    error,
+    onRetry
+}: {
+    error: string;
+    onRetry?: () => void;
+}) => (
+    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 bg-red-900/20 rounded-full flex items-center justify-center mb-4">
+            <WifiOff className="w-6 h-6 text-red-400" />
+        </div>
+        <h3 className="text-sm font-medium text-red-400 mb-2">Connection Error</h3>
+        <p className="text-xs text-slate-400 mb-4 max-w-48">
+            {error || "Unable to load navigation menu"}
+        </p>
+        {onRetry && (
+            <Button
+                onClick={onRetry}
+                size="sm"
+                variant="outline"
+                className="text-xs border-slate-600 text-slate-300 hover:bg-slate-800"
+            >
+                Try Again
+            </Button>
+        )}
+    </div>
+);
+
+// Empty Navigation State
+const EmptyNavigationState = () => (
+    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center mb-4">
+            <Settings className="w-6 h-6 text-slate-400" />
+        </div>
+        <h3 className="text-sm font-medium text-slate-300 mb-2">No Menu Items</h3>
+        <p className="text-xs text-slate-400 max-w-48">
+            Navigation menu is not available for your current role or account setup.
+        </p>
+    </div>
+);
+
+// Loading Indicator for Slow Connections
+const LoadingIndicator = () => (
+    <div className="flex items-center justify-center p-4">
+        <Loader2 className="w-4 h-4 animate-spin text-slate-400 mr-2" />
+        <span className="text-xs text-slate-400">Loading menu...</span>
+    </div>
+);
 
 export default function sidebar() {
     const pathname = usePathname();
+    const router = useRouter()
     const params = useParams()
     const { user } = useAppSelector(state => state.auth);
+    const { data: dashboardData, loading, error: dashboardError } = useDashboardData(user?.role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR);
     const { isSidebarOpen } = useGlobalUI();
     const [routeVerification, setRouteVerification] = useState({
         isValid: true,
         message: ""
     })
+
+    const [showSlowLoadingIndicator, setShowSlowLoadingIndicator] = useState(false);
+
+    // Show loading indicator after 2 seconds of loading
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (loading) {
+            timer = setTimeout(() => {
+                setShowSlowLoadingIndicator(true);
+            }, 2000);
+        } else {
+            setShowSlowLoadingIndicator(false);
+        }
+        return () => clearTimeout(timer);
+    }, [loading]);
 
     // Verify route access based on user ID and role
     const verifyRouteAccess = () => {
@@ -75,86 +194,32 @@ export default function sidebar() {
         verifyRouteAccess()
     }, [user?.id, user?.role, pathname, params])
 
-    // Get navigation items based on user role
-    const getNavigationItems = () => {
-        if (!user?.role) return []
+    const handleRetry = () => {
+        router.refresh();
+    };
 
-        const baseItems = [
-            { id: "dashboard", label: "Dashboard", icon: Home, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/dashboard` },
-            { id: "patients", label: "Patients", icon: Users, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/patients` },
-            { id: "providers", label: "Providers", icon: UserCheck, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/providers` },
-            { id: "appointments", label: "Appointments", icon: Calendar, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/appointments` },
-        ]
+    const sidebarItems = dashboardData?.admin?.menu.map((menuItem) => {
+        const mapped = MENU_MAP[menuItem];
+        return {
+            label: menuItem,
+            icon: mapped?.icon,
+            href: `/${user?.id}/${user?.role}/${mapped?.path}`,
+        };
+    }) || [];
 
-        const roleSpecificItems = [
-            { id: "medicalRecords", label: "Medical Records", icon: FileText, roles: ["admin", "doctor"], href: `/${user.id}/${user.role}/medical-records` },
-            { id: "reports", label: "Reports", icon: BarChart3, roles: ["admin", "doctor", "staff"], href: `/${user.id}/${user.role}/reports` },
-            { id: "billing", label: "Billing", icon: Receipt, roles: ["admin", "staff"], href: `/${user.id}/${user.role}/billing` },
-            // { id: "calendar", label: "Calendar View", icon: CalendarDays, roles: ["admin", "doctor", "staff"] },
-            { id: "settings", label: "Settings", icon: Settings, roles: ["admin"], href: `/${user.id}/${user.role}/settings` },
-        ]
-
-
-        return [...baseItems, ...roleSpecificItems].filter((item) => item.roles.includes(user?.role || ""))
+    if (loading) {
+        return (
+            <div
+                className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-700 transition-transform duration-300 z-40 flex flex-col ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+            >
+                <SidebarHeaderSkeleton />
+                {showSlowLoadingIndicator && <LoadingIndicator />}
+                <SidebarNavigationSkeleton />
+            </div>
+        );
     }
 
     return (
-        // <div
-        //     className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-700 transition-transform duration-300 z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
-        // >
-        //     <div className="p-6 border-b border-slate-700">
-        //         <h1 className="text-xl font-bold text-white">CliniTrack</h1>
-        //         <p className="text-sm text-slate-400">Medical Dashboard</p>
-
-        //         {/* User Role Badge */}
-        //         <div className="mt-3">
-        //             <div
-        //                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user?.role)}`}
-        //             >
-        //                 {(() => {
-        //                     const IconComponent = getRoleIcon(user?.role)
-        //                     return <IconComponent className="w-3 h-3 mr-1" />
-        //                 })()}
-        //                 {user?.role?.toUpperCase()}
-        //             </div>
-        //         </div>
-        //         {/* Route Verification Status */}
-        //         {!routeVerification.isValid && (
-        //             <div className="mt-3 p-2 bg-red-900/20 border border-red-700 rounded-md">
-        //                 <div className="flex items-center text-red-400 text-xs">
-        //                     <AlertTriangle className="w-3 h-3 mr-1" />
-        //                     {routeVerification.message}
-        //                 </div>
-        //             </div>
-        //         )}
-        //         {/* User Info Display */}
-        //         <div className="mt-3 text-xs text-slate-400">
-        //             <div>ID: {user?.id}</div>
-        //             <div>Role: {user?.role}</div>
-        //         </div>
-        //     </div>
-        //     <nav className="p-4">
-        //         <ul className="space-y-2">
-        //             {getNavigationItems().map((item) => {
-        //                 const isActive = pathname === item.href;
-
-        //                 return (
-        //                     <li key={item.id}>
-        //                         <Link href={item.href!} passHref>
-        //                             <Button
-        //                                 variant={isActive ? "secondary" : "ghost"}
-        //                                 className="w-full justify-start text-white hover:bg-slate-800"
-        //                             >
-        //                                 <item.icon className="mr-3 h-4 w-4" />
-        //                                 {item.label}
-        //                             </Button>
-        //                         </Link>
-        //                     </li>
-        //                 );
-        //             })}
-        //         </ul>
-        //     </nav>
-        // </div>
         <div
             className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-700 transition-transform duration-300 z-40 flex flex-col ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
@@ -191,9 +256,18 @@ export default function sidebar() {
                 </div>
             </div>
 
-            {/* Navigation - Scrollable */}
-            <nav className="flex-1 overflow-y-auto p-4">
-                <ul className="space-y-2">
+            {dashboardError ? (
+                <SidebarErrorState
+                    error={dashboardError}
+                    onRetry={handleRetry}
+                />
+            ) : sidebarItems.length === 0 ? (
+                <EmptyNavigationState />
+            ) : (
+
+                // {/* Navigation - Scrollable */ }
+                < nav className="flex-1 overflow-y-auto p-4">
+                    {/* <ul className="space-y-2">
                     {getNavigationItems().map((item) => {
                         const isActive = pathname === item.href;
 
@@ -211,8 +285,33 @@ export default function sidebar() {
                             </li>
                         );
                     })}
-                </ul>
-            </nav>
-        </div>
+                </ul> */}
+                    <ul className="space-y-2">
+                        {sidebarItems.map((item, index) => {
+                            if (!item.icon || !item.href) return null; // skip if not mapped
+
+                            const isActive = pathname === item.href;
+
+                            return (
+                                <li key={index}>
+                                    <Link href={item.href} passHref>
+                                        <Button
+                                            variant={isActive ? "secondary" : "ghost"}
+                                            className="w-full justify-start text-white hover:bg-slate-800"
+                                        >
+                                            <item.icon className="mr-3 h-4 w-4" />
+                                            {item.label}
+                                        </Button>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                </nav>
+            )
+            }
+
+        </div >
     )
 }

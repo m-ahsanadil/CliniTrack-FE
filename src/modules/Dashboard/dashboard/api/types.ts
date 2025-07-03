@@ -1,101 +1,108 @@
-export interface Address {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-}
-
-export interface EmergencyContact {
+export interface AdminData {
+    id: string;
     name: string;
-    relationship: string;
-    phone: string;
-    email: string;
+    role: string;
+    menu: string[];
 }
 
-export interface Medication {
-    name: string;
-    dosage: string;
-    frequency: string;
-    prescribedBy: string;
-    startDate: string;
-    _id?: string;
+export interface StatItem {
+    [key: string]: string | number | undefined;
+    value: number | string;
+    change?: string;
 }
 
-export interface Insurance {
-    provider: string;
-    policyNumber: string;
-    groupNumber: string;
-    subscriberId: string;
-    relationshipToSubscriber: string;
-    effectiveDate: string;
-    expirationDate: string;
-}
-
-export interface PatientRequest {
-    patientId: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    gender: string;
-    ssn: string;
-    phone: string;
-    email: string;
-    address: Address;
-    emergencyContact: EmergencyContact;
-    allergies: string[];
-    chronicConditions: string[];
-    currentMedications: Medication[];
-    insurance: Insurance;
-    status: string;
-    registrationDate: string;
-    preferredLanguage: string;
-    createdBy: string;
-    updatedBy: string;
-}
-
-// ✅ Response Patient Object (full data from backend)
-export interface Patient {
+export interface PatientName {
     _id: string;
-    patientId: string;
-    firstName: string;
-    lastName: string;
     fullName: string;
-    dateOfBirth: string;
-    age: number;
-    gender: string;
-    ssn: string;
-    phone: string;
-    email: string;
-    address: Address;
-    emergencyContact: EmergencyContact;
-    allergies: string[];
-    chronicConditions: string[];
-    currentMedications: Medication[];
-    insurance: Insurance;
-    status: string;
-    registrationDate: string;
-    preferredLanguage: string;
-    tags: string[];
-    createdBy: string;
-    updatedBy: string;
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
 }
 
-// ✅ Success Response
-export interface PatientResponse {
+export interface RecentMedicalRecord {
+    patientName: PatientName;
+    diagnosis: string;
+    date: string;
+}
+
+// GET ADMIN
+export interface Admin {
+    admin: AdminData;
+    Profile: string;
+    welcomeMessage: string;
+    accessMessage: string;
+    Department: string;
+    stats: StatItem[];
+    recentAppointments: Appointment[]; // currently an empty array
+    recentMedicalRecords: RecentMedicalRecord[];
+}
+
+
+export interface Appointment {
+    // define fields if needed in future
+}
+
+export interface AdminGetResponse {
     success: true;
-    message: string;
-    data: Patient;
+    message?: string
+    data: Admin;
 }
 
-export interface PatientErrorResponse {
+export interface AdminGetErrorResponse {
     success: false;
     message: string;
-    data: string;
+    data?: string;
 }
 
-// Combined response type
-export type PatientApiResponse = PatientResponse | PatientErrorResponse;
+export type AdminGetApiResponse = AdminGetResponse | AdminGetErrorResponse;
+
+
+// GET DOCTOR
+
+export interface Doctor {
+    admin: AdminData;
+    welcomeMessage: string;
+    accessMessage: string;
+    Department: string;
+    stats: StatItem[];
+    recentAppointments: Appointment[];
+    recentMedicalRecords: RecentMedicalRecord[];
+}
+
+export interface DoctorGetResponse {
+    success: true;
+    message?: string
+    data: Doctor;
+}
+
+export interface DoctorGetErrorResponse {
+    success: false;
+    message: string;
+    data?: string;
+}
+
+export type DoctorGetApiResponse = DoctorGetResponse | DoctorGetErrorResponse;
+
+
+// GET STAFF
+export interface Staff {
+    admin: AdminData;
+    Profile: string;
+    welcomeMessage: string;
+    accessMessage: string;
+    Department: string;
+    stats: StatItem[];
+    recentAppointments: any[]; // You can define a specific type later if needed
+    recentMedicalRecords: RecentMedicalRecord[];
+}
+
+export interface StaffGetResponse {
+    success: true;
+    message?: string
+    data: Staff;
+}
+
+export interface StaffGetErrorResponse {
+    success: false;
+    message: string;
+    data?: string;
+}
+
+export type StaffGetApiResponse = StaffGetResponse | StaffGetErrorResponse;
