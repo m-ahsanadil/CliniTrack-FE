@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { providerApi } from "./api";
-import { Provider, ProviderBasicInfo, ProviderBasicInfoResponse, ProviderGetApiResponse, ProviderGetErrorResponse, } from "./types";
+import { Provider, ProviderBasicInfo, ProviderBasicInfoResponse, ProviderGetApiResponse, ProviderGetErrorResponse, ProviderRequest, } from "./types";
 
 
 // Async thunk to fetch all providers
@@ -26,6 +26,46 @@ export const fetchAllProviders = createAsyncThunk<
     }
   }
 );
+
+// CREATE PROVIDER
+export const createProvider = createAsyncThunk<
+  Provider,
+  ProviderRequest,
+  { rejectValue: string }
+>("provider/create", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await providerApi.create(payload);
+    if (response.success) {
+      return response.data;
+    } else {
+      return rejectWithValue(response.message || "Failed to create provider");
+    }
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || error.message || "Failed to create provider"
+    );
+  }
+});
+
+// UPDATE PROVIDER
+export const updateProvider = createAsyncThunk<
+  Provider,
+  { id: string; data: ProviderRequest },
+  { rejectValue: string }
+>("provider/update", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await providerApi.update(id, data);
+    if (response.success) {
+      return response.data;
+    } else {
+      return rejectWithValue(response.message || "Failed to update provider");
+    }
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || error.message || "Failed to update provider"
+    );
+  }
+});
 
 
 export const fetchProviderBasicInfo = createAsyncThunk(
@@ -95,6 +135,10 @@ const providerSlice = createSlice({
       state.provider = [];
       state.count = 0;
     },
+    resetSuccess: (state) => {
+      state.success = false;
+    },
+
   },
   extraReducers: (builder) => {
     builder
@@ -128,6 +172,39 @@ const providerSlice = createSlice({
         state.basicInfo = [];
         state.count = 0;
         state.success = false;
+      })
+
+      // CREATE
+      .addCase(createProvider.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createProvider.fulfilled, (state, action: PayloadAction<Provider>) => {
+        state.loading = false;
+        state.provider.push(action.payload); // add newly created provider to list
+        state.success = true;
+      })
+      .addCase(createProvider.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to create provider";
+      })
+
+      // UPDATE
+      .addCase(updateProvider.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProvider.fulfilled, (state, action: PayloadAction<Provider>) => {
+        state.loading = false;
+        const index = state.provider.findIndex(p => p._id === action.payload._id);
+        if (index !== -1) {
+          state.provider[index] = action.payload;
+        }
+        state.success = true;
+      })
+      .addCase(updateProvider.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to update provider";
       });
 
   },
@@ -135,7 +212,8 @@ const providerSlice = createSlice({
 
 export const {
   clearError,
-  clearProvider
+  clearProvider,
+  resetSuccess,
 } = providerSlice.actions;
 
 export default providerSlice.reducer;

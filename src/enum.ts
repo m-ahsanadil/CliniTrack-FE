@@ -29,7 +29,6 @@ export const ReportStatusValues = Object.values(ReportStatus);
 export enum ProviderStatus {
   ACTIVE = 'Active',
   INACTIVE = 'Inactive',
-  PENDING = 'Pending',
 }
 
 export const ProviderStatusValues = Object.values(ProviderStatus);
@@ -96,6 +95,14 @@ export enum DepartmentName {
   PSYCHIATRY = 'Psychiatry',
   EMERGENCY = 'Emergency Medicine',
   RADIOLOGY = 'Radiology',
+  FAMILY_MEDICINE = 'Family Medicine',
+  INTERNAL_MEDICINE = 'Internal Medicine',
+  SURGERY = 'Surgery',
+  OPHTHALMOLOGY = 'Ophthalmology',
+  ENT = 'ENT',
+  ANESTHESIOLOGY = 'Anesthesiology',
+  PATHOLOGY = 'Pathology',
+  OTHER = 'Other'
 }
 
 export const DepartmentNameValues = Object.values(DepartmentName)

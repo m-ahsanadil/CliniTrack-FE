@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import { ProviderStatus, ProviderStatusValues } from "../enum";
 
 export const loginValidationSchema = Yup.object({
   email: Yup.string()
@@ -30,7 +31,28 @@ export const registerValidationSchema = Yup.object({
     .required('Role is required'),
 });
 
-
+export const providerValidationSchema = Yup.object({
+  providerId: Yup.string().optional(),
+  name: Yup.string().min(2, "Name must be at least 2 characters"),
+  email: Yup.string().email("Invalid email address"),
+  phone: Yup.string().min(10, "Phone number must be at least 10 characters"),
+  licenseNumber: Yup.string().min(2, "License number is required"),
+  npiNumber: Yup.string().min(10, "NPI number must be at least 10 characters"),
+  specialty: Yup.string().min(2, "Specialty is required"),
+  clinicAffiliation: Yup.string().min(2, "Clinic affiliation is required"),
+  status: Yup.mixed<ProviderStatus>()
+    .oneOf(ProviderStatusValues, "Invalid status")
+    .required("Status is required"),
+  address: Yup.object({
+    street: Yup.string().min(2, "Street address is required"),
+    city: Yup.string().min(2, "City is required"),
+    state: Yup.string().min(2, "State is required"),
+    country: Yup.string().min(2, "Country is required"),
+    zipCode: Yup.string().min(2, "Zip code is required"),
+  }),
+  createdBy: Yup.string().optional(),
+  updatedBy: Yup.string().optional(),
+})
 // export const registerSchema = Yup.object({
 //          name: Yup.string().required("Name is required"),
 //          email: Yup.string().required("Email is required").email("Invalid email format"),

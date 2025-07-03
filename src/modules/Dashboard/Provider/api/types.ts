@@ -1,3 +1,5 @@
+import { ProviderStatus } from "@/src/enum";
+
 export interface ProviderAddress {
     street: string;
     city: string;
@@ -17,7 +19,7 @@ export interface Provider {
     licenseNumber: string;
     npiNumber: string;
     clinicAffiliation: string;
-    status: string;
+    status: ProviderStatus.ACTIVE | ProviderStatus.INACTIVE ;
     createdBy: string;
     updatedBy: string;
     createdAt: string; // ISO timestamp
