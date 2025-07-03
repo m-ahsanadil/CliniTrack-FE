@@ -5,6 +5,24 @@ import { Appointment } from "@/src/modules/Dashboard/appointments/api/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type GlobalUIContextType = {
+  //Show password states
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  togglePasswordVisibility: () => void;
+
+  // Specific password states
+  showLoginPassword: boolean;
+  setShowLoginPassword: (show: boolean) => void;
+  toggleLoginPasswordVisibility: () => void;
+
+  showRegisterPassword: boolean;
+  setShowRegisterPassword: (show: boolean) => void;
+  toggleRegisterPasswordVisibility: () => void;
+
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (show: boolean) => void;
+  toggleConfirmPasswordVisibility: () => void;
+
   // UI States
   isSidebarOpen: boolean;
   setIsSidebarOpen: (val: boolean) => void;
@@ -73,20 +91,39 @@ type GlobalUIContextType = {
 const GlobalUIContext = createContext<GlobalUIContextType | undefined>(undefined);
 
 export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
+  // General Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Specific password Visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // UI States
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Data States
   const [patients, setPatients] = useState(Patients);
-  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [appointments, setAppointments] = useState(Appointments);
   const [medicalRecords, setMedicalRecords] = useState(MedicalRecords);
   const [invoices, setInvoices] = useState(Invoices);
+
+  // Modal States
   const [patientFormOpen, setPatientFormOpen] = useState(false);
+  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
   const [calendarViewOpen, setCalendarViewOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+
+  // Toggle functions for Password Visibility
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleLoginPasswordVisibility = () => setShowLoginPassword(!showLoginPassword);
+  const toggleRegisterPasswordVisibility = () => setShowRegisterPassword(!showRegisterPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   // Filter functions
   const filteredPatients = patients.filter(
@@ -225,40 +262,86 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GlobalUIContext.Provider
       value={{
-        isSidebarOpen, setIsSidebarOpen,
-        currentPage, setCurrentPage,
-        searchTerm, setSearchTerm,
-        patients, setPatients,
-        appointments, setAppointments,
-        medicalRecords, setMedicalRecords,
-        invoices, setInvoices,
-        patientFormOpen, setPatientFormOpen,
-        appointmentFormOpen, setAppointmentFormOpen,
-        medicalRecordFormOpen, setMedicalRecordFormOpen,
-        invoiceFormOpen, setInvoiceFormOpen,
-        reportsModalOpen, setReportsModalOpen,
-        calendarViewOpen, setCalendarViewOpen,
-        editingItem, setEditingItem,
+        // Password visibility
+        showPassword,
+        setShowPassword,
+        togglePasswordVisibility,
+
+
+        toggleLoginPasswordVisibility,
+        showLoginPassword,
+        setShowLoginPassword,
+
+        showRegisterPassword,
+        setShowRegisterPassword,
+        toggleRegisterPasswordVisibility,
+        showConfirmPassword,
+        setShowConfirmPassword,
+        toggleConfirmPasswordVisibility,
+
+        // UI States
+        isSidebarOpen,
+        setIsSidebarOpen,
+        currentPage,
+        setCurrentPage,
+        searchTerm,
+        setSearchTerm,
+
+        // Data States
+        patients,
+        setPatients,
+        appointments,
+        setAppointments,
+        medicalRecords,
+        setMedicalRecords,
+        invoices,
+        setInvoices,
+
+        // Modal States
+        patientFormOpen,
+        setPatientFormOpen,
+        appointmentFormOpen,
+        setAppointmentFormOpen,
+        medicalRecordFormOpen,
+        setMedicalRecordFormOpen,
+        invoiceFormOpen,
+        setInvoiceFormOpen,
+        reportsModalOpen,
+        setReportsModalOpen,
+        calendarViewOpen,
+        setCalendarViewOpen,
+        editingItem,
+        setEditingItem,
+
+        // Filtered Lists
         filteredPatients,
-        handleAddInvoice,
         filteredAppointments,
         filteredMedicalRecords,
-        handleSaveInvoice,
         filteredInvoices,
-        handleEditInvoice,
+
+        // Patient CRUD
         handleAddPatient,
         handleEditPatient,
         handleSavePatient,
         handleDeletePatient,
-        handleDeleteMedicalRecord,
-        handleSaveMedicalRecord,
-        handleEditMedicalRecord,
-        handleAddMedicalRecord,
-        handleDeleteAppointment,
-        handleDeleteInvoice,
+
+        // Appointment CRUD
         handleAddAppointment,
         handleEditAppointment,
         handleSaveAppointment,
+        handleDeleteAppointment,
+
+        // Medical Record CRUD
+        handleAddMedicalRecord,
+        handleEditMedicalRecord,
+        handleSaveMedicalRecord,
+        handleDeleteMedicalRecord,
+
+        // Invoice CRUD
+        handleAddInvoice,
+        handleEditInvoice,
+        handleSaveInvoice,
+        handleDeleteInvoice,
       }}
     >
       {children}

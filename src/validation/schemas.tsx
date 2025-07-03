@@ -1,36 +1,67 @@
 import * as Yup from "yup";
 
-export const registerSchema = Yup.object({
-         name: Yup.string().required("Name is required"),
-         email: Yup.string().required("Email is required").email("Invalid email format"),
-         password: Yup.string().required("Password is required"),
-         password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords do not match"),
+export const loginValidationSchema = Yup.object({
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Email is required'),
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
 });
 
-export const verifyEmailSchema = Yup.object({
-         email: Yup.string().required("Email is required").email("Invalid email format"),
-         otp: Yup.string().required("OTP is required").min(4, "OTP must be 4 digits long").max(4, "OTP must be 4 digits long"),
+export const registerValidationSchema = Yup.object({
+  username: Yup.string()
+    .min(5, 'Username must be at least 5 characters')
+    .max(50, 'Username must be less than 50 characters')
+    .matches(/^(?=(?:.*[a-zA-Z]){4,})(?=.*\d)[a-zA-Z0-9_]+$/, 'Username must contain at least 4 letters and 1 digit')
+    .required('Username is required'),
+  email: Yup.string()
+    .email('Invalid email address')
+    .matches(
+      /^[^\d@]+@clinitrack\.com$/,
+      'Email must end with @clinitrack.com and contain no digits'
+    )
+    .required('Email is required'),
+  password: Yup.string()
+    .min(8, 'Password must be at least 8 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
+    .required('Password is required'),
+  role: Yup.string()
+    .required('Role is required'),
 });
 
-export const loginSchema = Yup.object({
-         email: Yup.string().required("Email is required").email("Invalid email format"),
-         password: Yup.string().required("Password is required"),
-});
 
-export const resetPasswordSchema = Yup.object({
-         email: Yup.string().required("Email is required").email("Invalid email format"),
-});
+// export const registerSchema = Yup.object({
+//          name: Yup.string().required("Name is required"),
+//          email: Yup.string().required("Email is required").email("Invalid email format"),
+//          password: Yup.string().required("Password is required"),
+//          password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords do not match"),
+// });
 
-export const resetPasswordConfirmSchema = Yup.object({
-         password: Yup.string().required("Password is required"),
-         password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords do not match"),
-});
+// export const verifyEmailSchema = Yup.object({
+//          email: Yup.string().required("Email is required").email("Invalid email format"),
+//          otp: Yup.string().required("OTP is required").min(4, "OTP must be 4 digits long").max(4, "OTP must be 4 digits long"),
+// });
+
+// export const loginSchema = Yup.object({
+//          email: Yup.string().required("Email is required").email("Invalid email format"),
+//          password: Yup.string().required("Password is required"),
+// });
+
+// export const resetPasswordSchema = Yup.object({
+//          email: Yup.string().required("Email is required").email("Invalid email format"),
+// });
+
+// export const resetPasswordConfirmSchema = Yup.object({
+//          password: Yup.string().required("Password is required"),
+//          password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords do not match"),
+// });
 
 
-export const changePasswordSchema = Yup.object({
-         password: Yup.string().required("Password is required"),
-         password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords and Confirm Password doesn't match"),
-});
+// export const changePasswordSchema = Yup.object({
+//          password: Yup.string().required("Password is required"),
+//          password_confirmation: Yup.string().required("Confirm Password is required").oneOf([Yup.ref("password"), ""], "Passwords and Confirm Password doesn't match"),
+// });
 
 // Validation schema
 export const doctorProfileSchema = Yup.object({

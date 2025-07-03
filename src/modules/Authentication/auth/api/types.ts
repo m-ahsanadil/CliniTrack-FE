@@ -5,8 +5,11 @@ export interface UserInfo {
     username: string;
     email: string;
     role: UserRole;
-    createdAt: string; // ISO string format
+    createdAt: string;
     updatedAt: string;
+    avatar?: string;
+    department?: string;
+    fullName?: string;
 }
 
 export interface LoginRequest {
@@ -32,8 +35,16 @@ export interface LoginErrorResponse {
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 
 
-export interface RegisterRequest extends Omit<UserInfo, "id"> { }
-
+export interface RegisterRequest {
+    username: string;
+    email: string;
+    password: string;
+    fullName: string;
+    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | '';
+    dob: string;
+    education: string;
+    experience: string;
+}
 
 export interface RegisterResponse {
     success: true;
@@ -42,7 +53,12 @@ export interface RegisterResponse {
         id: string;
         username: string;
         email: string;
+        fullName: string,
         role: string;
+        age: number,
+        dob: string,
+        education: string,
+        experience: string
     };
 }
 
