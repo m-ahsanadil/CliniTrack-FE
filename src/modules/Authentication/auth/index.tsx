@@ -6,8 +6,8 @@ import { Stethoscope, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRef, useState } from "react";
 import { demoAccounts, mockUsers } from "@/src/constants";
-import { RegisterTab } from "../organisms/RegisterTab";
-import { LoginTab } from "../organisms/LoginTab";
+import { RegisterTab } from "./organisms/RegisterTab";
+import { LoginTab } from "./organisms/LoginTab";
 
 
 
