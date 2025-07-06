@@ -49,8 +49,6 @@ export default function Header() {
     const currentPage = pathname.split("/").pop() || "dashboard"
 
     const handleChangePhotoClick = () => {
-        console.log('🔄 Change photo clicked');
-
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -59,7 +57,6 @@ export default function Header() {
         input.onchange = (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
-                console.log('📁 File selected:', file.name);
                 handlePhotoUpload(file);
             }
             document.body.removeChild(input);
@@ -125,16 +122,11 @@ export default function Header() {
             await profileApi.upload_photo(formData);
             await fetchPhoto();
         } catch (err: any) {
-            console.error("❌ Upload failed:", err.message);
+            console.log("❌ Upload failed:", err.message);
         } finally {
             setUploading(false);
         }
     }, [fetchPhoto]);
-
-    const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) handlePhotoUpload(file);
-    };
 
     useEffect(() => {
         fetchPhoto();
@@ -283,7 +275,7 @@ export default function Header() {
                     <Input
                         type="search"
                         placeholder="Search anything..."
-                        className="pl-10 w-full border-slate-300 bg-slate-50 focus:bg-white"
+                        className="pl-10 w-full border-slate-300 bg-slate-50 focus:bg-white text-slate-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -292,12 +284,12 @@ export default function Header() {
 
             {/* Mobile Search Bar - Expandable (hidden by default) */}
             <div className="md:hidden px-4 pb-3 border-t border-slate-100 bg-slate-50" style={{ display: 'none' }} id="mobile-search">
-                <div className="relative pt-3">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <div className="relative pt-3 flex">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black h-4 w-4" />
                     <Input
                         type="search"
                         placeholder="Search..."
-                        className="pl-10 w-full border-slate-300"
+                        className="pl-10 w-full text-slate-500 border-slate-300"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
