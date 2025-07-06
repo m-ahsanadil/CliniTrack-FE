@@ -542,7 +542,7 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
                                 </CardContent>
                             </Card>
 
-                            <RoleGuard allowedRoles={["admin", "staff"]}>
+                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
                                 <Card className="bg-white border border-slate-200">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">Pending Invoices</CardTitle>
@@ -557,7 +557,7 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
                                 </Card>
                             </RoleGuard>
 
-                            <RoleGuard allowedRoles={["admin"]}>
+                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                                 <Card className="bg-white border border-slate-200">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">Revenue This Month</CardTitle>
@@ -591,13 +591,13 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
                                         <Plus className="mr-2 h-4 w-4" />
                                         Schedule Appointment
                                     </Button>
-                                    <RoleGuard allowedRoles={["admin", "doctor"]}>
+                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.SUPER_ADMIN]}>
                                         <Button onClick={handleAddMedicalRecord} className="bg-purple-600 hover:bg-purple-700 text-white">
                                             <Plus className="mr-2 h-4 w-4" />
                                             Add Medical Record
                                         </Button>
                                     </RoleGuard>
-                                    <RoleGuard allowedRoles={["admin", "staff"]}>
+                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
                                         <Button onClick={handleAddInvoice} className="bg-orange-600 hover:bg-orange-700 text-white">
                                             <Plus className="mr-2 h-4 w-4" />
                                             Create Invoice
@@ -641,7 +641,7 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
                                 </CardContent>
                             </Card>
 
-                            <RoleGuard allowedRoles={["admin", "doctor"]}>
+                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.SUPER_ADMIN]}>
                                 <Card className="bg-white border border-slate-200">
                                     <CardHeader>
                                         <CardTitle className="text-slate-900">Recent Medical Records</CardTitle>

@@ -11,6 +11,14 @@ export enum UserRole {
 
 export const UserRoleValues = Object.values(UserRole);
 
+export enum UserStatus {
+  ACTIVE = "active",
+  SUSPENDED = "suspended",
+  INACTIVE = "inactive",
+}
+
+export const UserStatusValues = Object.values(UserStatus);
+
 
 // =======================
 // REPORT

@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
 import { persistor, store } from '../store/store';
 import { logout } from '@/src/modules/Authentication/auth/api/slice';
-import { useRouter } from 'next/router';
+import Router from 'next/router';
 
 
 class ApiService {
@@ -103,9 +103,7 @@ class ApiService {
 
             // Redirect to login page
             if (typeof window !== 'undefined') {
-                const router = useRouter();
-                router.push('/');
-
+                Router.push('/');
             }
 
         } catch (logoutError) {
@@ -200,7 +198,7 @@ class ApiService {
     async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         return this.handleRequest(() => this.axiosInstance.patch<T>(url, data, config));
     }
-    
+
     async downloadFile(url: string, config: AxiosRequestConfig = {}): Promise<Blob | null> {
         try {
             const response = await this.axiosInstance.get<Blob>(url, {

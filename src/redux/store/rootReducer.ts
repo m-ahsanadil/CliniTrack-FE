@@ -8,6 +8,9 @@ import medicalRecordReducer from "@/src/modules/Dashboard/medicalRecords/api/sli
 import patientReducer from "@/src/modules/Dashboard/patients/api/slice";
 import reportReducer from "@/src/modules/Dashboard/reports/api/slice";
 import providerReducer from "@/src/modules/Dashboard/Provider/api/slice";
+import dashboardReducer from "@/src/modules/Dashboard/dashboard/api/slice";
+import systemUserReducer from "@/src/modules/Dashboard/(super-admin)/system-users/api/slice"
+
 
 // Define the logout action type
 const LOGOUT = 'auth/logout';
@@ -17,6 +20,8 @@ const placeholderReducer = (state = {}) => state;
 
 const appReducer = combineReducers({
     auth: authReducer,
+    dashboard: dashboardReducer,
+    systemUsers: systemUserReducer,
     invoice: billingReducer,
     appointment: appointmentReducer,
     medicalRecord: medicalRecordReducer,

@@ -74,7 +74,7 @@ export interface RegisterRequest {
     email: string;
     password: string;
     fullName: string;
-    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | UserRole.SUPER_ADMIN;
+    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | UserRole.SUPER_ADMIN | string;
     dob: string;
     education: string;
     experience: string;

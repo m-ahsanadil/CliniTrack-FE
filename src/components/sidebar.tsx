@@ -10,7 +10,10 @@ import {
     BarChart3,
     UserCheck,
     Loader2,
-    WifiOff
+    WifiOff,
+    UserPlus,
+    User,
+    HelpCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -24,20 +27,16 @@ import { useEffect, useState } from "react"
 import { useDashboardData } from "../modules/Dashboard/dashboard/api/hook/useDashboardData";
 import { UserRole } from "../enum";
 import { Admin, Doctor, Staff, SuperAdmin } from "../modules/Dashboard/dashboard/api/types";
+import * as LucideIcons from "lucide-react"
 
-const MENU_MAP: Record<string, { icon: any; path: string }> = {
-    "Dashboard": { icon: Home, path: "dashboard" },
-    "Patients": { icon: Users, path: "patients" },
-    "Providers": { icon: UserCheck, path: "providers" },
-    "Appointments": { icon: Calendar, path: "appointments" },
-    "Medical Records": { icon: FileText, path: "medical-records" },
-    "Reports": { icon: BarChart3, path: "reports" },
-    "Billing": { icon: Receipt, path: "billing" },
-    "Settings": { icon: Settings, path: "settings" },
-    "Create Admin": { icon: UserCheck, path: "create-admin" },
-    "Create Doctor": { icon: UserCheck, path: "create-doctor" },
-    "Create Staff": { icon: Users, path: "create-staff" },
-    "System Settings": { icon: Settings, path: "system-settings" }
+
+// Function to get icon component from string
+const getIconComponent = (iconName: string) => {
+    // Get the icon from Lucide React dynamically
+    const IconComponent = (LucideIcons as any)[iconName];
+
+    // Return the icon component or fallback to HelpCircle
+    return IconComponent || HelpCircle;
 };
 
 // Skeleton Components
@@ -218,14 +217,19 @@ export default function sidebar() {
         }
     })();
 
-    const sidebarItems = dashboardMenu?.map((menuItem: string | number) => {
-        const mapped = MENU_MAP[menuItem];
+
+    const sidebarItems = (dashboardMenu ?? []).map((menuItem) => {
+        const Icon = getIconComponent(menuItem.icon);
+
         return {
-            label: menuItem,
-            icon: mapped?.icon,
-            href: `/${user?.id}/${user?.role}/${mapped?.path}`,
+            label: menuItem.label,
+            icon: Icon,
+            href: `/${user?.id}/${user?.role}/${menuItem.path}`,
         };
-    }) || [];
+    });
+
+
+
 
     if (loading) {
         return (
@@ -287,30 +291,10 @@ export default function sidebar() {
 
                 // {/* Navigation - Scrollable */ }
                 < nav className="flex-1 overflow-y-auto p-4">
-                    {/* <ul className="space-y-2">
-                    {getNavigationItems().map((item) => {
-                        const isActive = pathname === item.href;
-
-                        return (
-                            <li key={item.id}>
-                                <Link href={item.href!} passHref>
-                                    <Button
-                                        variant={isActive ? "secondary" : "ghost"}
-                                        className="w-full justify-start text-white hover:bg-slate-800"
-                                    >
-                                        <item.icon className="mr-3 h-4 w-4" />
-                                        {item.label}
-                                    </Button>
-                                </Link>
-                            </li>
-                        );
-                    })}
-                </ul> */}
                     <ul className="space-y-2">
                         {sidebarItems.map((item, index) => {
-                            if (!item.icon || !item.href) return null; // skip if not mapped
-
-                            const isActive = pathname === item.href;
+                            if (!item?.icon || !item?.href) return null; // skip if not mapped
+                            const isActive = pathname?.startsWith(item.href);
 
                             return (
                                 <li key={index}>

@@ -55,17 +55,6 @@ export default function index({ isSuperAdmin = false }: AuthProps) {
 
 
     return (
-        // <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-        //     <div className="w-full max-w-4xl">
-        //         <div className="text-center mb-8">
-        //             <div className="flex items-center justify-center mb-4">
-        //                 <div className="bg-blue-600 p-3 rounded-full">
-        //                     <Stethoscope className="h-8 w-8 text-white" />
-        //                 </div>
-        //             </div>
-        //             <h1 className="text-4xl font-bold text-white mb-2">CliniTrack</h1>
-        //             <p className="text-slate-300">Medical Administration Dashboard</p>
-        //         </div>
         <div className={`min-h-screen bg-gradient-to-br ${pageContent.bgGradient} flex items-center justify-center p-4`}>
             <div className="w-full max-w-4xl">
                 <div className="text-center mb-8">
@@ -80,8 +69,12 @@ export default function index({ isSuperAdmin = false }: AuthProps) {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-1' : 'grid-cols-3'} mb-6`}>
                         <TabsTrigger value="login">Login</TabsTrigger>
-                        <TabsTrigger value="register" disabled={isSuperAdmin}>Register</TabsTrigger>
-                        <TabsTrigger value="demo" disabled={isSuperAdmin}>Demo Accounts</TabsTrigger>
+                        {!isSuperAdmin && (
+                            <>
+                                <TabsTrigger value="register" disabled={isSuperAdmin}>Register</TabsTrigger>
+                                <TabsTrigger value="demo" disabled={isSuperAdmin}>Demo Accounts</TabsTrigger>
+                            </>
+                        )}
                     </TabsList>
 
 

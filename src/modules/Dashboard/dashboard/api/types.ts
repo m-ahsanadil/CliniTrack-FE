@@ -1,8 +1,15 @@
+export interface MenuItem {
+    label: string;
+    path: string;
+    icon: string
+}
+
+
 export interface AdminData {
     id: string;
     name: string;
     role: string;
-    menu: string[];
+    menu: MenuItem[];
 }
 
 export interface StatItem {

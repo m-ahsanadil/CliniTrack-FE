@@ -76,7 +76,7 @@ export default function Header() {
 
 
     const goToSupport = () => {
-        router.push("/support")
+        router.push(`/${user?.id}/${user?.role}/support`)
     }
 
     const handleLogout = async () => {
@@ -295,7 +295,7 @@ export default function Header() {
                     />
                 </div>
             </div>
-            
+
         </header >
     )
 }

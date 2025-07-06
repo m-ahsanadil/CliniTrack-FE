@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useAppSelector } from "@/src/redux/store/reduxHook"
-import { UserRole } from "@/src/constants"
+import { UserRole } from "@/src/enum"
 
 interface RoleGuardProps {
   allowedRoles: UserRole[]

@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     BarChart3,
-    TrendingUp,
     Users,
     Calendar,
     FileText,
@@ -16,26 +15,20 @@ import {
     Filter,
     Activity,
     DollarSign,
-    Clock,
     AlertCircle,
     Lock,
-    Shield
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { ReportsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/reports/page";
 import { useState, useEffect } from "react"
-import { Report, ReportsGetResponse } from './api/types';
+import { Report } from './api/types';
 import { fetchAllReports } from './api/slice';
 import { useReportsFetcher } from './api/useReportsFetcher';
-import { useAppointmentsFetcher } from '../appointments/api/useAppointmentsFetcher';
-import { useInvoiceFetcher } from '../billing/api/useInvoiceFetcher';
-import { useMedicalRecordsFetcher } from '../medicalRecords/api/useMedicalRecord';
-import { usePatientsFetcher } from '../patients/api/usePatientsFetcher';
-import { useRouter } from 'next/navigation';
 import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
 import { formatDate } from "@/src/utils/dateFormatter"
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
+import { UserRole } from '@/src/enum';
 
 
 interface QuickReport {
@@ -65,10 +58,10 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
 
     // Role-based permissions
     const permissions = {
-        canCreateReports: ['admin', 'staff', 'doctor'].includes(user?.role || ''),
-        canDeleteReports: ['admin'].includes(user?.role || ''),
-        canViewFinancialReports: ['admin', 'staff'].includes(user?.role || ''),
-        canViewMedicalReports: ['admin', 'doctor'].includes(user?.role || '')
+        canCreateReports: [UserRole.ADMIN, UserRole.STAFF, UserRole.DOCTOR, UserRole.SUPER_ADMIN].includes(user?.role as UserRole || ''),
+        canDeleteReports: [UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(user?.role as UserRole || ''),
+        canViewFinancialReports: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF].includes(user?.role as UserRole || ''),
+        canViewMedicalReports: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.DOCTOR].includes(user?.role as UserRole || '')
     };
 
     // Quick reports configuration
