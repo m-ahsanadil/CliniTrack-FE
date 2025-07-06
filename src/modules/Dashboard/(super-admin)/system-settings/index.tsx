@@ -1,9 +1,10 @@
 "use client"
-import React, { useState } from 'react';
+import React, { createElement, useState } from 'react';
 import { Settings, Shield, Database, Mail, Globe, Bell, Key, Save, RefreshCw, AlertTriangle, CheckCircle, Server, Lock, Eye, EyeOff, User, LogOut } from 'lucide-react';
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { SuperAdminSystemSettingsProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/(SUPER-ADMIN)/system-settings/page';
 
-export default function index({ dashboardId, role }: AppointmentProps) {
+export default function index({ dashboardId, role }: SuperAdminSystemSettingsProps) {
     const [activeTab, setActiveTab] = useState('general');
     const [showApiKey, setShowApiKey] = useState(false);
     const [saveStatus, setSaveStatus] = useState('');
@@ -617,7 +618,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                         <div className="flex items-center gap-3">
                                             {tabs.find(tab => tab.id === activeTab) && (
                                                 <>
-                                                    {React.createElement(tabs.find(tab => tab.id === activeTab).icon, {
+                                                    {createElement(tabs.find(tab => tab.id === activeTab).icon, {
                                                         className: "w-5 h-5 text-gray-600"
                                                     })}
                                                     <h2 className="text-xl font-semibold text-gray-900">

@@ -9,6 +9,7 @@ import {
     HelpCircle,
     Loader2,
     Camera,
+    AlertCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,21 +31,34 @@ import { logout } from "../modules/Authentication/auth/api/slice"
 import { persistor } from "../redux/store/store"
 import { PURGE } from "redux-persist"
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react"
-import { profileApi } from "../modules/Authentication/profile/api/api"
+// import { profileApi } from "../modules/Authentication/profile/api/api"
+import { UserRole } from "../enum"
+import { useProfilePhoto } from "../modules/Authentication/profile/api/useProfilePhotoFetcher"
+// import { UploadPhotoApiResponse } from "../modules/Authentication/profile/api/types"
+// import { clearPhotoUrl, fetchProfilePhoto, uploadProfilePhoto } from "../modules/Authentication/profile/api/slice"
 
 
 
 export default function Header() {
     const router = useRouter()
-    // const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const previousUrlRef = useRef<string | null>(null);
     const pathname = usePathname()
     const dispatch = useAppDispatch();
     const { user } = useAppSelector(state => state.auth);
+    const {
+        photoUrl,
+        previewUrl,
+        isLoading: isPhotoLoading,
+        isUploading,
+        error: photoError,
+        uploadPhoto,
+        isAnyLoading,
+        showPreview,
+        hasPhoto,
+        lastUploadSuccess
+    } = useProfilePhoto(user?.id || '');
+    // const { photoUrl, isPhotoLoading, isUploading, photoError, uploadError } = useAppSelector(state => state.profile);
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [uploading, setUploading] = useState<boolean>(false);
+
 
     const currentPage = pathname.split("/").pop() || "dashboard"
 
@@ -57,7 +71,7 @@ export default function Header() {
         input.onchange = (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
-                handlePhotoUpload(file);
+                uploadPhoto(file);
             }
             document.body.removeChild(input);
         };
@@ -65,6 +79,7 @@ export default function Header() {
         document.body.appendChild(input);
         input.click();
     };
+
 
     const goToSettings = () => {
         router.push(`/${user?.id}/${user?.role}/settings`)
@@ -80,57 +95,80 @@ export default function Header() {
     }
 
     const handleLogout = async () => {
-        // Method 1: Dispatch logout action first, then purge
         dispatch(logout());
-
         // Clear persisted state
         await persistor.purge();
-
-        // Clear any additional localStorage items
-        if (typeof window !== 'undefined') {
-            // localStorage.removeItem('token');
-        }
-
-        // Redirect to login
         router.push('/');
     };
-    const fetchPhoto = useCallback(async () => {
-        if (!user?.id) return;
 
-        setLoading(true);
-        try {
-            const blob = await profileApi.get_photo(user.id);
-            const url = URL.createObjectURL(blob);
-            if (previousUrlRef.current) {
-                URL.revokeObjectURL(previousUrlRef.current);
-            }
-            previousUrlRef.current = url;
-            setImageUrl(url);
-        } catch (err) {
-            console.log("❌ Failed to fetch photo:", err);
-        } finally {
-            setLoading(false);
-        }
-    }, [user?.id]);
 
-    const handlePhotoUpload = useCallback(async (file: File) => {
-        const formData = new FormData();
-        formData.append("photo", file);
-
-        try {
-            setUploading(true);
-            await profileApi.upload_photo(formData);
-            await fetchPhoto();
-        } catch (err: any) {
-            console.log("❌ Upload failed:", err.message);
-        } finally {
-            setUploading(false);
-        }
-    }, [fetchPhoto]);
-
+    // Show success message
     useEffect(() => {
-        fetchPhoto();
-    }, [fetchPhoto]);
+        if (lastUploadSuccess) {
+            // You can use a toast library here
+            console.log('✅ Upload successful:', lastUploadSuccess);
+            // toast.success(lastUploadSuccess);
+        }
+    }, [lastUploadSuccess]);
+
+    // Show error messages
+    useEffect(() => {
+        if (photoError) {
+            console.error('❌ Photo error:', photoError);
+            // toast.error(photoError);
+        }
+    }, [photoError]);
+
+    // Determine what to show in avatar
+    const getAvatarContent = () => {
+        // Show loading spinner during any loading state
+        if (isAnyLoading) {
+            return (
+                <AvatarFallback className="bg-slate-200">
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                </AvatarFallback>
+            );
+        }
+
+        // Show error state
+        if (photoError && !showPreview) {
+            return (
+                <AvatarFallback className="bg-red-100 text-red-600 text-xs">
+                    <AlertCircle className="h-4 w-4" />
+                </AvatarFallback>
+            );
+        }
+
+        // Show preview image during upload (highest priority)
+        if (showPreview && previewUrl) {
+            return (
+                <AvatarImage
+                    src={previewUrl}
+                    alt="Preview"
+                    className="object-cover"
+                />
+            );
+        }
+
+        // Show actual photo if available
+        if (hasPhoto && photoUrl) {
+            return (
+                <AvatarImage
+                    src={photoUrl}
+                    alt={`${user?.fullName || user?.username || 'User'}'s profile photo`}
+                    className="object-cover"
+                />
+            );
+        }
+
+        // Show initials fallback
+        return (
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+                {user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase() ||
+                    user?.username?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+        );
+    };
 
     return (
         <header className="bg-white border-b border-slate-200 shadow-sm">
@@ -157,7 +195,7 @@ export default function Header() {
                 {/* Right Section: Action Icons */}
                 <div className="flex items-center space-x-1">
                     {/* Generate Report - Icon on mobile, button on desktop */}
-                    <RoleGuard allowedRoles={["admin"]}>
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                         {currentPage === "dashboard" && (
                             <>
                                 {/* Mobile: Icon Button */}
@@ -208,26 +246,14 @@ export default function Header() {
                     {/* User Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="p-1 rounded-full">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 rounded-full"
+                                disabled={isAnyLoading}
+                            >
                                 <Avatar className="h-7 w-7">
-                                    {(loading || uploading) ? (
-                                        <AvatarFallback className="bg-slate-200">
-                                            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                        </AvatarFallback>
-                                    ) : (
-                                        imageUrl ? (
-                                            <AvatarImage
-                                                src={imageUrl || "/placeholder-user.jpg"}
-                                                alt={`${user?.fullName || user?.username || 'User'}'s profile photo`}
-                                                className="object-cover"
-                                                onLoad={(e) => (e.currentTarget.style.opacity = "1")}
-                                            />
-                                        ) : (
-                                            <AvatarFallback className="bg-blue-600 text-white text-xs">
-                                                {user?.username?.split(" ").map(n => n[0]).join("") || "U"}
-                                            </AvatarFallback>
-                                        )
-                                    )}
+                                    {getAvatarContent()}
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
@@ -240,10 +266,9 @@ export default function Header() {
                                 </span>
                             </div>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleChangePhotoClick}
-                            >
+                            <DropdownMenuItem onClick={handleChangePhotoClick} disabled={isAnyLoading}>
                                 <Camera className="mr-2 h-4 w-4" />
-                                Change Photo
+                                {isAnyLoading ? "Uploading..." : "Change Photo"}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={goToSettings}>
@@ -299,3 +324,4 @@ export default function Header() {
         </header >
     )
 }
+

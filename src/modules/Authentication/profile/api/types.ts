@@ -1,9 +1,15 @@
 export interface UpdateProfileRequest {
     name?: string;
-    email?: string;
-    phone?: string;
-    avatar?: string;
+    age?: number;
+    dob?: string;
+    speciality?: string;
+    intro?: string;
+    field?: string;
+    degree?: string;
+    education?: string;
+    experience?: string;
 }
+
 
 export interface UpdateProfileResponse {
     success: boolean;
@@ -30,14 +36,6 @@ export interface UpdateProfileResponse {
     };
 }
 
-
-export interface ErrorResponse {
-    success: false;
-    message: string;
-    errors: string[];
-}
-
-
 export interface UploadPhotoRequest {
     file: File; // Usually image/jpeg or image/png
 }
@@ -47,3 +45,12 @@ export interface UploadPhotoResponse {
     message: string;
     userId: string;
 }
+export interface UploadPhotoErrorResponse {
+    success: false;
+    message: string;
+    errors: string[];
+}
+
+export type UploadPhotoApiResponse = UploadPhotoResponse | UploadPhotoErrorResponse
+
+

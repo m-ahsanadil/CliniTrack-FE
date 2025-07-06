@@ -31,6 +31,7 @@ import { Provider } from "./api/types"
 import { ViewProviderDialog } from "./organisms/ViewProvidersDialog"
 import { deleteProvider, fetchAllProviders } from "./api/slice"
 import { ProviderForm } from "@/src/components/provider-form"
+import { UserRole } from "@/src/enum"
 
 
 export default function index({ dashboardId, role }: ProviderProps) {
@@ -84,7 +85,7 @@ export default function index({ dashboardId, role }: ProviderProps) {
 
 
                     </div>
-                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                         <Button onClick={handleAddProvider} className="bg-green-600 hover:bg-green-700 text-white">
                             <Plus className="mr-2 h-4 w-4" />
                             Schedule Provider
@@ -135,7 +136,7 @@ export default function index({ dashboardId, role }: ProviderProps) {
                                                     <Button variant="ghost" onClick={() => handleViewProvider(provider)} size="sm" className="text-slate-600 hover:text-slate-900">
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
-                                                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -145,7 +146,7 @@ export default function index({ dashboardId, role }: ProviderProps) {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </RoleGuard>
-                                                    <RoleGuard allowedRoles={['admin']}>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"

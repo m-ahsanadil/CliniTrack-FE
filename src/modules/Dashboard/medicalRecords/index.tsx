@@ -32,6 +32,7 @@ import { formatDate } from "@/src/utils/dateFormatter"
 import MedicalRecordForm from "@/src/components/medical-record-form"
 import { MedicalRecordGetAll } from "./api/types"
 import { useMedicalRecord } from "@/src/redux/providers/contexts/MedicalRecordContext"
+import { UserRole } from "@/src/enum"
 
 export default function index({ dashboardId, role }: MedicalRecordProps) {
     const dispatch = useAppDispatch();
@@ -109,7 +110,7 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
             <RoleGuard
-                allowedRoles={["admin", "doctor"]}
+                allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.SUPER_ADMIN]}
                 fallback={
                     <div className="text-center py-12">
                         <Shield className="mx-auto h-12 w-12 text-slate-400 mb-4" />
@@ -227,14 +228,14 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end space-x-2">
                                                         {/* View button - Available to all roles that can access medical records */}
-                                                        <RoleGuard allowedRoles={["admin", "doctor", "staff"]}>
+                                                        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                                                             <Button variant="ghost" onClick={() => handleViewMedicalRecord(record)} size="sm" className="text-slate-600 hover:text-slate-900">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </RoleGuard>
 
                                                         {/* Edit button - Only admin and doctor can update medical records */}
-                                                        <RoleGuard allowedRoles={["admin", "doctor"]}>
+                                                        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.DOCTOR]}>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
@@ -246,7 +247,7 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                                                         </RoleGuard>
 
                                                         {/* Delete button - Only admin can delete medical records */}
-                                                        <RoleGuard allowedRoles={["admin"]}>
+                                                        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"

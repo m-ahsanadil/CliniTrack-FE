@@ -23,6 +23,7 @@ import { Patient } from "./api/types";
 import { deletePatient, fetchAllPatients, clearCreateError, clearCreateSuccess, clearError, clearPatients, clearUpdateError, clearUpdateSuccess, createPatients } from "./api/slice";
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 import PatientForm from "@/src/components/patient-form";
+import { UserRole } from "@/src/enum";
 
 
 export default function index({ dashboardId, role }: PatientsProps) {
@@ -67,7 +68,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
                         <h2 className="text-2xl font-bold text-slate-900">Patients</h2>
                         <p className="text-slate-600">Manage patient information and records</p>
                     </div>
-                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
                         <Button onClick={handleAddPatient} className="bg-blue-600 hover:bg-blue-700 text-white">
                             <Plus className="mr-2 h-4 w-4" />
                             Add New Patient
@@ -112,7 +113,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
                                                     <Button variant="ghost" size="sm" onClick={() => handleViewPatients(patient)} className="text-slate-600 hover:text-slate-900">
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
-                                                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -122,7 +123,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </RoleGuard>
-                                                    <RoleGuard allowedRoles={["admin"]}>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"

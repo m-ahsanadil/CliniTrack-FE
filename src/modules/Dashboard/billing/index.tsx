@@ -26,6 +26,7 @@ import { ViewInvoicesDialog } from "./organisms/ViewBillingDialog"
 import { deleteInvoice, fetchAllInvoices } from "./api/slice"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { formatDate } from "@/src/utils/dateFormatter"
+import { InvoiceStatus, UserRole } from "@/src/enum"
 
 
 export default function index({ dashboardId, role }: BillingProps) {
@@ -90,7 +91,7 @@ export default function index({ dashboardId, role }: BillingProps) {
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
 
             <RoleGuard
-                allowedRoles={["admin", "staff"]}
+                allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}
                 fallback={
                     <div className="text-center py-12">
                         <Shield className="mx-auto h-12 w-12 text-slate-400 mb-4" />
@@ -190,7 +191,7 @@ export default function index({ dashboardId, role }: BillingProps) {
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                     {/* NEW: Mark as Paid Button - Only show for unpaid invoices */}
-                                                    {invoice.status !== 'paid' && (
+                                                    {invoice.status !== InvoiceStatus.PAID && (
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -206,7 +207,7 @@ export default function index({ dashboardId, role }: BillingProps) {
                                                             )}
                                                         </Button>
                                                     )}
-                                                    <RoleGuard allowedRoles={["admin"]}>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"

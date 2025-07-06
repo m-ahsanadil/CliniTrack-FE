@@ -3,7 +3,7 @@ import apiService from "@/src/redux/config/apiService";
 import { UpdateProfileRequest, UpdateProfileResponse, UploadPhotoResponse } from "./types";
 
 export const profileApi = {
-    get_photo: (id: string | number): Promise<Blob> => {
+    get_photo: (id: string | number): Promise<Blob | null> => {
         return apiService.downloadFile(ENDPOINTS.AUTH.GET_PHOTO(id));
     },
 
@@ -11,8 +11,9 @@ export const profileApi = {
     update: (payload: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
         return apiService.put(ENDPOINTS.AUTH.UPDATE, payload);
     },
-    
-    upload_photo: (formData: FormData) => {
-        return apiService.put(ENDPOINTS.AUTH.UPLOAD_PHOTO, formData); 
+
+    // In api.ts
+    upload_photo: (formData: FormData): Promise<UploadPhotoResponse> => {
+        return apiService.put(ENDPOINTS.AUTH.UPLOAD_PHOTO, formData);
     },
 }

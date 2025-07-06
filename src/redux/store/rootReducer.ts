@@ -2,6 +2,7 @@ import { combineReducers, UnknownAction } from "redux";
 
 // Import Reducers
 import authReducer, { logout } from "@/src/modules/Authentication/auth/api/slice"
+import profileReducer from "@/src/modules/Authentication/profile/api/slice"
 import billingReducer from "@/src/modules/Dashboard/billing/api/slice";
 import appointmentReducer from "@/src/modules/Dashboard/appointments/api/slice";
 import medicalRecordReducer from "@/src/modules/Dashboard/medicalRecords/api/slice";
@@ -10,7 +11,6 @@ import reportReducer from "@/src/modules/Dashboard/reports/api/slice";
 import providerReducer from "@/src/modules/Dashboard/Provider/api/slice";
 import dashboardReducer from "@/src/modules/Dashboard/dashboard/api/slice";
 import systemUserReducer from "@/src/modules/Dashboard/(super-admin)/system-users/api/slice"
-
 
 // Define the logout action type
 const LOGOUT = 'auth/logout';
@@ -24,6 +24,7 @@ const appReducer = combineReducers({
     systemUsers: systemUserReducer,
     invoice: billingReducer,
     appointment: appointmentReducer,
+    profile: profileReducer,
     medicalRecord: medicalRecordReducer,
     patients: patientReducer,
     reports: reportReducer,

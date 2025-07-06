@@ -20,8 +20,12 @@ export default function ImagePage() {
         setLoading(true);
         try {
             const blob = await profileApi.get_photo(user.id);
-            const url = URL.createObjectURL(blob);
-            setImageUrl(url);
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                setImageUrl(url);
+            } else {
+                console.warn("❌ No photo blob returned.");
+            }
         } catch (err) {
             console.log("❌ Failed to fetch photo:", err);
         } finally {

@@ -25,6 +25,7 @@ import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
 import { deleteAppointment, fetchAllAppointments } from "./api/slice"
 import AppointmentForm from "@/src/components/appointment-form"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { UserRole } from "@/src/enum"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
     const dispatch = useAppDispatch();
@@ -45,7 +46,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
         loading: appointmentsLoading,
         error: appointmentsError,
         count: appointmentsCount
-        
+
     } = useAppSelector(state => state.appointment);
 
     // FIXED: Proper type for the parameter
@@ -125,7 +126,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                         <h2 className="text-2xl font-bold text-slate-900">Appointments</h2>
                         <p className="text-slate-600">Schedule and manage patient appointments</p>
                     </div>
-                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                         <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
                             <Plus className="mr-2 h-4 w-4" />
                             Schedule Appointment
@@ -170,7 +171,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                                 <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
-                                                <RoleGuard allowedRoles={['admin', 'staff']}>
+                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -180,7 +181,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                 </RoleGuard>
-                                                <RoleGuard allowedRoles={['admin']} >
+                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]} >
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
