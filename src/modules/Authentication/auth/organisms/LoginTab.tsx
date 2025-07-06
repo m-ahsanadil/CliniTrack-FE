@@ -93,7 +93,7 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
                     <form onSubmit={formik.handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-slate-700">
-                                {isSuperAdmin ? "Administrator Email" : "Email Address"}
+                                Email Address
                             </Label>
                             <Input
                                 id="email"
@@ -113,7 +113,7 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
 
                         <div className="space-y-2">
                             <Label htmlFor="password" className="text-slate-700">
-                                {isSuperAdmin ? "Administrator Password" : "Password"}
+                                Password
                             </Label>
                             <div className="relative">
                                 <Input

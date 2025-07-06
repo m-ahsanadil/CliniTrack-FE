@@ -1,6 +1,6 @@
 export interface UpdateProfileRequest {
     name?: string;
-    age?: number;
+    age?: number | '';
     dob?: string;
     speciality?: string;
     intro?: string;

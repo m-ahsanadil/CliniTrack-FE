@@ -19,6 +19,7 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useToast } from "@/hooks/use-toast"
 import { updateProfile } from '../../Authentication/profile/api/slice'
+import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 
 interface UpdateProfileFormValues {
     name: string;
@@ -69,16 +70,27 @@ export default function index({ dashboardId, role }: SettingProps) {
     }, [])
 
     const handleUpdateProfile = async (values: UpdateProfileFormValues, actions: FormikHelpers<UpdateProfileFormValues>) => {
-        // try {
-        //     dispatch(updateProfile({}))
-        toast({
-            title: "Profile updated!",
-            description: "All your changes have been saved.",
-            variant: "default", // or "success" if your toast lib supports it
-        })
-        // }
-        // catch () { }
-        // finally { }
+        try {
+            const credentials: UpdateProfileRequest = {
+                name: values.name,
+                // email: values.email,
+                // password: values.password,
+                // fullName: values.fullName,
+                // role: values.role as UserRole,
+                age: values.age,
+                dob: values.dob,
+                education: values.education,
+                experience: values.experience
+            }
+            dispatch(updateProfile({}))
+            toast({
+                title: "Profile updated!",
+                description: "All your changes have been saved.",
+                variant: "default", // or "success" if your toast lib supports it
+            })
+        }
+        catch (error) { }
+        finally { }
     }
 
     const formik = useFormik({

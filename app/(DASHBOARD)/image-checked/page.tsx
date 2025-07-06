@@ -55,6 +55,12 @@ export default function ImagePage() {
 
     useEffect(() => {
         fetchPhoto();
+
+        return () => {
+            if (imageUrl) {
+                URL.revokeObjectURL(imageUrl);
+            }
+        };
     }, [fetchPhoto]);
 
     // Function to get user initials

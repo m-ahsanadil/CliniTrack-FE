@@ -1,7 +1,6 @@
 import type React from "react"
 import { FormikHelpers, useFormik } from 'formik'
 import { useToast } from "@/hooks/use-toast";
-import { useAppSelector } from "@/src/redux/store/reduxHook";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerValidationSchema } from "@/src/validation/schemas";
@@ -33,7 +32,6 @@ const initialRegisterValues: RegisterFormValues = {
 
 export const useRegister = (onSuccessCallback?: () => void) => {
     const { toast } = useToast()
-    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [serverErrorMessage, setServerErrorMessage] = useState('')
     const [serverSuccessMessage, setServerSuccessMessage] = useState('')
