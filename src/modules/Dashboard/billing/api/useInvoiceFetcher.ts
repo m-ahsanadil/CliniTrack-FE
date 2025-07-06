@@ -3,9 +3,9 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { useEffect } from "react";
 import { fetchAllInvoices } from "./slice";
 import { useRoleBasedFetcher } from "@/src/redux/hook/useRoleBasedFetcher";
+import { UserRole } from "@/src/enum";
 
 export const useInvoiceFetcher = () => {
-    const dispatch = useAppDispatch();
     const { invoices } = useAppSelector(state => state.invoice);
 
     // useEffect(() => {
@@ -21,7 +21,7 @@ export const useInvoiceFetcher = () => {
     //     return () => window.removeEventListener("focus", handleFocus);
     // }, []);
     useRoleBasedFetcher({
-        allowedRoles: ['admin', 'staff'],
+        allowedRoles: [UserRole.ADMIN, UserRole.STAFF],
         dataLength: invoices?.length || 0,
         fetchAction: fetchAllInvoices,
         resourceName: 'Invoices'

@@ -1,13 +1,15 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { medicalRecordApi } from "./api";
-import { MedicalRecord, MedicalRecordDeleteResponse } from "./types";
+import {
+  MedicalRecordDeleteResponse,
+  MedicalRecordGetAll,
+  MedicalRecordGetAllResponse,
+  MedicalRecordPost,
+  MedicalRecordPostApiResponse,
+  MedicalRecordPostResponse,
+  PatientProviderResponse,
 
-// Define response type
-interface MedicalRecordGetResponse {
-  success: boolean;
-  count: number;
-  data: MedicalRecord[];
-}
+} from "./types";
 
 // Async thunk to fetch all medical records
 export const fetchAllMedicalRecord = createAsyncThunk(
@@ -17,7 +19,7 @@ export const fetchAllMedicalRecord = createAsyncThunk(
       const response = await medicalRecordApi.getAll();
 
       if (response.success) {
-        return response as MedicalRecordGetResponse;
+        return response;
       } else {
         return rejectWithValue('Failed to fetch medical records');
       }
@@ -29,6 +31,68 @@ export const fetchAllMedicalRecord = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch selected patients and their providers
+export const fetchSelectedPatientProviders = createAsyncThunk(
+  'medicalRecord/fetchSelectedPatientProviders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: PatientProviderResponse = await medicalRecordApi.getSelected();
+
+      if (response.success) {
+        return response;
+      } else {
+        return rejectWithValue("Failed to fetch selected patient-provider data");
+      }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Failed to fetch selected patient-provider data'
+      );
+    }
+  }
+);
+
+// Async thunk to create a new medical record
+export const createMedicalRecord = createAsyncThunk(
+  'medicalRecord/create',
+  async (payload: MedicalRecordPost, { rejectWithValue }) => {
+    try {
+      const response: MedicalRecordPostApiResponse = await medicalRecordApi.create(payload);
+
+      if (response.success) {
+        return response;
+      } else {
+        return rejectWithValue(response.message || 'Failed to create medical record');
+      }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Failed to create medical record'
+      );
+    }
+  }
+);
+
+// Async thunk for updating a medical record
+export const updateMedicalRecord = createAsyncThunk(
+  'medicalRecord/update',
+  async (
+    { id, medicalRecordData }: { id: string | number, medicalRecordData: MedicalRecordPost },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response: MedicalRecordPostApiResponse = await medicalRecordApi.update(id, medicalRecordData);
+
+      if (response.success) {
+        return { id, updatedMedicalRecord: response.data };
+      } else {
+        return rejectWithValue(response.message || 'Failed to update medical record');
+      }
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update medical record');
+    }
+  }
+);
+
+// Async thunk to delete a medical record
 export const deleteMedicalRecord = createAsyncThunk(
   'medicalRecord/delete',
   async (medicalRecordId: string, { rejectWithValue }) => {
@@ -48,13 +112,23 @@ export const deleteMedicalRecord = createAsyncThunk(
 );
 
 interface MedicalRecordState {
-  medicalRecords: MedicalRecord[];
+  medicalRecords: MedicalRecordGetAll[]; // Updated to use populated refs type
   loading: boolean;
   error: string | null;
   count: number;
   success: boolean;
   deleteLoading: boolean;
   deleteError: string | null;
+  createLoading: boolean;
+  createError: string | null;
+  createSuccess: boolean;
+  updateLoading: boolean;
+  updateError: string | null;
+  updateSuccess: boolean;
+
+  selectedPatients: PatientProviderResponse["data"]; // New
+  selectedLoading: boolean; // New
+  selectedError: string | null; // New
 }
 
 const initialState: MedicalRecordState = {
@@ -65,6 +139,16 @@ const initialState: MedicalRecordState = {
   success: false,
   deleteLoading: false,
   deleteError: null,
+  createLoading: false,
+  createError: null,
+  createSuccess: false,
+  updateLoading: false,
+  updateError: null,
+  updateSuccess: false,
+
+  selectedPatients: [], // New
+  selectedLoading: false, // New
+  selectedError: null, // New
 };
 
 const medicalRecordSlice = createSlice({
@@ -81,14 +165,32 @@ const medicalRecordSlice = createSlice({
       state.medicalRecords = [];
       state.count = 0;
     },
+    clearCreateError: (state) => {
+      state.createError = null;
+    },
+    clearCreateSuccess: (state) => {
+      state.createSuccess = false;
+    },
+    clearUpdateError: (state) => {
+      state.updateError = null;
+    },
+    clearUpdateSuccess: (state) => {
+      state.updateSuccess = false;
+    },
+    clearSelectedPatients: (state) => {
+      state.selectedPatients = [];
+      state.selectedLoading = false;
+      state.selectedError = null;
+    }
   },
   extraReducers: (builder) => {
     builder
+      // GET
       .addCase(fetchAllMedicalRecord.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAllMedicalRecord.fulfilled, (state, action: PayloadAction<MedicalRecordGetResponse>) => {
+      .addCase(fetchAllMedicalRecord.fulfilled, (state, action: PayloadAction<MedicalRecordGetAllResponse>) => {
         state.loading = false;
         state.medicalRecords = action.payload.data;
         state.count = action.payload.count;
@@ -102,6 +204,61 @@ const medicalRecordSlice = createSlice({
         state.count = 0;
         state.success = false;
       })
+
+      // Create medical record cases
+      .addCase(createMedicalRecord.pending, (state) => {
+        state.createLoading = true;
+        state.createError = null;
+        state.createSuccess = false;
+      })
+      .addCase(createMedicalRecord.fulfilled, (state, action: PayloadAction<MedicalRecordPostResponse>) => {
+        state.createLoading = false;
+        state.createError = null;
+        state.createSuccess = true;
+        // Note: We don't add the created record to the list since it doesn't have populated refs
+        // You should refetch the list or handle this case specifically
+      })
+      .addCase(createMedicalRecord.rejected, (state, action) => {
+        state.createLoading = false;
+        state.createError = action.payload as string;
+        state.createSuccess = false;
+      })
+
+      // Update medical record cases
+      .addCase(updateMedicalRecord.pending, (state) => {
+        state.updateLoading = true;
+        state.updateError = null;
+        state.updateSuccess = false;
+      })
+      .addCase(updateMedicalRecord.fulfilled, (state, action: PayloadAction<{ id: string | number, updatedMedicalRecord: MedicalRecordPost }>) => {
+        state.updateLoading = false;
+        state.updateError = null;
+        state.updateSuccess = true;
+        // Note: The updated record doesn't have populated refs, so you might want to refetch
+        // or handle this case specifically to maintain consistency
+      })
+      .addCase(updateMedicalRecord.rejected, (state, action) => {
+        state.updateLoading = false;
+        state.updateError = action.payload as string;
+        state.updateSuccess = false;
+      })
+
+      // Get Selected Patients
+      .addCase(fetchSelectedPatientProviders.pending, (state) => {
+        state.selectedLoading = true;
+        state.selectedError = null;
+      })
+      .addCase(fetchSelectedPatientProviders.fulfilled, (state, action: PayloadAction<PatientProviderResponse>) => {
+        state.selectedLoading = false;
+        state.selectedPatients = action.payload.data;
+        state.selectedError = null;
+      })
+      .addCase(fetchSelectedPatientProviders.rejected, (state, action) => {
+        state.selectedLoading = false;
+        state.selectedError = action.payload as string;
+        state.selectedPatients = [];
+      })
+
       // Delete medicalRecord cases
       .addCase(deleteMedicalRecord.pending, (state) => {
         state.deleteLoading = true;
@@ -123,5 +280,14 @@ const medicalRecordSlice = createSlice({
   },
 });
 
-export const { clearError, clearMedicalRecords, clearDeleteError } = medicalRecordSlice.actions;
+export const {
+  clearError,
+  clearMedicalRecords,
+  clearDeleteError,
+  clearCreateError,
+  clearCreateSuccess,
+  clearUpdateError,
+  clearUpdateSuccess,
+  clearSelectedPatients
+} = medicalRecordSlice.actions;
 export default medicalRecordSlice.reducer;

@@ -3,7 +3,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { ChangeEvent, FormEvent, useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,43 +11,164 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Upload, X } from "lucide-react"
+import { Calendar, CalendarIcon, Loader2, Upload, X } from "lucide-react"
 import patientIdGenerator from "../utils/patientIdGenerator"
+import { Medication, Patient, PatientPostRequest } from "../modules/Dashboard/patients/api/types"
+import { generateId } from "../utils/idGenerator"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format, parseISO } from "date-fns"
+import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
+import { Gender, GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
+import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
 
 interface PatientFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   patient?: any
-  onSave: (patient: any) => void
+  mode: 'create' | 'edit'
+  onSave: (patient: Patient) => void
 }
 
-export default function PatientForm({ open, onOpenChange, patient, onSave }: PatientFormProps) {
-  const [formData, setFormData] = useState({
-    name: patient?.name || "",
-    age: patient?.age || "",
-    gender: patient?.gender || "",
-    phone: patient?.phone || "",
-    email: patient?.email || "",
-    address: patient?.address || "",
-    emergencyContact: patient?.emergencyContact || "",
-    condition: patient?.condition || "",
-    bloodType: patient?.bloodType || "",
-    allergies: patient?.allergies || "",
-    medications: patient?.medications || "",
-    insuranceProvider: patient?.insuranceProvider || "",
-    insuranceNumber: patient?.insuranceNumber || "",
-    notes: patient?.notes || "",
-  })
 
-  const [profileImage, setProfileImage] = useState(patient?.profileImage || null)
+const initialFormState: PatientPostRequest = {
+  patientId: "",
+  firstName: "",
+  lastName: "",
+  dateOfBirth: "",
+  gender: "",
+  ssn: "",
+  phone: "",
+  email: "",
+  preferredLanguage: "",
+  address: {
+    street: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: ""
+  },
+  emergencyContact: {
+    name: "",
+    relationship: "",
+    phone: "",
+    email: ""
+  },
+  insurance: {
+    provider: "",
+    policyNumber: "",
+    groupNumber: "",
+    subscriberId: "",
+    relationshipToSubscriber: "",
+    effectiveDate: "",
+    expirationDate: ""
+  },
+  allergies: [],
+  chronicConditions: [],
+  currentMedications: [],
+  status: "",
+  registrationDate: "",
+  createdBy: "",
+  updatedBy: ""
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave({ ...formData, profileImage, id: patientId })
-    onOpenChange(false)
-  }
+export default function PatientForm({ mode, open, onOpenChange, patient, onSave }: PatientFormProps) {
+  const dispatch = useAppDispatch()
+  const { createError, createLoading, createSuccess, updateError, updateLoading, updateSuccess } = useAppSelector(state => state.patients)
+  const [formData, setFormData] = useState<PatientPostRequest>(initialFormState)
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(patient?.dateOfBirth ? new Date(patient?.dateOfBirth) : new Date())
+  const [medicationInput, setMedicationInput] = useState<string>("")
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (mode === 'edit' && patient) {
+      setFormData({
+        patientId: patient.patientId || "",
+        firstName: patient.firstName || "",
+        lastName: patient.lastName || "",
+        dateOfBirth: patient.dateOfBirth || "",
+        gender: patient.gender || Gender.UNKNOWN,
+        ssn: patient.ssn || "",
+        phone: patient.phone || "",
+        email: patient.email || "",
+        preferredLanguage: patient.preferredLanguage || Language.ENGLISH,
+        address: {
+          street: patient.address?.street || "",
+          city: patient.address?.city || "",
+          state: patient.address?.state || "",
+          zipCode: patient.address?.zipCode || "",
+          country: patient.address?.country || "",
+        },
+        emergencyContact: {
+          name: patient.emergencyContact?.name || "",
+          relationship: patient.emergencyContact?.relationship || Relationship.OTHER,
+          phone: patient.emergencyContact?.phone || "",
+          email: patient.emergencyContact?.email || "",
+        },
+        insurance: {
+          provider: patient.insurance?.provider || "",
+          policyNumber: patient.insurance?.policyNumber || "",
+          groupNumber: patient.insurance?.groupNumber || "",
+          subscriberId: patient.insurance?.subscriberId || "",
+          relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || Relationship.SELF,
+          effectiveDate: patient.insurance?.effectiveDate || "",
+          expirationDate: patient.insurance?.expirationDate || "",
+        },
+        allergies: patient.allergies || [],
+        chronicConditions: patient.chronicConditions || [],
+        currentMedications: patient.currentMedications?.map((med: { name: any; dosage: any; frequency: any; prescribedBy: any; startDate: any }) => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          prescribedBy: med.prescribedBy,
+          startDate: med.startDate
+        })) || [],
+        status: patient.status || PatientStatus.ACTIVE,
+        registrationDate: patient.registrationDate || new Date().toISOString(),
+        createdBy: patient.createdBy || "",
+        updatedBy: patient.updatedBy || ""
+      })
+      setProfileImage(patient.profileImage || null)
+      if (patient.dateOfBirth) {
+        setSelectedBirthDate(new Date(patient.dateOfBirth))
+      }
+    } else if (mode === 'create') {
+      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
+      setFormData({
+        ...initialFormState,
+        patientId: newId,
+        registrationDate: new Date().toISOString(),
+        createdBy: "current_user_id", // Replace with actual user ID
+        updatedBy: "current_user_id" // Replace with actual user ID
+      })
+      setProfileImage(null)
+      setSelectedBirthDate(undefined)
+    }
+  }, [mode, patient])
+
+  useEffect(() => {
+    if (createSuccess || updateSuccess) {
+      onSave({ ...formData, profileImage } as unknown as Patient)
+      setFormData(initialFormState)
+      setProfileImage(null)
+      setSelectedBirthDate(undefined)
+      dispatch(clearCreateSuccess())
+      dispatch(clearUpdateSuccess())
+      onOpenChange(false)
+    }
+  }, [createSuccess, updateSuccess, dispatch, onSave, onOpenChange])
+
+  useEffect(() => {
+    if (createError || updateError) {
+      console.error(mode === 'edit' ? updateError : createError)
+      // Optionally show error toast/notification here
+    }
+    return () => {
+      dispatch(clearCreateError())
+      dispatch(clearUpdateError())
+    }
+  }, [createError, updateError, dispatch, mode])
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
@@ -56,27 +177,61 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
     }
   }
 
-  const [patientId, setPatientId] = useState(patient?.id || "")
-  useEffect(() => {
-    if (open && !patient) {
-      const newId = patientIdGenerator.generate()
-      setPatientId(newId)
-    } else if (patient) {
-      setPatientId(patient.id) // existing patient
+  const regenerateId = () => {
+    if (mode === 'create') {
+      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
+      setFormData({ ...formData, patientId: newId })
     }
-  }, [open, patient])
-
-  const handleRegenerateId = () => {
-    const newId = patientIdGenerator.generate()
-    setPatientId(newId)
   }
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+
+    const submissionData: PatientPostRequest = {
+      ...formData,
+      dateOfBirth: selectedBirthDate ? selectedBirthDate.toISOString() : formData.dateOfBirth,
+      updatedBy: "current_user_id", // Replace with actual user ID
+      registrationDate: mode === 'create' ? new Date().toISOString() : formData.registrationDate
+    }
+
+    if (mode === 'edit' && patient?._id) {
+      dispatch(updatePatients({
+        id: patient._id,
+        patientData: submissionData
+      }))
+    } else {
+      dispatch(createPatients(submissionData))
+    }
+  }
+
+  const handleMedicationChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const medications = e.target.value.split("\n").map(item => {
+      const [name, dosage, frequency, prescribedBy, startDate] = item.split(",").map(s => s.trim())
+      return {
+        name: name || "",
+        dosage: dosage || "",
+        frequency: frequency || "",
+        prescribedBy: prescribedBy || "",
+        startDate: startDate || new Date().toISOString()
+      }
+    }).filter(med => med.name)
+    setFormData({ ...formData, currentMedications: medications })
+  }
+
+  const isLoading = mode === 'edit' ? updateLoading : createLoading
+  const currentError = mode === 'edit' ? updateError : createError
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-700">
         <DialogHeader>
-          <DialogTitle>{patient ? "Edit Patient" : "Add New Patient"}</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? "Edit Patient" : "Add New Patient"}</DialogTitle>
         </DialogHeader>
+
+        {currentError && (
+          <div className="text-red-500 text-sm mb-4">
+            Error: {currentError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Image */}
@@ -84,9 +239,9 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
             <Avatar className="h-20 w-20">
               <AvatarImage src={profileImage || "/placeholder.svg"} />
               <AvatarFallback>
-                {formData.name
+                {(formData.firstName + " " + formData.lastName)
                   .split(" ")
-                  .map((n: any[]) => n[0])
+                  .map((n) => n[0])
                   .join("")}
               </AvatarFallback>
             </Avatar>
@@ -107,211 +262,503 @@ export default function PatientForm({ open, onOpenChange, patient, onSave }: Pat
             </div>
           </div>
 
-          {/* Patient ID Display */}
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1">
-              <Label className="text-sm text-white">Patient ID (Auto-generated)</Label>
+          {/* Patient ID */}
+          <div className="flex items-end gap-2">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="patientId">{mode === 'edit' ? 'Patient ID *' : 'Generated Patient ID'}</Label>
               <Input
-                type="text"
-                value={patientId}
+                id="patientId"
                 readOnly
+                value={formData.patientId}
+                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
                 className="bg-slate-700 border-slate-600"
+                placeholder="p-001"
+                required
+                disabled={isLoading}
               />
             </div>
-
-            {!patient && (
-              <div className="flex flex-col gap-2">
-                <span className="text-xs text-gray-300">
-                  Next Preview: {patientIdGenerator.previewNextId()}
-                </span>
-                <Button
-                  type="button"
-                  onClick={handleRegenerateId}
-                  className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
-                >
-                  Regenerate ID
-                </Button>
-
-              </div>
+            {mode === 'create' && (
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={regenerateId}
+                className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+              >
+                Regenerate
+              </button>
             )}
           </div>
 
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="age">Age *</Label>
-              <Input
-                id="age"
-                type="number"
-                value={formData.age}
-                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender *</Label>
-              <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bloodType">Blood Type</Label>
-              <Select
-                value={formData.bloodType}
-                onValueChange={(value) => setFormData({ ...formData, bloodType: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select blood type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A+">A+</SelectItem>
-                  <SelectItem value="A-">A-</SelectItem>
-                  <SelectItem value="B+">B+</SelectItem>
-                  <SelectItem value="B-">B-</SelectItem>
-                  <SelectItem value="AB+">AB+</SelectItem>
-                  <SelectItem value="AB-">AB-</SelectItem>
-                  <SelectItem value="O+">O+</SelectItem>
-                  <SelectItem value="O-">O-</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name *</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                  required
+                />
+              </div>
+              {/* <div className="space-y-2">
+                <Label>Date of Birth *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal bg-slate-700 border-slate-600"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedBirthDate ? format(selectedBirthDate, "PPP p") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
+                    <Calendar
+                      mode="single"
+                      selected={selectedBirthDate}
+                      // onSelect={(date: Date | undefined) => setSelectedBirthDate(date)}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedBirthDate(date);
+                          setFormData((prev) => ({
+                            ...prev,
+                            dateOfBirth: dateOfBirth.toISOString().slice(0, 16), // format to "yyyy-MM-ddTHH:mm"
+                          }));
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div> */}
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender *</Label>
+                <Select value={formData.gender} disabled={isLoading} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GenderValues.map((gender) => (
+                      <SelectItem key={gender} value={gender}>
+                        {gender}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ssn">Social Security Number</Label>
+                <Input
+                  id="ssn"
+                  value={formData.ssn}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({ ...formData, ssn: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="XXX-XX-XXXX"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="preferredLanguage">Preferred Language</Label>
+                <Select
+                  value={formData.preferredLanguage}
+                  onValueChange={(value) => setFormData({ ...formData, preferredLanguage: value })}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LanguageValues.map((language) => (
+                      <SelectItem key={language} value={language}>
+                        {language}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
           {/* Contact Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="bg-slate-700 border-slate-600"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="emergencyContact">Emergency Contact</Label>
-            <Input
-              id="emergencyContact"
-              value={formData.emergencyContact}
-              onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
-              className="bg-slate-700 border-slate-600"
-              placeholder="Name - Phone Number"
-            />
-          </div>
-
-          {/* Medical Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="condition">Primary Condition</Label>
-              <Input
-                id="condition"
-                value={formData.condition}
-                onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="allergies">Allergies</Label>
-              <Input
-                id="allergies"
-                value={formData.allergies}
-                onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                placeholder="Separate with commas"
-              />
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Contact Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="medications">Current Medications</Label>
-            <Textarea
-              id="medications"
-              value={formData.medications}
-              onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
-              className="bg-slate-700 border-slate-600"
-              placeholder="List current medications and dosages"
-            />
+          {/* Address Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Address</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="street">Street Address</Label>
+                <Input
+                  id="street"
+                  value={formData.address.street}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    address: { ...formData.address, street: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={formData.address.city}
+                    disabled={isLoading}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      address: { ...formData.address, city: e.target.value }
+                    })}
+                    className="bg-slate-700 border-slate-600"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={formData.address.state}
+                    disabled={isLoading}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      address: { ...formData.address, state: e.target.value }
+                    })}
+                    className="bg-slate-700 border-slate-600"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode">ZIP Code</Label>
+                  <Input
+                    id="zipCode"
+                    value={formData.address.zipCode}
+                    disabled={isLoading}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      address: { ...formData.address, zipCode: e.target.value }
+                    })}
+                    className="bg-slate-700 border-slate-600"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  value={formData.address.country}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    address: { ...formData.address, country: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="United States"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Emergency Contact</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="emergencyName">Contact Name</Label>
+                <Input
+                  id="emergencyName"
+                  value={formData.emergencyContact.name}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, name: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyRelationship">Relationship</Label>
+                <Select
+                  value={formData.emergencyContact.relationship}
+                  disabled={isLoading}
+                  onValueChange={(value) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, relationship: value }
+                  })}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Select relationship" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RelationshipValues.map((relationship) => (
+                      <SelectItem key={relationship} value={relationship}>
+                        {relationship}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyPhone">Phone Number</Label>
+                <Input
+                  id="emergencyPhone"
+                  value={formData.emergencyContact.phone}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, phone: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyEmail">Email Address</Label>
+                <Input
+                  id="emergencyEmail"
+                  disabled={isLoading}
+                  type="email"
+                  value={formData.emergencyContact.email}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    emergencyContact: { ...formData.emergencyContact, email: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Insurance Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="insuranceProvider">Insurance Provider</Label>
-              <Input
-                id="insuranceProvider"
-                value={formData.insuranceProvider}
-                onChange={(e) => setFormData({ ...formData, insuranceProvider: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="insuranceNumber">Insurance Number</Label>
-              <Input
-                id="insuranceNumber"
-                value={formData.insuranceNumber}
-                onChange={(e) => setFormData({ ...formData, insuranceNumber: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-              />
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Insurance Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="insuranceProvider">Insurance Provider</Label>
+                <Input
+                  id="insuranceProvider"
+                  value={formData.insurance.provider}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, provider: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="policyNumber">Policy Number</Label>
+                <Input
+                  id="policyNumber"
+                  value={formData.insurance.policyNumber}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, policyNumber: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="groupNumber">Group Number</Label>
+                <Input
+                  id="groupNumber"
+                  value={formData.insurance.groupNumber}
+                  disabled={isLoading}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, groupNumber: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="relationshipToSubscriber">Relationship to Subscriber</Label>
+                <Select
+                  value={formData.insurance.relationshipToSubscriber}
+                  disabled={isLoading}
+                  onValueChange={(value) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, relationshipToSubscriber: value }
+                  })}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Select relationship" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RelationshipValues.map((relationship) => (
+                      <SelectItem key={relationship} value={relationship}>
+                        {relationship}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+
+              <div className="space-y-2">
+                <Label htmlFor="effectiveDate">Effective Date</Label>
+                <Input
+                  id="effectiveDate"
+                  type="date"
+                  disabled={isLoading}
+                  value={formData.insurance.effectiveDate}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, effectiveDate: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="expirationDate">Expiration Date</Label>
+                <Input
+                  id="expirationDate"
+                  type="date"
+                  disabled={isLoading}
+                  value={formData.insurance.expirationDate}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    insurance: { ...formData.insurance, expirationDate: e.target.value }
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="bg-slate-700 border-slate-600"
-            />
+          {/* Medical Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Medical Information</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="allergies">Allergies</Label>
+                <Textarea
+                  id="allergies"
+                  disabled={isLoading}
+                  value={Array.isArray(formData.allergies) ? formData.allergies.join(", ") : ""}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    allergies: e.target.value.split(",").map(item => item.trim()).filter(item => item)
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Enter allergies separated by commas"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="chronicConditions">Chronic Conditions</Label>
+                <Textarea
+                  id="chronicConditions"
+                  disabled={isLoading}
+                  value={Array.isArray(formData.chronicConditions) ? formData.chronicConditions.join(", ") : ""}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    chronicConditions: e.target.value.split(",").map(item => item.trim()).filter(item => item)
+                  })}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Enter chronic conditions separated by commas"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currentMedications">Current Medications</Label>
+                <Textarea
+                  id="currentMedications"
+                  disabled={isLoading}
+                  value={medicationInput}
+                  onChange={handleMedicationChange}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Enter current medications separated by commas"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          {/* Status and Tags */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">Status & Tags</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Patient Status</Label>
+                <Select
+                  disabled={isLoading}
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PatientStatusValues.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              {patient ? "Update Patient" : "Add Patient"}
+            <Button
+              disabled={isLoading}
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === 'edit' ? 'Updating...' : 'Saving...'}
+                </>
+              ) : (
+                <>
+                  {mode === 'edit' ? 'Update Patient' : 'Save Patient'}
+                </>
+              )}
             </Button>
           </div>
         </form>

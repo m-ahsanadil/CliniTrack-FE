@@ -1,20 +1,22 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "./types"; 
+import { SuperAdminUser, UserInfo } from "./types";
 
 interface AuthState {
-  user: User | null;
+  user: UserInfo | null;
+  superAdminUser: SuperAdminUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
+  loginLoading: boolean;
+  loginError: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
-  loading: false,
-  error: null,
+  loginLoading: false,
+  loginError: null,
+  superAdminUser: null
 };
 
 const authSlice = createSlice({
@@ -23,61 +25,77 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{ user: UserInfo; token: string }>
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.superAdminUser = null;
       state.isAuthenticated = true;
-      state.error = null;
+      state.loginError = null;
     },
-    
+    setSuperAdminCredentials: (
+      state,
+      action: PayloadAction<{ user: SuperAdminUser; token: string }>
+    ) => {
+      state.superAdminUser = action.payload.user;
+      state.user = null;
+      state.token = action.payload.token;
+      state.isAuthenticated = true;
+      state.loginError = null;
+    },
+
+
     logout: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.error = null;
-      state.loading = false;
+      state.loginError = null;
+      state.loginLoading = false;
     },
-    
+
     // Additional logout actions for different scenarios
     logoutSuccess: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.error = null;
-      state.loading = false;
+      state.loginError = null;
+      state.loginLoading = false;
     },
-    
+
     sessionExpired: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.error = "Session expired. Please login again.";
-      state.loading = false;
+      state.loginError = "Session expired. Please login again.";
+      state.loginLoading = false;
     },
-    
+
     setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+      state.loginLoading = action.payload;
     },
-    
+
     setError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload;
+      state.loginError = action.payload;
     },
-    
+
     clearError: (state) => {
-      state.error = null;
+      state.loginError = null;
     },
   },
 });
 
-export const { 
-  setCredentials, 
-  logout, 
-  logoutSuccess, 
+export const {
+  setCredentials,
+  setSuperAdminCredentials,
+  logout,
+  logoutSuccess,
   sessionExpired,
   setLoading,
   setError,
-  clearError 
+  clearError,
 } = authSlice.actions;
 
 export default authSlice.reducer;

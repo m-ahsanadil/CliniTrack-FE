@@ -1,3 +1,5 @@
+import { PatientStatus } from "@/src/enum";
+
 interface Address {
   street: string;
   city: string;
@@ -23,7 +25,7 @@ interface Insurance {
   expirationDate: string; // ISO date string
 }
 
-interface Medication {
+export interface Medication {
   _id: string;
   name: string;
   dosage: string;
@@ -50,7 +52,7 @@ export interface Patient {
   allergies: string[];
   chronicConditions: string[];
   currentMedications: Medication[];
-  status: string;
+  status: PatientStatus.ACTIVE | PatientStatus.DECEASED | PatientStatus.INACTIVE;
   registrationDate: string; // ISO date string
   preferredLanguage: string;
   tags: string[];
@@ -91,15 +93,26 @@ export interface PatientPostRequest {
   chronicConditions: string[];
   currentMedications: Omit<Medication, "_id">[]; // when creating, _id isn't required
   insurance: Insurance;
-  status: string;
+  status: PatientStatus.ACTIVE | PatientStatus.DECEASED | PatientStatus.INACTIVE;
   registrationDate: string; // ISO date string
   preferredLanguage: string;
   createdBy: string;
   updatedBy: string;
 }
 
+export interface PatientPostResponse {
+  success: boolean;
+  message?: string;
+  data: Patient;
+}
 
+export interface PatientPostErrorResponse {
+  success: false;
+  message: string;
+  errors?: string[];
+}
 
+export type PatientPostApiResponse = PatientPostResponse | PatientPostErrorResponse;
 
 // DELETE Patient
 export interface PatientDeleteResponse {
@@ -115,14 +128,32 @@ export interface PatientDeleteErrorResponse {
 
 export type PatientDeleteApiResponse = PatientDeleteResponse | PatientDeleteErrorResponse;
 
-export interface PatientPostApiResponse {
-  success: boolean;
-  message?: string;
-  data: Patient;
-}
-
 // GET by ID — returns a single Patient
 export interface PatientGetByIdResponse {
   success: boolean;
   data: Patient;
+}
+
+// export interface PatientBasicInfo {
+//   _id: string;
+//   patientId: string;
+//   firstName: string;
+//   lastName: string;
+//   fullName: string;
+// }
+
+// export interface PatientBasicInfoResponse {
+//   success: boolean;
+//   count: number;
+//   message?: string
+//   data: PatientBasicInfo[];
+// }
+
+export interface PatientListGetResponse {
+  success: boolean;
+  count: number;
+  data: {
+    _id: string;
+    fullName: string;
+  }[];
 }

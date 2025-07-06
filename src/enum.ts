@@ -1,153 +1,189 @@
+// =======================
+// USER & ROLES
+// =======================
+export enum UserRole {
+  PATIENT = 'patient',
+  DOCTOR = 'doctor',
+  STAFF = 'staff',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'superadmin',
+}
 
-// Appointment Type Enum
+export const UserRoleValues = Object.values(UserRole);
+
+export enum UserStatus {
+  ACTIVE = "active",
+  SUSPENDED = "suspended",
+  INACTIVE = "inactive",
+}
+
+export const UserStatusValues = Object.values(UserStatus);
+
+
+// =======================
+// REPORT
+// =======================
+export enum ReportStatus {
+  GENERATED = 'Generated',
+  PENDING = 'Pending',
+  FAILED = 'Failed',
+}
+
+export enum ReportType {
+  CLINIC_OPERATIONS = "Clinic Operations",
+  PATIENT_STATISTICS = "Patient Statistics",
+  APPOINTMENT_SUMMARY = "Appointment Summary",
+  BILLING_REPORT = "Billing Report",
+  PROVIDER_PERFORMANCE = "Provider Performance",
+  TREATMENT_OUTCOMES = "Treatment Outcomes",
+  LAB_RESULTS = "Lab Results",
+  FINANCIAL_SUMMARY = "Financial Summary",
+  OTHER = "Other",
+}
+
+export const ReportTypeValues = Object.values(ReportType);
+export const ReportStatusValues = Object.values(ReportStatus);
+
+
+// =======================
+// PROVIDER
+// =======================
+export enum ProviderStatus {
+  ACTIVE = 'Active',
+  INACTIVE = 'Inactive',
+}
+
+export const ProviderStatusValues = Object.values(ProviderStatus);
+
+
+// =======================
+// PATIENT
+// =======================
+export enum PatientStatus {
+  ACTIVE = 'Active',
+  INACTIVE = 'Inactive',
+  DECEASED = 'Deceased',
+}
+
+export const PatientStatusValues = Object.values(PatientStatus);
+
+
+// =======================
+// INVOICE
+// =======================
+export enum InvoiceStatus {
+  PENDING = 'Pending',
+  PAID = 'Paid',
+  OVERDUE = 'Overdue',
+  CANCELLED = 'Cancelled',
+}
+
+export const InvoiceStatusValues = Object.values(InvoiceStatus);
+
+
+// =======================
+// APPOINTMENT
+// =======================
 export enum AppointmentType {
-  CONSULTATION = "Consultation",
-  FOLLOW_UP = "Follow-up",
-  EMERGENCY = "Emergency",
-  PROCEDURE = "Procedure"
+  CONSULTATION = 'Consultation',
+  FOLLOW_UP = 'Follow-up',
+  EMERGENCY = 'Emergency',
+  PROCEDURE = 'Procedure',
 }
 
-// Appointment Status Enum
-export enum AppointmentStatus {
-  SCHEDULED = "Scheduled",
-  COMPLETED = "Completed",
-  CANCELLED = "Cancelled",
-  RESCHEDULED = "Rescheduled",
-  NO_SHOW = "No Show", 
-//   CONFIRMED = "Confirmed",
-//   IN_PROGRESS = "In Progress",
-}
-
-// Appointment Priority Enum
 export enum AppointmentPriority {
-  LOW = "Low",
-  MEDIUM = "Medium",
-  HIGH = "High",
-  URGENT = "Urgent"
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
+  URGENT = 'Urgent',
 }
 
-// Time Zone Enum (Common ones for medical systems)
-export enum TimeZone {
-  ASIA_RIYADH = "Asia/Riyadh",
-  ASIA_DUBAI = "Asia/Dubai",
-  ASIA_KUWAIT = "Asia/Kuwait",
-  ASIA_QATAR = "Asia/Qatar",
-  UTC = "UTC",
-  AMERICA_NEW_YORK = "America/New_York",
-  EUROPE_LONDON = "Europe/London"
+export enum AppointmentStatus {
+  SCHEDULED = 'Scheduled',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
+  RESCHEDULED = 'Rescheduled',
+  NO_SHOW = 'No-show',
 }
 
-// Department Names Enum
 export enum DepartmentName {
-  GENERAL_MEDICINE = "General Medicine",
+  GENERAL_PRACTICE = "General Practice",
+  PEDIATRICS = "Pediatrics",
   CARDIOLOGY = "Cardiology",
   DERMATOLOGY = "Dermatology",
-  ORTHOPEDICS = "Orthopedics",
-  PEDIATRICS = "Pediatrics",
-  GYNECOLOGY = "Gynecology",
+  ENDOCRINOLOGY = "Endocrinology",
+  GASTROENTEROLOGY = "Gastroenterology",
   NEUROLOGY = "Neurology",
+  OBSTETRICS_GYNECOLOGY = "Obstetrics and Gynecology",
+  ONCOLOGY = "Oncology",
+  OPHTHALMOLOGY = "Ophthalmology",
+  ORTHOPEDICS = "Orthopedics",
   PSYCHIATRY = "Psychiatry",
+  PULMONOLOGY = "Pulmonology",
   RADIOLOGY = "Radiology",
-  EMERGENCY = "Emergency",
+  UROLOGY = "Urology",
+  RHEUMATOLOGY = "Rheumatology",
+  ENT = "Ear, Nose and Throat (ENT)",
+  ANESTHESIOLOGY = "Anesthesiology",
+  PATHOLOGY = "Pathology",
+  INFECTIOUS_DISEASES = "Infectious Diseases",
+  FAMILY_MEDICINE = "Family Medicine",
+  INTERNAL_MEDICINE = "Internal Medicine",
   SURGERY = "Surgery",
-  DENTISTRY = "Dentistry"
+  OTHER = "Other",
 }
 
-// User Roles Enum
-export enum UserRole {
-  PATIENT = "patient",
-  DOCTOR = "doctor",
-  NURSE = "nurse",
-  ADMIN = "admin",
-  CLINIC_ADMIN = "clinicadmin",
-  RECEPTIONIST = "receptionist"
-}
-
-// Gender Enum
-export enum Gender {
-  MALE = "Male",
-  FEMALE = "Female",
-  OTHER = "Other"
-}
-
-// Blood Type Enum
-export enum BloodType {
-  A_POSITIVE = "A+",
-  A_NEGATIVE = "A-",
-  B_POSITIVE = "B+",
-  B_NEGATIVE = "B-",
-  AB_POSITIVE = "AB+",
-  AB_NEGATIVE = "AB-",
-  O_POSITIVE = "O+",
-  O_NEGATIVE = "O-"
-}
-
-// Marital Status Enum
-export enum MaritalStatus {
-  SINGLE = "Single",
-  MARRIED = "Married",
-  DIVORCED = "Divorced",
-  WIDOWED = "Widowed"
-}
-
-// Payment Status Enum
-export enum PaymentStatus {
-  PENDING = "Pending",
-  PAID = "Paid",
-  PARTIAL = "Partial",
-  REFUNDED = "Refunded",
-  CANCELLED = "Cancelled"
-}
-
-// Payment Method Enum
-export enum PaymentMethod {
-  CASH = "Cash",
-  CREDIT_CARD = "Credit Card",
-  DEBIT_CARD = "Debit Card",
-  INSURANCE = "Insurance",
-  BANK_TRANSFER = "Bank Transfer",
-  DIGITAL_WALLET = "Digital Wallet"
-}
-
-// Notification Type Enum
-export enum NotificationType {
-  APPOINTMENT_REMINDER = "Appointment Reminder",
-  APPOINTMENT_CONFIRMATION = "Appointment Confirmation",
-  APPOINTMENT_CANCELLATION = "Appointment Cancellation",
-  PAYMENT_DUE = "Payment Due",
-  PAYMENT_RECEIVED = "Payment Received",
-  TEST_RESULTS = "Test Results",
-  PRESCRIPTION_READY = "Prescription Ready"
-}
-
-// Days of Week Enum
-export enum DayOfWeek {
-  SUNDAY = "Sunday",
-  MONDAY = "Monday",
-  TUESDAY = "Tuesday",
-  WEDNESDAY = "Wednesday",
-  THURSDAY = "Thursday",
-  FRIDAY = "Friday",
-  SATURDAY = "Saturday"
-}
-
-export enum PatientStatus {
-    ACTIVE = 'active',
-    INACTIVE = 'inactive',
-    PENDING = 'pending'
-}
-
-// Export all enum values as arrays for validation purposes
+export const DepartmentNameValues = Object.values(DepartmentName)
 export const AppointmentTypeValues = Object.values(AppointmentType);
-export const AppointmentStatusValues = Object.values(AppointmentStatus);
 export const AppointmentPriorityValues = Object.values(AppointmentPriority);
-export const TimeZoneValues = Object.values(TimeZone);
-export const DepartmentNameValues = Object.values(DepartmentName);
-export const UserRoleValues = Object.values(UserRole);
+export const AppointmentStatusValues = Object.values(AppointmentStatus);
+
+
+// =======================
+// REMINDER
+// =======================
+export enum ReminderStatus {
+  SENT = 'Sent',
+  FAILED = 'Failed',
+}
+
+export const ReminderStatusValues = Object.values(ReminderStatus);
+
+
+// =======================
+// OTHER ENUMS
+// =======================
+export enum Gender {
+  MALE = 'Male',
+  FEMALE = 'Female',
+  OTHER = 'Other',
+  UNKNOWN = 'Unknown',
+}
+
+export enum Language {
+  ENGLISH = 'English',
+  SPANISH = 'Spanish',
+  FRENCH = 'French',
+  GERMAN = 'German',
+  CHINESE = 'Chinese',
+  URDU = 'Urdu',
+  ARABIC = 'Arabic',
+  OTHER = 'Other',
+}
+
+export enum Relationship {
+  BROTHER = 'Brother',
+  SELF = 'Self',
+  SPOUSE = 'Spouse',
+  PARENT = 'Parent',
+  CHILD = 'Child',
+  SIBLING = 'Sibling',
+  FRIEND = 'Friend',
+  OTHER = 'Other',
+  HUSBAND = 'Husband',
+  FATHER = 'Father',
+}
+
 export const GenderValues = Object.values(Gender);
-export const BloodTypeValues = Object.values(BloodType);
-export const MaritalStatusValues = Object.values(MaritalStatus);
-export const PaymentStatusValues = Object.values(PaymentStatus);
-export const PaymentMethodValues = Object.values(PaymentMethod);
-export const NotificationTypeValues = Object.values(NotificationType);
-export const DayOfWeekValues = Object.values(DayOfWeek);
+export const LanguageValues = Object.values(Language);
+export const RelationshipValues = Object.values(Relationship);

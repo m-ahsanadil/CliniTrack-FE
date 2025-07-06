@@ -5,14 +5,15 @@ import {
     UserCheck,
     Users,
 } from "lucide-react"
+import { UserRole } from "./enum"
 
 export const getRoleIcon = (role?: string) => {
     switch (role) {
-        case "admin":
+        case UserRole.ADMIN:
             return Shield
-        case "doctor":
+        case UserRole.DOCTOR:
             return Stethoscope
-        case "staff":
+        case UserRole.STAFF:
             return UserCheck
         default:
             return User
@@ -45,7 +46,7 @@ export const countries = [
     'Other'
 ]
 
- export  const doctors = [
+export const doctors = [
     "Dr. Smith",
     "Dr. Johnson",
     "Dr. Brown",
@@ -55,7 +56,7 @@ export const countries = [
     "Dr. Garcia",
     "Dr. Rodriguez",
     "Dr. Martinez",
-  ]
+]
 
 export const statusOptions = [
     { value: 'Active', label: 'Active' },
@@ -66,18 +67,18 @@ export const statusOptions = [
 
 export const getRoleColor = (role?: string) => {
     switch (role) {
-        case "admin":
+        case UserRole.ADMIN:
             return "text-red-600 bg-red-100"
-        case "doctor":
+        case UserRole.DOCTOR:
             return "text-blue-600 bg-blue-100"
-        case "staff":
+        case UserRole.STAFF:
             return "text-green-600 bg-green-100"
         default:
             return "text-gray-600 bg-gray-100"
     }
 }
 
-export type UserRole = "admin" | "doctor" | "staff"
+// export type UserRole = UserRole.ADMIN | UserRole.DOCTOR | UserRole.STAFF
 
 
 export interface User {
@@ -89,68 +90,6 @@ export interface User {
     department?: string
     specialization?: string
 }
-
-// Mock users for demonstration
-export const mockUsers: Record<string, User & { password: string }> = {
-    "admin@clinitrack.com": {
-        id: "1",
-        name: "Dr. Sarah Wilson",
-        email: "admin@clinitrack.com",
-        role: "admin",
-        password: "admin123",
-        avatar: "/placeholder-user.jpg",
-        department: "Administration",
-    },
-    "doctor@clinitrack.com": {
-        id: "2",
-        name: "Dr. Michael Chen",
-        email: "doctor@clinitrack.com",
-        role: "doctor",
-        password: "doctor123",
-        avatar: "/placeholder-user.jpg",
-        department: "Cardiology",
-        specialization: "Interventional Cardiology",
-    },
-    "staff@clinitrack.com": {
-        id: "3",
-        name: "Jennifer Martinez",
-        email: "staff@clinitrack.com",
-        role: "staff",
-        password: "staff123",
-        avatar: "/placeholder-user.jpg",
-        department: "Reception",
-    },
-}
-
-export const demoAccounts = [
-    {
-        role: "admin",
-        email: "admin@clinitrack.com",
-        password: "admin123",
-        name: "Dr. Sarah Wilson",
-        icon: Shield,
-        color: "bg-red-500",
-        description: "Full system access, user management, reports",
-    },
-    {
-        role: "doctor",
-        email: "doctor@clinitrack.com",
-        password: "doctor123",
-        name: "Dr. Michael Chen",
-        icon: Stethoscope,
-        color: "bg-blue-500",
-        description: "Patient records, appointments, medical notes",
-    },
-    {
-        role: "staff",
-        email: "staff@clinitrack.com",
-        password: "staff123",
-        name: "Jennifer Martinez",
-        icon: Users,
-        color: "bg-green-500",
-        description: "Appointments, patient check-in, basic records",
-    },
-]
 
 export const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -174,6 +113,70 @@ export const getStatusBadgeVariant = (status: string) => {
             return "secondary"
     }
 }
+
+// Mock users for demonstration
+export const mockUsers: Record<string, User & { password: string }> = {
+    "admin@clinitrack.com": {
+        id: "1",
+        name: "Dr. Sarah Wilson",
+        email: "admin@clinitrack.com",
+        role: UserRole.ADMIN,
+        password: "admin123",
+        avatar: "/placeholder-user.jpg",
+        department: "Administration",
+    },
+    "doctor@clinitrack.com": {
+        id: "2",
+        name: "Dr. Michael Chen",
+        email: "doctor@clinitrack.com",
+        role: UserRole.DOCTOR,
+        password: "doctor123",
+        avatar: "/placeholder-user.jpg",
+        department: "Cardiology",
+        specialization: "Interventional Cardiology",
+    },
+    "staff@clinitrack.com": {
+        id: "3",
+        name: "Jennifer Martinez",
+        email: "staff@clinitrack.com",
+        role: UserRole.STAFF,
+        password: "staff123",
+        avatar: "/placeholder-user.jpg",
+        department: "Reception",
+    },
+}
+
+export const demoAccounts = [
+    {
+        role: UserRole.ADMIN,
+        email: "admin@clinitrack.com",
+        password: "admin123",
+        name: "Dr. Sarah Wilson",
+        icon: Shield,
+        color: "bg-red-500",
+        description: "Full system access, user management, reports",
+    },
+    {
+        role: UserRole.DOCTOR,
+        email: "doctor@clinitrack.com",
+        password: "doctor123",
+        name: "Dr. Michael Chen",
+        icon: Stethoscope,
+        color: "bg-blue-500",
+        description: "Patient records, appointments, medical notes",
+    },
+    {
+        role: UserRole.STAFF,
+        email: "staff@clinitrack.com",
+        password: "staff123",
+        name: "Jennifer Martinez",
+        icon: Users,
+        color: "bg-green-500",
+        description: "Appointments, patient check-in, basic records",
+    },
+]
+
+
 
 export const Patients = [
     {

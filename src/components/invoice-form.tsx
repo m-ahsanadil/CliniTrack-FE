@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, X } from "lucide-react"
+import { generateId } from "../utils/idGenerator"
+import { InvoiceStatusValues } from "../enum"
 
 // interface InvoiceFormProps {
 //   open: boolean
@@ -27,6 +29,7 @@ interface InvoiceFormProps {
   onOpenChange: (open: boolean) => void
   invoice?: any
   onSave: (invoice: any) => void
+  mode: 'create' | 'edit'
   patients: any[]
   providers: any[]
   currentUser: any
@@ -68,104 +71,12 @@ interface FormData {
   discount: number;
 }
 
-// interface FormData {
-//   patientId: string;
-//   patientName: string;
-//   date: string;
-//   dueDate: string;
-//   service: string;
-//   amount: string;
-//   status: string;
-//   paymentMethod: string;
-//   insuranceClaim: string;
-//   notes: string;
-//   items: InvoiceItem[];
-//   subtotal: number;
-//   tax: number;
-//   discount: number;
-//   total: number;
-// }
 
+export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patients, providers, currentUser, mode }: InvoiceFormProps) {
 
-export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patients, providers, currentUser }: InvoiceFormProps) {
-  // const [formData, setFormData] = useState<FormData>({
-  //   patientId: invoice?.patientId || "",
-  //   patientName: invoice?.patientName || "",
-  //   date: invoice?.date || "",
-  //   dueDate: invoice?.dueDate || "",
-  //   service: invoice?.service || "",
-  //   amount: invoice?.amount || "",
-  //   status: invoice?.status || "Pending",
-  //   paymentMethod: invoice?.paymentMethod || "",
-  //   insuranceClaim: invoice?.insuranceClaim || "Not Submitted",
-  //   notes: invoice?.notes || "",
-  //   // items: invoice?.items || [],
-  //   items: invoice?.items?.map((item: Partial<InvoiceItem>) => ({
-  //     description: item.description || "",
-  //     quantity: item.quantity || 0,
-  //     rate: item.rate || 0,
-  //     amount: item.amount || 0,
-  //   })) || [],
-  //   subtotal: invoice?.subtotal || 0,
-  //   tax: invoice?.tax || 0,
-  //   discount: invoice?.discount || 0,
-  //   total: invoice?.total || 0,
-  // })
-
-  // const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-  //   invoice?.date ? new Date(invoice.date) : new Date(),
-  // )
-
-  // const [dueDate, setDueDate] = useState<Date | undefined>(invoice?.dueDate ? new Date(invoice.dueDate) : undefined)
-
-  // const [newItem, setNewItem] = useState({
-  //   description: "",
-  //   quantity: 1,
-  //   rate: 0,
-  //   amount: 0,
-  // })
-
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   const selectedPatient = patients.find((p) => p.id.toString() === formData.patientId)
-  //   onSave({
-  //     ...formData,
-  //     patientName: selectedPatient?.name || formData.patientName,
-  //     date: selectedDate ? format(selectedDate, "yyyy-MM-dd") : formData.date,
-  //     dueDate: dueDate ? format(dueDate, "yyyy-MM-dd") : "",
-  //     id: invoice?.id || Date.now(),
-  //   })
-  //   onOpenChange(false)
-  // }
-
-  // const addItem = () => {
-  //   if (newItem.description.trim()) {
-  //     const amount = newItem.quantity * newItem.rate
-  //     const item = { ...newItem, amount }
-  //     setFormData({
-  //       ...formData,
-  //       items: [...formData.items, item],
-  //     })
-  //     setNewItem({ description: "", quantity: 1, rate: 0, amount: 0 })
-  //     calculateTotals([...formData.items, item])
-  //   }
-  // }
-
-  // const removeItem = (index: number) => {
-  //   const newItems = formData.items.filter((_, i) => i !== index)
-  //   setFormData({ ...formData, items: newItems })
-  //   calculateTotals(newItems)
-  // }
-
-  // const calculateTotals = (items: any[]) => {
-  //   const subtotal = items.reduce((sum, item) => sum + item.amount, 0)
-  //   const tax = subtotal * 0.08 // 8% tax
-  //   const total = subtotal + tax - formData.discount
-  //   setFormData((prev) => ({ ...prev, subtotal, tax, total }))
-  // }
 
   const [formData, setFormData] = useState<FormData>({
-    invoiceNumber: invoice?.invoiceNumber || `INV-${Date.now()}`,
+    invoiceNumber: invoice?.invoiceNumber || "",
     patientId: invoice?.patientId || "",
     providerId: invoice?.providerId || "",
     amount: invoice?.amount || 0,
@@ -206,6 +117,23 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
     total: 0,
   })
 
+  // GENERATED NEW INVOICE ID
+  // const [id, setId] = useState(() =>
+  //   generateId({ prefix: "INV", suffix: 'BILLING' })
+  // );
+
+  // const regenerateId = () => {
+  //   setId(generateId({ prefix: "INV", suffix: "BILLING" }));
+  // };
+
+  const regenerateId = () => {
+    // Only allow regeneration in create mode
+    if (mode === 'create') {
+      const newId = generateId({ prefix: "INV", suffix: "BILLING" });
+      setFormData({ ...formData, invoiceNumber: newId });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const selectedPatient = patients.find((p) => p.id.toString() === formData.patientId)
@@ -222,7 +150,6 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
     onOpenChange(false)
   }
 
-  console.table(formData)
   const addService = () => {
     if (newService.description.trim()) {
       const total = newService.quantity * newService.unitPrice
@@ -262,23 +189,38 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-700">
         <DialogHeader>
-          <DialogTitle>{invoice ? "Edit Invoice" : "Create New Invoice"}</DialogTitle>
+          <DialogTitle>{mode ? "Edit Invoice" : "Create New Invoice"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Invoice Number and Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="invoiceNumber">Invoice Number *</Label>
-              <Input
-                id="invoiceNumber"
-                value={formData.invoiceNumber}
-                onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                placeholder="INV-001"
-                required
-              />
+
+
+            <div className="flex items-end gap-2">
+              <div className="space-y-2 w-full">
+                <Label htmlFor="invoiceNumber">{mode === 'edit' ? 'Invoice Number *' : 'Generated Invoice ID'}</Label>
+                <Input
+                  id="invoiceNumber"
+                  readOnly
+                  value={formData.invoiceNumber}
+                  onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="INV-001"
+                  required
+                />
+              </div>
+              {mode === 'create' && (
+                <button
+                  type="button"
+                  onClick={regenerateId}
+                  className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                >
+                  Regenerate
+                </button>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
               <Select
@@ -291,9 +233,14 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
+                  {/* <SelectItem value="Pending">Pending</SelectItem>
                   <SelectItem value="Paid">Paid</SelectItem>
-                  <SelectItem value="Overdue">Overdue</SelectItem>
+                  <SelectItem value="Overdue">Overdue</SelectItem> */}
+                  {InvoiceStatusValues.map((invoice) => (
+                    <SelectItem key={invoice} value={invoice}>
+                      {invoice}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -311,9 +258,9 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
                   <SelectValue placeholder="Select patient" />
                 </SelectTrigger>
                 <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id.toString()}>
-                      {patient.name} - {patient.phone}
+                  {patients.map((patient, index) => (
+                    <SelectItem key={index} value={patient._id}>
+                      {patient.fullName} - {patient.phone}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -330,10 +277,11 @@ export default function InvoiceForm({ open, onOpenChange, invoice, onSave, patie
                 </SelectTrigger>
                 <SelectContent>
                   {providers.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id.toString()}>
-                      {provider.name} - {provider.specialization}
+                    <SelectItem key={provider.id} value={provider._id}>
+                      {provider.name} - {provider.specialty}
                     </SelectItem>
                   ))}
+
                 </SelectContent>
               </Select>
             </div>

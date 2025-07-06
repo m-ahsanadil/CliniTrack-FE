@@ -3,6 +3,13 @@ import {
     Menu,
     Search,
     LogOut,
+    FileText,
+    User,
+    CreditCard,
+    HelpCircle,
+    Loader2,
+    Camera,
+    AlertCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,21 +30,57 @@ import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { logout } from "../modules/Authentication/auth/api/slice"
 import { persistor } from "../redux/store/store"
 import { PURGE } from "redux-persist"
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react"
+// import { profileApi } from "../modules/Authentication/profile/api/api"
+import { UserRole } from "../enum"
+import { useProfilePhoto } from "../modules/Authentication/profile/api/useProfilePhotoFetcher"
+// import { UploadPhotoApiResponse } from "../modules/Authentication/profile/api/types"
+// import { clearPhotoUrl, fetchProfilePhoto, uploadProfilePhoto } from "../modules/Authentication/profile/api/slice"
 
 
 
 export default function Header() {
     const router = useRouter()
-    // const params = useParams();
     const pathname = usePathname()
     const dispatch = useAppDispatch();
-    // const dashboardId = params.dashboardId;
-    // const role = params.role;
-
     const { user } = useAppSelector(state => state.auth);
+    const {
+        photoUrl,
+        previewUrl,
+        isLoading: isPhotoLoading,
+        isUploading,
+        error: photoError,
+        uploadPhoto,
+        isAnyLoading,
+        showPreview,
+        hasPhoto,
+        lastUploadSuccess
+    } = useProfilePhoto(user?.id || '');
+    // const { photoUrl, isPhotoLoading, isUploading, photoError, uploadError } = useAppSelector(state => state.profile);
+    const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
+
 
     const currentPage = pathname.split("/").pop() || "dashboard"
-    const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
+
+    const handleChangePhotoClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+
+        input.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (file) {
+                uploadPhoto(file);
+            }
+            document.body.removeChild(input);
+        };
+
+        document.body.appendChild(input);
+        input.click();
+    };
+
+
     const goToSettings = () => {
         router.push(`/${user?.id}/${user?.role}/settings`)
     }
@@ -48,106 +91,237 @@ export default function Header() {
 
 
     const goToSupport = () => {
-        router.push("/support")
+        router.push(`/${user?.id}/${user?.role}/support`)
     }
 
     const handleLogout = async () => {
-        // Method 1: Dispatch logout action first, then purge
         dispatch(logout());
-
         // Clear persisted state
         await persistor.purge();
-
-        // Clear any additional localStorage items
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-        }
-
-        // Redirect to login
         router.push('/');
     };
 
+
+    // Show success message
+    useEffect(() => {
+        if (lastUploadSuccess) {
+            // You can use a toast library here
+            console.log('✅ Upload successful:', lastUploadSuccess);
+            // toast.success(lastUploadSuccess);
+        }
+    }, [lastUploadSuccess]);
+
+    // Show error messages
+    useEffect(() => {
+        if (photoError) {
+            console.error('❌ Photo error:', photoError);
+            // toast.error(photoError);
+        }
+    }, [photoError]);
+
+    // Determine what to show in avatar
+    const getAvatarContent = () => {
+        // Show loading spinner during any loading state
+        if (isAnyLoading) {
+            return (
+                <AvatarFallback className="bg-slate-200">
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                </AvatarFallback>
+            );
+        }
+
+        // Show error state
+        if (photoError && !showPreview) {
+            return (
+                <AvatarFallback className="bg-red-100 text-red-600 text-xs">
+                    <AlertCircle className="h-4 w-4" />
+                </AvatarFallback>
+            );
+        }
+
+        // Show preview image during upload (highest priority)
+        if (showPreview && previewUrl) {
+            return (
+                <AvatarImage
+                    src={previewUrl}
+                    alt="Preview"
+                    className="object-cover"
+                />
+            );
+        }
+
+        // Show actual photo if available
+        if (hasPhoto && photoUrl) {
+            return (
+                <AvatarImage
+                    src={photoUrl}
+                    alt={`${user?.fullName || user?.username || 'User'}'s profile photo`}
+                    className="object-cover"
+                />
+            );
+        }
+
+        // Show initials fallback
+        return (
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+                {user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase() ||
+                    user?.username?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+        );
+    };
+
     return (
-        // {/* Header */ }
-        <header className="flex items-center justify-between p-4 bg-white border-b border-slate-200 shadow-sm" >
-            <div className="flex items-center space-x-4">
-                <Button
-                    variant="ghost"
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="text-slate-600 hover:text-slate-900"
-                >
-                    <Menu className="h-6 w-6" />
-                </Button>
-                <div>
-                    <h1 className="text-lg font-semibold text-slate-900 capitalize">
+        <header className="bg-white border-b border-slate-200 shadow-sm">
+            {/* Main Header Row */}
+            <div className="flex items-center justify-between px-4 py-3">
+                {/* Left Section: Menu + Title */}
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="text-slate-600 hover:text-slate-900 p-2"
+                    >
+                        <Menu className="h-5 w-5" />
+                    </Button>
+                    <h1 className="text-base md:text-lg font-semibold text-slate-900 capitalize truncate">
                         {currentPage
                             .replace(/([A-Z])/g, " $1")
-                            .replace(/-/g, " ") // handle kebab-case routes
+                            .replace(/-/g, " ")
                             .replace(/\b\w/g, (char) => char.toUpperCase())}
                     </h1>
                 </div>
+
+                {/* Right Section: Action Icons */}
+                <div className="flex items-center space-x-1">
+                    {/* Generate Report - Icon on mobile, button on desktop */}
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
+                        {currentPage === "dashboard" && (
+                            <>
+                                {/* Mobile: Icon Button */}
+                                <Button
+                                    size="sm"
+                                    onClick={() => setReportsModalOpen(true)}
+                                    className="md:hidden bg-indigo-600 hover:bg-indigo-700 text-white p-2"
+                                >
+                                    <FileText className="h-4 w-4" />
+                                </Button>
+
+                                {/* Desktop: Text Button */}
+                                <Button
+                                    onClick={() => setReportsModalOpen(true)}
+                                    className="hidden md:flex bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2"
+                                >
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Generate Report
+                                </Button>
+                            </>
+                        )}
+                    </RoleGuard>
+
+                    {/* Search Button */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-600 hover:text-slate-900 p-2"
+                        onClick={() => {
+                            // Toggle search bar or open search modal
+                            console.log('Toggle search');
+                        }}
+                    >
+                        <Search className="h-4 w-4" />
+                    </Button>
+
+                    {/* Notifications */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-600 hover:text-slate-900 p-2 relative"
+                    >
+                        <Bell className="h-4 w-4" />
+                        {/* Notification badge */}
+                        <span className="absolute -top-1 right-0.5 h-3 w-3 bg-red-500 rounded-full"></span>
+                    </Button>
+
+                    {/* User Menu */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 rounded-full"
+                                disabled={isAnyLoading}
+                            >
+                                <Avatar className="h-7 w-7">
+                                    {getAvatarContent()}
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <div className="px-3 py-2">
+                                <p className="text-sm font-medium truncate">{user?.fullName}</p>
+                                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize mt-1">
+                                    {user?.role}
+                                </span>
+                            </div>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleChangePhotoClick} disabled={isAnyLoading}>
+                                <Camera className="mr-2 h-4 w-4" />
+                                {isAnyLoading ? "Uploading..." : "Change Photo"}
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={goToSettings}>
+                                <User className="mr-2 h-4 w-4" />
+                                Profile Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={goToBilling}>
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Billing
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={goToSupport}>
+                                <HelpCircle className="mr-2 h-4 w-4" />
+                                Support
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Sign Out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-                <RoleGuard allowedRoles={["admin"]}>
-                    {currentPage === "dashboard" && (
-                        <Button
-                            onClick={() => setReportsModalOpen(true)}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                            Generate Report
-                        </Button>
-                    )}
-                </RoleGuard>
-                <div className="relative">
+            {/* Desktop Search Bar - Full Width */}
+            <div className="hidden md:block px-4 pb-3">
+                <div className="relative max-w-md">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                     <Input
                         type="search"
-                        placeholder="Search..."
-                        className="pl-10 w-64 border-slate-300"
+                        placeholder="Search anything..."
+                        className="pl-10 w-full border-slate-300 bg-slate-50 focus:bg-white text-slate-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
-                    <Bell className="h-5 w-5" />
-                </Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={user?.password || "/placeholder-user.jpg"} />
-                                <AvatarFallback className="bg-blue-600 text-white">
-                                    {user?.username
-                                        ?.split(" ")
-                                        .map((n) => n[0])
-                                        .join("") || "U"}
-                                </AvatarFallback>
-                            </Avatar>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <div className="px-2 py-1.5">
-                            <p className="text-sm font-medium">{user?.username}</p>
-                            <p className="text-xs text-slate-500">{user?.email}</p>
-                            <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
-                        </div>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={goToSettings}>Profile Settings</DropdownMenuItem>
-                        <DropdownMenuItem onClick={goToBilling}>Billing</DropdownMenuItem>
-                        <DropdownMenuItem onClick={goToSupport}>Support</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout}
-                            className="text-red-600">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-
-                </DropdownMenu>
             </div>
-        </header>
 
+            {/* Mobile Search Bar - Expandable (hidden by default) */}
+            <div className="md:hidden px-4 pb-3 border-t border-slate-100 bg-slate-50" style={{ display: 'none' }} id="mobile-search">
+                <div className="relative pt-3 flex">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black h-4 w-4" />
+                    <Input
+                        type="search"
+                        placeholder="Search..."
+                        className="pl-10 w-full text-slate-500 border-slate-300"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
+        </header >
     )
 }
+

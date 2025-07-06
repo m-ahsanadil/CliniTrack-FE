@@ -18,59 +18,104 @@ import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
 import { RoleGuard } from "@/components/role-guard"
-import { SetStateAction, useEffect, useState } from "react"
+import { useState } from "react"
 import { ViewAppointmentDialog } from "./organisms/ViewAppointmentDialog"
 import { Appointment } from "./api/types"
 import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
 import { deleteAppointment, fetchAllAppointments } from "./api/slice"
-import { useRouter } from "next/navigation"
 import AppointmentForm from "@/src/components/appointment-form"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { UserRole } from "@/src/enum"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
     const dispatch = useAppDispatch();
     useAppointmentsFetcher()
+
     // FIXED: Local state management
     const [updateAppointmentFormOpen, setUpdateAppointmentFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Appointment | null>(null);
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
-    
+
     // FIXED: Destructure Redux state properly
     const { handleAddAppointment } = useGlobalUI();
     const {
+        updateError,
+        updateLoading,
         appointments: apiAppointments,
         loading: appointmentsLoading,
         error: appointmentsError,
         count: appointmentsCount
+
     } = useAppSelector(state => state.appointment);
 
     // FIXED: Proper type for the parameter
+    // const handleViewAppointment = (appointment: Appointment) => {
+    //     setSelectedAppointment(appointment);
+    //     setIsViewOpen(true);
+    // }
+
+    // FIXED: Better error handling and loading state management
+    // const handleDeleteAppointment = async (appointmentId: string) => {
+    //     await dispatch(deleteAppointment(appointmentId)).unwrap();
+    //     dispatch(fetchAllAppointments());
+    // }
+
+    // FIXED: Handle view dialog close properly
+    // const handleCloseViewDialog = () => {
+    //     setIsViewOpen(false);
+    //     setSelectedAppointment(null);
+    // }
+
+    const handleEditAppointment = (appointment: Appointment) => {
+        console.log('Editing appointment:', appointment);
+        setEditingItem(appointment);
+        setUpdateAppointmentFormOpen(true);
+    };
+
+    const handleCloseEditForm = () => {
+        setUpdateAppointmentFormOpen(false);
+        setEditingItem(null);
+    };
+
     const handleViewAppointment = (appointment: Appointment) => {
         setSelectedAppointment(appointment);
         setIsViewOpen(true);
     }
 
-    // FIXED: Better error handling and loading state management
     const handleDeleteAppointment = async (appointmentId: string) => {
-        await dispatch(deleteAppointment(appointmentId)).unwrap();
-        dispatch(fetchAllAppointments());
+        try {
+            await dispatch(deleteAppointment(appointmentId)).unwrap();
+            await dispatch(fetchAllAppointments());
+        } catch (error) {
+            console.error('Error deleting appointment:', error);
+        }
     }
 
-    // FIXED: Handle view dialog close properly
     const handleCloseViewDialog = () => {
         setIsViewOpen(false);
         setSelectedAppointment(null);
     }
 
-    const handleEditAppointment = (appointment: Appointment) => {
-        setEditingItem(appointment)
-        setUpdateAppointmentFormOpen(true)
-    }
+    const handleUpdatedAppointment = async (updatedAppointment: Appointment) => {
+        try {
+            // Close the form
+            setUpdateAppointmentFormOpen(false);
 
-    const handleUpdatedAppointment = () => {
+            // Clear the editing item
+            setEditingItem(null);
 
-    }
+            // Refresh the appointments list to show updated data
+            await dispatch(fetchAllAppointments());
+
+            // Optional: Show success message
+            console.log('Appointment updated successfully:', updatedAppointment);
+
+        } catch (error) {
+            console.error('Error handling updated appointment:', error);
+            // Optional: Show error message to user
+        }
+    };
 
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
@@ -81,7 +126,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                         <h2 className="text-2xl font-bold text-slate-900">Appointments</h2>
                         <p className="text-slate-600">Schedule and manage patient appointments</p>
                     </div>
-                    <RoleGuard allowedRoles={['admin', 'staff']}>
+                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                         <Button onClick={handleAddAppointment} className="bg-green-600 hover:bg-green-700 text-white">
                             <Plus className="mr-2 h-4 w-4" />
                             Schedule Appointment
@@ -104,6 +149,13 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
+                                {appointmentsCount === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="text-center text-slate-500 py-6">
+                                            No appointment found. Please add a new appointment to get started.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                                 {apiAppointments.map((appointment) => (
                                     <TableRow key={appointment._id} className="hover:bg-slate-50">
                                         <TableCell className="font-medium text-slate-900">{appointment.patientName}</TableCell>
@@ -119,7 +171,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                                 <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
-                                                <RoleGuard allowedRoles={['admin', 'staff']}>
+                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -129,7 +181,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                 </RoleGuard>
-                                                <RoleGuard allowedRoles={['admin']} >
+                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]} >
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -152,12 +204,12 @@ export default function index({ dashboardId, role }: AppointmentProps) {
             <ViewAppointmentDialog
                 appointment={selectedAppointment}
                 isOpen={isViewOpen}
-                onClose={() => setIsViewOpen(false)}
+                onClose={handleCloseViewDialog}
             />
             <AppointmentForm
                 open={updateAppointmentFormOpen}
                 appointment={editingItem}
-                onOpenChange={setUpdateAppointmentFormOpen}
+                onOpenChange={handleCloseEditForm}
                 mode={"edit"}
                 onSave={handleUpdatedAppointment}
             />

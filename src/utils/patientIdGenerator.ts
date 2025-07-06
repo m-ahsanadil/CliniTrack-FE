@@ -1,5 +1,3 @@
-// src/utils/patientIdGenerator.ts
-
 interface PatientIdGeneratorConfig {
   clinicCode?: string;
   storageKey?: string;

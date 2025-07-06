@@ -11,7 +11,7 @@ import { Storage } from "./ssrStorage";
 const persistConfig = {
     key: REDUX_PERSIST_KEY,
     storage: Storage,
-    whitelist: ["auth", 'doctor', 'invoice'],
+    whitelist: ["auth"],
     blacklist: [],
     debug: false,
 };

@@ -1,47 +1,84 @@
+import { UserRole } from "@/src/enum";
+
+export interface UserInfo {
+    id: string;
+    username: string;
+    token?: string;
+    email?: string;
+    role: UserRole;
+    createdAt: string;
+    updatedAt: string;
+    avatar?: string;
+    department?: string;
+    fullName?: string;
+}
+
 export interface LoginRequest {
     usernameOrEmail: string;
     password: string;
 }
 
-export interface User {
-    id: string;
-    username: string;
-    email: string;
-    password?: string;
-    role: "doctor" | "staff" | "admin";
-    department?: string
-}
-
-export interface DecodedToken {
-    sub: string; // user id
-    email: string;
-    role: "doctor" | "staff" | "admin";
-    username?: string;
-    iat?: number;
-    exp?: number;
-    department?: string;
-}
-
 export interface LoginResponse {
-    success: true;
+    success: boolean;
     message: string;
-    token: string
-    user: User;
+    token: string;
+    user: UserInfo;
 }
 
 // Error response
-interface LoginErrorResponse {
+export interface LoginErrorResponse {
     success: false;
     message: string;
-    data: string;
+    errors: string[];
 }
 
 // Combined response type
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 
 
-export interface RegisterRequest extends Omit<User, "id"> { }
+// SUPER ADMIN LOGIN INTERFACE:
+export interface SuperAdminLoginRequest {
+    username: string;
+    password: string;
+}
 
+export interface SuperAdminUser {
+    id: string;
+    username: string;
+    role: UserRole.SUPER_ADMIN;
+    token: string;
+    email?: string;
+    department?: string;
+    avatar?: string
+};
+
+
+export interface SuperAdminLoginResponse {
+    success: true;
+    message: string;
+    user: SuperAdminUser;
+}
+
+// Error response
+export interface SuperAdminLoginErrorResponse {
+    success: false;
+    message: string;
+}
+
+// Combined response type
+export type SuperAdminLoginApiResponse = SuperAdminLoginResponse | SuperAdminLoginErrorResponse;
+
+
+export interface RegisterRequest {
+    username: string;
+    email: string;
+    password: string;
+    fullName: string;
+    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | UserRole.SUPER_ADMIN | string;
+    dob: string;
+    education: string;
+    experience: string;
+}
 
 export interface RegisterResponse {
     success: true;
@@ -50,7 +87,12 @@ export interface RegisterResponse {
         id: string;
         username: string;
         email: string;
+        fullName: string,
         role: string;
+        age: number,
+        dob: string,
+        education: string,
+        experience: string
     };
 }
 
