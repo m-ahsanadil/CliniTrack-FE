@@ -6,7 +6,7 @@ import {
         PatientPostRequest,
         PatientPostResponse,
         PatientGetApiResponse,
-        PatientBasicInfoResponse
+        PatientListGetResponse
 } from "./types";
 import { ProviderGetApiByIdResponse } from "../../Provider/api/types";
 
@@ -17,9 +17,9 @@ export const patientsApi = {
         },
 
         // Getting basic info
-        getBasicInfo: (): Promise<PatientBasicInfoResponse> => {
-                return apiService.get(ENDPOINTS.PATIENT.GET_BASIC_INFO);
-        },
+        // getBasicInfo: (): Promise<PatientBasicInfoResponse> => {
+        //         return apiService.get(ENDPOINTS.PATIENT.GET_BASIC_INFO);
+        // },
 
         // Get all patients
         getAll: (): Promise<PatientGetResponse> => {
@@ -40,4 +40,6 @@ export const patientsApi = {
         delete: (id: string | number): Promise<PatientDeleteApiResponse> =>
                 apiService.delete(ENDPOINTS.PATIENT.DELETE(id)),
 
+        getPatientName: (): Promise<PatientListGetResponse> =>
+                apiService.get(ENDPOINTS.PATIENT.GET_PATIENT_NAME),
 };

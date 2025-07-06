@@ -18,8 +18,8 @@ import { AppointmentRequest } from "../modules/Dashboard/appointments/api/types"
 import { ProviderBasicInfo } from "../modules/Dashboard/Provider/api/types"
 import { PatientBasicInfo } from "../modules/Dashboard/patients/api/types"
 import { useAppDispatch } from "../redux/store/reduxHook"
-import { fetchPatientBasicInfo } from "../modules/Dashboard/patients/api/slice"
-import { fetchProviderBasicInfo } from "../modules/Dashboard/Provider/api/slice"
+// import { fetchPatientBasicInfo } from "../modules/Dashboard/patients/api/slice"
+// import { fetchProviderBasicInfo } from "../modules/Dashboard/Provider/api/slice"
 import { updateAppointment } from "../modules/Dashboard/appointments/api/slice"
 
 interface AppointmentFormProps {
@@ -37,9 +37,9 @@ export default function AppointmentForm({ open, onOpenChange, appointment, onSav
 
   useEffect(() => {
     {
-      open &&
-        dispatch(fetchPatientBasicInfo())
-      dispatch(fetchProviderBasicInfo())
+      // open &&
+      //   dispatch(fetchPatientBasicInfo())
+      // dispatch(fetchProviderBasicInfo())
     }
   }, [open, dispatch]);
 

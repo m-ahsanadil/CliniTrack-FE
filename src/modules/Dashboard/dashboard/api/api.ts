@@ -1,8 +1,10 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
 import apiService from "@/src/redux/config/apiService";
-import { AdminGetApiResponse, DoctorGetApiResponse, StaffGetApiResponse } from "./types";
+import { AdminGetApiResponse, DoctorGetApiResponse, StaffGetApiResponse, SuperAdminGetApiResponse } from "./types";
 
 export const dashboardApi = {
+    getSuperAdmin: (): Promise<SuperAdminGetApiResponse> =>
+        apiService.get(ENDPOINTS.DASHBOARD.GET_SUPER_ADMIN),
     getAdmin: (): Promise<AdminGetApiResponse> =>
         apiService.get(ENDPOINTS.DASHBOARD.GET_ADMIN),
 
@@ -11,5 +13,9 @@ export const dashboardApi = {
 
     getDoctor: (): Promise<DoctorGetApiResponse> =>
         apiService.get(ENDPOINTS.DASHBOARD.GET_DOCTOR),
+
+    getCount: () => apiService.get(ENDPOINTS.DASHBOARD.GET_COUNT),
+
+    getStats: () => apiService.get(ENDPOINTS.DASHBOARD.GET_STATS)
 
 };

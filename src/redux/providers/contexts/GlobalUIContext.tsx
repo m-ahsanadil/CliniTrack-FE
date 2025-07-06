@@ -1,8 +1,9 @@
 "use client";
 
-import { Appointments, Invoices, MedicalRecords, Patients } from "@/src/constants";
+import { Appointments, Invoices, Patients } from "@/src/constants";
 import { Appointment } from "@/src/modules/Dashboard/appointments/api/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { MedicalRecordGetAll } from '@/src/modules/Dashboard/medicalRecords/api/types'
 
 type GlobalUIContextType = {
   //Show password states
@@ -36,8 +37,8 @@ type GlobalUIContextType = {
   setPatients: (val: typeof Patients) => void;
   appointments: typeof Appointments;
   setAppointments: (val: typeof Appointments) => void;
-  medicalRecords: typeof MedicalRecords;
-  setMedicalRecords: (val: typeof MedicalRecords) => void;
+  medicalRecords: MedicalRecordGetAll[];
+  setMedicalRecords: (val: MedicalRecordGetAll[]) => void;
   invoices: typeof Invoices;
   setInvoices: (val: typeof Invoices) => void;
 
@@ -60,7 +61,7 @@ type GlobalUIContextType = {
   // Filtered Lists
   filteredPatients: typeof Patients;
   filteredAppointments: typeof Appointments;
-  filteredMedicalRecords: typeof MedicalRecords;
+  filteredMedicalRecords: MedicalRecordGetAll[];
   filteredInvoices: typeof Invoices;
 
   // Patient CRUD
@@ -77,9 +78,9 @@ type GlobalUIContextType = {
 
   // Medical Record CRUD
   handleAddMedicalRecord: () => void;
-  handleEditMedicalRecord: (record: any) => void;
-  handleSaveMedicalRecord: (recordData: any) => void;
-  handleDeleteMedicalRecord: (recordId: number) => void;
+  handleEditMedicalRecord: (record: MedicalRecordGetAll) => void;
+  handleSaveMedicalRecord: (recordData: MedicalRecordGetAll) => void;
+  handleDeleteMedicalRecord: (recordId: string) => void;
 
   // Invoice CRUD
   handleAddInvoice: () => void;
@@ -107,7 +108,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   // Data States
   const [patients, setPatients] = useState(Patients);
   const [appointments, setAppointments] = useState(Appointments);
-  const [medicalRecords, setMedicalRecords] = useState(MedicalRecords);
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecordGetAll[]>([]);
   const [invoices, setInvoices] = useState(Invoices);
 
   // Modal States
@@ -128,7 +129,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   // Filter functions
   const filteredPatients = patients.filter(
     (patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.phone.includes(searchTerm) ||
       patient.email.toLowerCase().includes(searchTerm.toLowerCase()),
   )
@@ -142,9 +143,9 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
 
   const filteredMedicalRecords = medicalRecords.filter(
     (record) =>
-      (record.patientName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (record?.patientId.fullName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       record.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.doctor.toLowerCase().includes(searchTerm.toLowerCase()),
+      record.providerId.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const filteredInvoices = invoices.filter(
@@ -173,12 +174,12 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const handleDeletePatient = (patientId: number) => {
+  const handleDeletePatient = (patientId: number | string) => {
     if (confirm("Are you sure you want to delete this patient?")) {
       setPatients(patients.filter((p) => p.id !== patientId))
       // Also remove related appointments, records, and invoices
       setAppointments(appointments.filter((a) => a.patientId !== patientId))
-      setMedicalRecords(medicalRecords.filter((r) => r.patientId !== patientId))
+      setMedicalRecords(medicalRecords.filter((r) => r.patientId._id !== patientId))
       setInvoices(invoices.filter((i) => i.patientId !== patientId))
     }
   }
@@ -214,24 +215,24 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setMedicalRecordFormOpen(true)
   }
 
-  const handleEditMedicalRecord = (record: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string }; prescriptions: string[]; symptoms: string[]; notes: string }) => {
+  const handleEditMedicalRecord = (record: any) => {
     setEditingItem(record)
     setMedicalRecordFormOpen(true)
   }
 
-  const handleSaveMedicalRecord = (recordData: { id: number; patientId: number; patientName: string; date: string; doctor: string; diagnosis: string; treatment: string; severity: string; status: string; vitals: { bp: string; pulse: string; temp: string; weight: string; height: string; oxygen: string; }; prescriptions: string[]; symptoms: string[]; notes: string; }) => {
+  const handleSaveMedicalRecord = (recordData: MedicalRecordGetAll) => {
     if (editingItem) {
       setMedicalRecords(
-        medicalRecords.map((r) => (r.id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),
+        medicalRecords.map((r) => (r._id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),
       )
     } else {
-      setMedicalRecords([...medicalRecords, { ...recordData, id: Date.now() }])
+      setMedicalRecords([...medicalRecords, { ...recordData}])
     }
   }
 
-  const handleDeleteMedicalRecord = (recordId: number) => {
+  const handleDeleteMedicalRecord = (recordId: number | string) => {
     if (confirm("Are you sure you want to delete this medical record?")) {
-      setMedicalRecords(medicalRecords.filter((r) => r.id !== recordId))
+      setMedicalRecords(medicalRecords.filter((r) => r._id !== recordId))
     }
   }
 

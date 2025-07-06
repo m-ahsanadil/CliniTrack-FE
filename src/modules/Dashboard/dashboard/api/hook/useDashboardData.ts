@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Admin, AdminGetApiResponse, Doctor, DoctorGetApiResponse, Staff, StaffGetApiResponse } from "../types";
+import { Admin, AdminGetApiResponse, Doctor, DoctorGetApiResponse, Staff, StaffGetApiResponse, SuperAdmin, SuperAdminGetApiResponse } from "../types";
 import { dashboardApi } from "../api";
 import { UserRole } from "@/src/enum";
 
 
-type Role = UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR;
-type DashboardApiResponse = AdminGetApiResponse | StaffGetApiResponse | DoctorGetApiResponse;
-type DashboardData = Admin | Staff | Doctor;
+type Role = UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN;
+type DashboardApiResponse = AdminGetApiResponse | StaffGetApiResponse | DoctorGetApiResponse | SuperAdminGetApiResponse;
+type DashboardData = Admin | Staff | Doctor | SuperAdmin;
 
 export function useDashboardData(role: Role) {
     const [data, setData] = useState<DashboardData | null>(null);
@@ -17,13 +17,16 @@ export function useDashboardData(role: Role) {
         let fetchFn: () => Promise<DashboardApiResponse>;
 
         switch (role) {
-            case "admin":
+            case UserRole.SUPER_ADMIN:
+                fetchFn = dashboardApi.getSuperAdmin;
+                break;
+            case UserRole.ADMIN:
                 fetchFn = dashboardApi.getAdmin;
                 break;
-            case "staff":
+            case UserRole.STAFF:
                 fetchFn = dashboardApi.getStaff;
                 break;
-            case "doctor":
+            case UserRole.DOCTOR:
                 fetchFn = dashboardApi.getDoctor;
                 break;
             default:

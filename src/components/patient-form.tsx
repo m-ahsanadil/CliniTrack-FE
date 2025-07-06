@@ -76,7 +76,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
   const { createError, createLoading, createSuccess, updateError, updateLoading, updateSuccess } = useAppSelector(state => state.patients)
   const [formData, setFormData] = useState<PatientPostRequest>(initialFormState)
   const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(undefined)
+  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(patient?.dateOfBirth ? new Date(patient?.dateOfBirth) : new Date())
   const [medicationInput, setMedicationInput] = useState<string>("")
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
       })
       setProfileImage(patient.profileImage || null)
       if (patient.dateOfBirth) {
-        setSelectedBirthDate(parseISO(patient.dateOfBirth))
+        setSelectedBirthDate(new Date(patient.dateOfBirth))
       }
     } else if (mode === 'create') {
       const newId = generateId({ prefix: "P", suffix: "CLINIC" })
@@ -147,7 +147,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
 
   useEffect(() => {
     if (createSuccess || updateSuccess) {
-      onSave({ ...formData, profileImage } as Patient)
+      onSave({ ...formData, profileImage } as unknown as Patient)
       setFormData(initialFormState)
       setProfileImage(null)
       setSelectedBirthDate(undefined)
@@ -314,7 +314,7 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                   required
                 />
               </div>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label>Date of Birth *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -323,19 +323,28 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                       className="w-full justify-start text-left font-normal bg-slate-700 border-slate-600"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedBirthDate ? format(selectedBirthDate, "PPP") : "Pick a date"}
+                      {selectedBirthDate ? format(selectedBirthDate, "PPP p") : "Pick a date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
                     <Calendar
                       mode="single"
                       selected={selectedBirthDate}
-                      onSelect={(date: Date | undefined) => setSelectedBirthDate(date)}
+                      // onSelect={(date: Date | undefined) => setSelectedBirthDate(date)}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedBirthDate(date);
+                          setFormData((prev) => ({
+                            ...prev,
+                            dateOfBirth: dateOfBirth.toISOString().slice(0, 16), // format to "yyyy-MM-ddTHH:mm"
+                          }));
+                        }
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
+              </div> */}
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender *</Label>
                 <Select value={formData.gender} disabled={isLoading} onValueChange={(value) => setFormData({ ...formData, gender: value })}>

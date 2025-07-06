@@ -31,6 +31,7 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { formatDate } from "@/src/utils/dateFormatter"
 import MedicalRecordForm from "@/src/components/medical-record-form"
 import { MedicalRecordGetAll } from "./api/types"
+import { useMedicalRecord } from "@/src/redux/providers/contexts/MedicalRecordContext"
 
 export default function index({ dashboardId, role }: MedicalRecordProps) {
     const dispatch = useAppDispatch();
@@ -40,7 +41,12 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     // Custom hook for fetching appointments
     useMedicalRecordsFetcher();
 
-    const { handleAddMedicalRecord, filteredMedicalRecords } = useGlobalUI();
+    const {
+        handleAddMedicalRecord,
+        handleDeleteMedicalRecord,
+        handleEditMedicalRecord,
+    } = useMedicalRecord();
+
     const { medicalRecords: apiMedicalRecord, deleteError, deleteLoading, count: medicalCount } = useAppSelector(state => state.medicalRecord);
     const { basicInfo: patientsBasicInfo } = useAppSelector(state => state.patients);
     const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider);
@@ -50,29 +56,29 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     const [deletingMedicalRecordId, setDeletingMedicalRecordId] = useState<string | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<MedicalRecordGetAll | null>(null);
-    const [formOpen, setFormOpen] = useState(false);
+    // const [formOpen, setFormOpen] = useState(false);
 
 
-    const handleDeleteMedicalRecord = async (medicalRecordId: string) => {
-        // Clear any previous delete errors
-        if (deleteError) {
-            dispatch(clearDeleteError());
-        }
+    // const handleDeleteMedicalRecord = async (medicalRecordId: string) => {
+    //     // Clear any previous delete errors
+    //     if (deleteError) {
+    //         dispatch(clearDeleteError());
+    //     }
 
-        // Optional: Add confirmation dialog
-        const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
-        if (!confirmDelete) return;
+    //     // Optional: Add confirmation dialog
+    //     const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
+    //     if (!confirmDelete) return;
 
-        try {
-            setDeletingMedicalRecordId(medicalRecordId);
-            await dispatch(deleteMedicalRecord(medicalRecordId)).unwrap();
-            // Optional: Show success message
-        } catch (error) {
-            // Error is already handled by Redux state
-        } finally {
-            setDeletingMedicalRecordId(null);
-        }
-    }
+    //     try {
+    //         setDeletingMedicalRecordId(medicalRecordId);
+    //         await dispatch(deleteMedicalRecord(medicalRecordId)).unwrap();
+    //         // Optional: Show success message
+    //     } catch (error) {
+    //         // Error is already handled by Redux state
+    //     } finally {
+    //         setDeletingMedicalRecordId(null);
+    //     }
+    // }
 
     // FIXED: Effect to handle delete errors
     useEffect(() => {
@@ -90,17 +96,17 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
         setIsViewOpen(true);
     }
 
-    const handleEditMedicalRecord = (record: MedicalRecordGetAll) => {
-        setSelectedRecord(record);
-        setFormOpen(true);
-    };
+    // const handleEditMedicalRecord = (record: MedicalRecordGetAll) => {
+    //     setSelectedRecord(record);
+    //     setFormOpen(true);
+    // };
 
-    const handleSave = useCallback(() => {
-        setFormOpen(false);
-    }, []);
+    // const handleSave = useCallback(() => {
+    //     setFormOpen(false);
+    // }, []);
 
 
-    return (  
+    return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
             <RoleGuard
                 allowedRoles={["admin", "doctor"]}
@@ -202,10 +208,18 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                                                         </Tooltip>
                                                         {record.prescription && (
                                                             <div className="text-xs text-slate-500">
-                                                                Rx: {record.prescription.length > 25
-                                                                    ? `${record.prescription.substring(0, 25)}...`
-                                                                    : record.prescription
-                                                                }
+                                                                Rx: {(() => {
+                                                                    if (Array.isArray(record.prescription)) {
+                                                                        const prescriptionText = record.prescription.join(', ');
+                                                                        return prescriptionText.length > 25
+                                                                            ? `${prescriptionText.substring(0, 25)}...`
+                                                                            : prescriptionText;
+                                                                    } else {
+                                                                        return record.prescription.length > 25
+                                                                            ? `${record.prescription.substring(0, 25)}...`
+                                                                            : record.prescription;
+                                                                    }
+                                                                })()}
                                                             </div>
                                                         )}
                                                     </div>
@@ -257,22 +271,6 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
                 medicalRecord={selectedMedicalRecord}
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
-            />
-            {/* <MedicalRecordForm
-                open={medicalRecordFormOpen}
-                onOpenChange={setMedicalRecordFormOpen}
-                mode={"edit"}
-                patients={patientsBasicInfo}
-                provider={providerBasicInfo}
-            /> */}
-            <MedicalRecordForm
-                open={formOpen}
-                onOpenChange={setFormOpen}
-                record={selectedRecord || undefined}
-                mode="edit"
-                onSave={handleSave}
-                patients={patientsBasicInfo}
-                provider={providerBasicInfo}
             />
         </ProtectedRoleGuard>
     )

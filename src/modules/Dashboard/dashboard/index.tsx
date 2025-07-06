@@ -434,11 +434,16 @@ import { getStatusBadgeVariant } from '@/src/constants';
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 import { QuickActionsSkeleton, RecentActivitySkeleton, Skeleton, StatCardSkeleton } from './atoms/skeletonLoading';
 import { EmptyState } from './atoms/EmptyState';
+import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 
 
 const Dashboard = ({ dashboardId, role }: DashboardProps) => {
-    const { data, loading, error } = useDashboardData(role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR);
-    const { handleAddAppointment, handleAddInvoice, handleAddMedicalRecord, handleAddPatient, handleDeleteAppointment } = useGlobalUI()
+    const { data, loading, error } = useDashboardData(role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN);
+    const { handleAddAppointment, handleAddInvoice, handleAddPatient } = useGlobalUI()
+
+    const {
+        handleAddMedicalRecord,
+    } = useMedicalRecord();
 
     const getStat = (label: string): number | string => {
         const match = data?.stats?.find((item) =>
@@ -500,7 +505,9 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
                     <div className="space-y-6">
                         {/* Welcome Message */}
                         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-                            <h2 className="text-2xl font-bold mb-2">Welcome back, {data.admin.name}!</h2>
+                            <h2 className="text-2xl font-bold mb-2">
+                                {data.welcomeMessage}
+                            </h2>
                             <p className="opacity-90">
                                 {data.accessMessage}
                             </p>

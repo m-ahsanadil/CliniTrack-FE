@@ -23,6 +23,7 @@ import { useAppSelector } from "../redux/store/reduxHook"
 import { useEffect, useState } from "react"
 import { useDashboardData } from "../modules/Dashboard/dashboard/api/hook/useDashboardData";
 import { UserRole } from "../enum";
+import { Admin, Doctor, Staff, SuperAdmin } from "../modules/Dashboard/dashboard/api/types";
 
 const MENU_MAP: Record<string, { icon: any; path: string }> = {
     "Dashboard": { icon: Home, path: "dashboard" },
@@ -33,6 +34,10 @@ const MENU_MAP: Record<string, { icon: any; path: string }> = {
     "Reports": { icon: BarChart3, path: "reports" },
     "Billing": { icon: Receipt, path: "billing" },
     "Settings": { icon: Settings, path: "settings" },
+    "Create Admin": { icon: UserCheck, path: "create-admin" },
+    "Create Doctor": { icon: UserCheck, path: "create-doctor" },
+    "Create Staff": { icon: Users, path: "create-staff" },
+    "System Settings": { icon: Settings, path: "system-settings" }
 };
 
 // Skeleton Components
@@ -128,7 +133,7 @@ export default function sidebar() {
     const router = useRouter()
     const params = useParams()
     const { user } = useAppSelector(state => state.auth);
-    const { data: dashboardData, loading, error: dashboardError } = useDashboardData(user?.role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR);
+    const { data: dashboardData, loading, error: dashboardError } = useDashboardData(user?.role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN);
     const { isSidebarOpen } = useGlobalUI();
     const [routeVerification, setRouteVerification] = useState({
         isValid: true,
@@ -198,7 +203,22 @@ export default function sidebar() {
         router.refresh();
     };
 
-    const sidebarItems = dashboardData?.admin?.menu.map((menuItem) => {
+    const dashboardMenu = (() => {
+        switch (user?.role) {
+            case UserRole.SUPER_ADMIN:
+                return (dashboardData as SuperAdmin)?.superadmin?.menu;
+            case UserRole.ADMIN:
+                return (dashboardData as Admin)?.admin?.menu;
+            case UserRole.STAFF:
+                return (dashboardData as Staff)?.admin?.menu;
+            case UserRole.DOCTOR:
+                return (dashboardData as Doctor)?.admin?.menu;
+            default:
+                return [];
+        }
+    })();
+
+    const sidebarItems = dashboardMenu?.map((menuItem: string | number) => {
         const mapped = MENU_MAP[menuItem];
         return {
             label: menuItem,

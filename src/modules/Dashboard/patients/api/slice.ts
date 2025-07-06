@@ -21,21 +21,21 @@ export const fetchAllPatients = createAsyncThunk(
   }
 );
 
-export const fetchPatientBasicInfo = createAsyncThunk(
-  'patient/fetchBasicInfo',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await patientsApi.getBasicInfo();
-      if (response.success) {
-        return response;
-      } else {
-        return rejectWithValue(response.message || 'Failed to fetch patient basic info');
-      }
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch patient basic info');
-    }
-  }
-);
+// export const fetchPatientBasicInfo = createAsyncThunk(
+//   'patient/fetchBasicInfo',
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const response = await patientsApi.getBasicInfo();
+//       if (response.success) {
+//         return response;
+//       } else {
+//         return rejectWithValue(response.message || 'Failed to fetch patient basic info');
+//       }
+//     } catch (error: any) {
+//       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch patient basic info');
+//     }
+//   }
+// );
 
 // Async thunk to create a new patients
 export const createPatients = createAsyncThunk(
@@ -187,23 +187,23 @@ const patientSlice = createSlice({
       })
 
       // FETCH THE BASIC INFO
-      .addCase(fetchPatientBasicInfo.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchPatientBasicInfo.fulfilled, (state, action: PayloadAction<PatientBasicInfoResponse>) => {
-        state.loading = false;
-        state.basicInfo = action.payload.data;
-        state.count = action.payload.count;
-        state.success = action.payload.success;
-      })
-      .addCase(fetchPatientBasicInfo.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-        state.basicInfo = [];
-        state.count = 0;
-        state.success = false;
-      })
+      // .addCase(fetchPatientBasicInfo.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchPatientBasicInfo.fulfilled, (state, action: PayloadAction<PatientBasicInfoResponse>) => {
+      //   state.loading = false;
+      //   state.basicInfo = action.payload.data;
+      //   state.count = action.payload.count;
+      //   state.success = action.payload.success;
+      // })
+      // .addCase(fetchPatientBasicInfo.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload as string;
+      //   state.basicInfo = [];
+      //   state.count = 0;
+      //   state.success = false;
+      // })
 
       // Create patient cases
       .addCase(createPatients.pending, (state) => {

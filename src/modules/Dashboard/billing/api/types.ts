@@ -1,3 +1,5 @@
+import { InvoiceStatus } from "@/src/enum";
+
 export interface InvoiceService {
   _id: string;
   description: string;
@@ -22,7 +24,7 @@ export interface Invoice {
   patientId: Patient;
   providerId: Provider;
   amount: number;
-  status: string;
+  status: InvoiceStatus.CANCELLED | InvoiceStatus.OVERDUE | InvoiceStatus.PAID | InvoiceStatus.PENDING;
   issueDate: string;
   dueDate: string;
   services: InvoiceService[];
@@ -42,7 +44,7 @@ export interface InvoicePostRequest {
   providerId: string;
   amount: number;
   totalAmount: number;
-  status: "Pending" | "Paid" | "Overdue";
+  status: InvoiceStatus.CANCELLED | InvoiceStatus.OVERDUE | InvoiceStatus.PAID | InvoiceStatus.PENDING;
   issueDate: string;
   dueDate: string;
   services: {
@@ -66,7 +68,7 @@ export interface InvoicePostResponse {
     providerId: string;
     amount: number;
     totalAmount: number;
-    status: "Pending" | "Paid" | "Overdue";
+    status: InvoiceStatus.CANCELLED | InvoiceStatus.OVERDUE | InvoiceStatus.PAID | InvoiceStatus.PENDING;
     issueDate: string;
     dueDate: string;
     services: {

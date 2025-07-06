@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import { medicalRecordApi } from "./api";
 import {
-
   MedicalRecordDeleteResponse,
   MedicalRecordGetAll,
   MedicalRecordGetAllResponse,
   MedicalRecordPost,
   MedicalRecordPostApiResponse,
   MedicalRecordPostResponse,
+  PatientProviderResponse,
 
 } from "./types";
 
@@ -26,6 +26,26 @@ export const fetchAllMedicalRecord = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || error.message || 'Failed to fetch medical records'
+      );
+    }
+  }
+);
+
+// Async thunk to fetch selected patients and their providers
+export const fetchSelectedPatientProviders = createAsyncThunk(
+  'medicalRecord/fetchSelectedPatientProviders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: PatientProviderResponse = await medicalRecordApi.getSelected();
+
+      if (response.success) {
+        return response;
+      } else {
+        return rejectWithValue("Failed to fetch selected patient-provider data");
+      }
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Failed to fetch selected patient-provider data'
       );
     }
   }
@@ -59,7 +79,7 @@ export const updateMedicalRecord = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response:  MedicalRecordPostApiResponse = await medicalRecordApi.update(id, medicalRecordData);
+      const response: MedicalRecordPostApiResponse = await medicalRecordApi.update(id, medicalRecordData);
 
       if (response.success) {
         return { id, updatedMedicalRecord: response.data };
@@ -105,6 +125,10 @@ interface MedicalRecordState {
   updateLoading: boolean;
   updateError: string | null;
   updateSuccess: boolean;
+
+  selectedPatients: PatientProviderResponse["data"]; // New
+  selectedLoading: boolean; // New
+  selectedError: string | null; // New
 }
 
 const initialState: MedicalRecordState = {
@@ -120,7 +144,11 @@ const initialState: MedicalRecordState = {
   createSuccess: false,
   updateLoading: false,
   updateError: null,
-  updateSuccess: false
+  updateSuccess: false,
+
+  selectedPatients: [], // New
+  selectedLoading: false, // New
+  selectedError: null, // New
 };
 
 const medicalRecordSlice = createSlice({
@@ -149,6 +177,11 @@ const medicalRecordSlice = createSlice({
     clearUpdateSuccess: (state) => {
       state.updateSuccess = false;
     },
+    clearSelectedPatients: (state) => {
+      state.selectedPatients = [];
+      state.selectedLoading = false;
+      state.selectedError = null;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -210,6 +243,22 @@ const medicalRecordSlice = createSlice({
         state.updateSuccess = false;
       })
 
+      // Get Selected Patients
+      .addCase(fetchSelectedPatientProviders.pending, (state) => {
+        state.selectedLoading = true;
+        state.selectedError = null;
+      })
+      .addCase(fetchSelectedPatientProviders.fulfilled, (state, action: PayloadAction<PatientProviderResponse>) => {
+        state.selectedLoading = false;
+        state.selectedPatients = action.payload.data;
+        state.selectedError = null;
+      })
+      .addCase(fetchSelectedPatientProviders.rejected, (state, action) => {
+        state.selectedLoading = false;
+        state.selectedError = action.payload as string;
+        state.selectedPatients = [];
+      })
+
       // Delete medicalRecord cases
       .addCase(deleteMedicalRecord.pending, (state) => {
         state.deleteLoading = true;
@@ -238,6 +287,7 @@ export const {
   clearCreateError,
   clearCreateSuccess,
   clearUpdateError,
-  clearUpdateSuccess
+  clearUpdateSuccess,
+  clearSelectedPatients
 } = medicalRecordSlice.actions;
 export default medicalRecordSlice.reducer;

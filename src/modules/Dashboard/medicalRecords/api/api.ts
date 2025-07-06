@@ -1,6 +1,6 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
 import apiService from "@/src/redux/config/apiService";
-import { MedicalRecordDeleteResponse, MedicalRecordGetAll, MedicalRecordGetAllApiResponse, MedicalRecordGetAllResponse, MedicalRecordPost, MedicalRecordPostApiResponse, MedicalRecordPostResponse } from "./types";
+import { MedicalRecordDeleteResponse, MedicalRecordGetAll, MedicalRecordGetAllApiResponse, MedicalRecordGetAllResponse, MedicalRecordPost, MedicalRecordPostApiResponse, MedicalRecordPostResponse, PatientProviderResponse } from "./types";
 
 
 export const medicalRecordApi = {
@@ -27,5 +27,8 @@ export const medicalRecordApi = {
   // Delete Medical Record by ID
   delete: (id: string | number): Promise<MedicalRecordDeleteResponse> => {
     return apiService.delete(ENDPOINTS.MEDICAL_RECORDS.DELETE(id));
-  }
+  },
+
+  getSelected: (): Promise<PatientProviderResponse> =>
+    apiService.get(ENDPOINTS.MEDICAL_RECORDS.GET_SELECTED),
 };

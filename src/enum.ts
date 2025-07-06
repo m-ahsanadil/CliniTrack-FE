@@ -6,6 +6,7 @@ export enum UserRole {
   DOCTOR = 'doctor',
   STAFF = 'staff',
   ADMIN = 'admin',
+  SUPER_ADMIN = 'superadmin',
 }
 
 export const UserRoleValues = Object.values(UserRole);
@@ -20,6 +21,19 @@ export enum ReportStatus {
   FAILED = 'Failed',
 }
 
+export enum ReportType {
+  CLINIC_OPERATIONS = "Clinic Operations",
+  PATIENT_STATISTICS = "Patient Statistics",
+  APPOINTMENT_SUMMARY = "Appointment Summary",
+  BILLING_REPORT = "Billing Report",
+  PROVIDER_PERFORMANCE = "Provider Performance",
+  TREATMENT_OUTCOMES = "Treatment Outcomes",
+  LAB_RESULTS = "Lab Results",
+  FINANCIAL_SUMMARY = "Financial Summary",
+  OTHER = "Other",
+}
+
+export const ReportTypeValues = Object.values(ReportType);
 export const ReportStatusValues = Object.values(ReportStatus);
 
 
@@ -85,24 +99,30 @@ export enum AppointmentStatus {
 }
 
 export enum DepartmentName {
-  GENERAL_MEDICINE = 'General Medicine',
-  CARDIOLOGY = 'Cardiology',
-  DERMATOLOGY = 'Dermatology',
-  ORTHOPEDICS = 'Orthopedics',
-  PEDIATRICS = 'Pediatrics',
-  GYNECOLOGY = 'Gynecology',
-  NEUROLOGY = 'Neurology',
-  PSYCHIATRY = 'Psychiatry',
-  EMERGENCY = 'Emergency Medicine',
-  RADIOLOGY = 'Radiology',
-  FAMILY_MEDICINE = 'Family Medicine',
-  INTERNAL_MEDICINE = 'Internal Medicine',
-  SURGERY = 'Surgery',
-  OPHTHALMOLOGY = 'Ophthalmology',
-  ENT = 'ENT',
-  ANESTHESIOLOGY = 'Anesthesiology',
-  PATHOLOGY = 'Pathology',
-  OTHER = 'Other'
+  GENERAL_PRACTICE = "General Practice",
+  PEDIATRICS = "Pediatrics",
+  CARDIOLOGY = "Cardiology",
+  DERMATOLOGY = "Dermatology",
+  ENDOCRINOLOGY = "Endocrinology",
+  GASTROENTEROLOGY = "Gastroenterology",
+  NEUROLOGY = "Neurology",
+  OBSTETRICS_GYNECOLOGY = "Obstetrics and Gynecology",
+  ONCOLOGY = "Oncology",
+  OPHTHALMOLOGY = "Ophthalmology",
+  ORTHOPEDICS = "Orthopedics",
+  PSYCHIATRY = "Psychiatry",
+  PULMONOLOGY = "Pulmonology",
+  RADIOLOGY = "Radiology",
+  UROLOGY = "Urology",
+  RHEUMATOLOGY = "Rheumatology",
+  ENT = "Ear, Nose and Throat (ENT)",
+  ANESTHESIOLOGY = "Anesthesiology",
+  PATHOLOGY = "Pathology",
+  INFECTIOUS_DISEASES = "Infectious Diseases",
+  FAMILY_MEDICINE = "Family Medicine",
+  INTERNAL_MEDICINE = "Internal Medicine",
+  SURGERY = "Surgery",
+  OTHER = "Other",
 }
 
 export const DepartmentNameValues = Object.values(DepartmentName)

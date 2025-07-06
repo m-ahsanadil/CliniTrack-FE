@@ -3,7 +3,8 @@ import { UserRole } from "@/src/enum";
 export interface UserInfo {
     id: string;
     username: string;
-    email: string;
+    token?: string;
+    email?: string;
     role: UserRole;
     createdAt: string;
     updatedAt: string;
@@ -35,12 +36,45 @@ export interface LoginErrorResponse {
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 
 
+// SUPER ADMIN LOGIN INTERFACE:
+export interface SuperAdminLoginRequest {
+    username: string;
+    password: string;
+}
+
+export interface SuperAdminUser {
+    id: string;
+    username: string;
+    role: UserRole.SUPER_ADMIN;
+    token: string;
+    email?: string;
+    department?: string;
+    avatar?: string
+};
+
+
+export interface SuperAdminLoginResponse {
+    success: true;
+    message: string;
+    user: SuperAdminUser;
+}
+
+// Error response
+export interface SuperAdminLoginErrorResponse {
+    success: false;
+    message: string;
+}
+
+// Combined response type
+export type SuperAdminLoginApiResponse = SuperAdminLoginResponse | SuperAdminLoginErrorResponse;
+
+
 export interface RegisterRequest {
     username: string;
     email: string;
     password: string;
     fullName: string;
-    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | '';
+    role: UserRole.ADMIN | UserRole.DOCTOR | UserRole.PATIENT | UserRole.STAFF | UserRole.SUPER_ADMIN;
     dob: string;
     education: string;
     experience: string;

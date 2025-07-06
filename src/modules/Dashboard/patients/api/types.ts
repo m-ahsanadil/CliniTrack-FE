@@ -1,3 +1,5 @@
+import { PatientStatus } from "@/src/enum";
+
 interface Address {
   street: string;
   city: string;
@@ -50,7 +52,7 @@ export interface Patient {
   allergies: string[];
   chronicConditions: string[];
   currentMedications: Medication[];
-  status: string;
+  status: PatientStatus.ACTIVE | PatientStatus.DECEASED | PatientStatus.INACTIVE;
   registrationDate: string; // ISO date string
   preferredLanguage: string;
   tags: string[];
@@ -91,7 +93,7 @@ export interface PatientPostRequest {
   chronicConditions: string[];
   currentMedications: Omit<Medication, "_id">[]; // when creating, _id isn't required
   insurance: Insurance;
-  status: string;
+  status: PatientStatus.ACTIVE | PatientStatus.DECEASED | PatientStatus.INACTIVE;
   registrationDate: string; // ISO date string
   preferredLanguage: string;
   createdBy: string;
@@ -132,17 +134,26 @@ export interface PatientGetByIdResponse {
   data: Patient;
 }
 
-export interface PatientBasicInfo {
-  _id: string;
-  patientId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-}
+// export interface PatientBasicInfo {
+//   _id: string;
+//   patientId: string;
+//   firstName: string;
+//   lastName: string;
+//   fullName: string;
+// }
 
-export interface PatientBasicInfoResponse {
+// export interface PatientBasicInfoResponse {
+//   success: boolean;
+//   count: number;
+//   message?: string
+//   data: PatientBasicInfo[];
+// }
+
+export interface PatientListGetResponse {
   success: boolean;
   count: number;
-  message?: string
-  data: PatientBasicInfo[];
+  data: {
+    _id: string;
+    fullName: string;
+  }[];
 }

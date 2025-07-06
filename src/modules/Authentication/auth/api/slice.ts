@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { UserInfo } from "./types";
+import { SuperAdminUser, UserInfo } from "./types";
 
 interface AuthState {
   user: UserInfo | null;
+  superAdminUser: SuperAdminUser | null;
   token: string | null;
   isAuthenticated: boolean;
   loginLoading: boolean;
@@ -15,6 +16,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   loginLoading: false,
   loginError: null,
+  superAdminUser: null
 };
 
 const authSlice = createSlice({
@@ -27,12 +29,25 @@ const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.superAdminUser = null;
+      state.isAuthenticated = true;
+      state.loginError = null;
+    },
+    setSuperAdminCredentials: (
+      state,
+      action: PayloadAction<{ user: SuperAdminUser; token: string }>
+    ) => {
+      state.superAdminUser = action.payload.user;
+      state.user = null;
+      state.token = action.payload.token;
       state.isAuthenticated = true;
       state.loginError = null;
     },
 
+
     logout: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
       state.loginError = null;
@@ -42,6 +57,7 @@ const authSlice = createSlice({
     // Additional logout actions for different scenarios
     logoutSuccess: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
       state.loginError = null;
@@ -50,6 +66,7 @@ const authSlice = createSlice({
 
     sessionExpired: (state) => {
       state.user = null;
+      state.superAdminUser = null;
       state.token = null;
       state.isAuthenticated = false;
       state.loginError = "Session expired. Please login again.";
@@ -72,12 +89,13 @@ const authSlice = createSlice({
 
 export const {
   setCredentials,
+  setSuperAdminCredentials,
   logout,
   logoutSuccess,
   sessionExpired,
   setLoading,
   setError,
-  clearError
+  clearError,
 } = authSlice.actions;
 
 export default authSlice.reducer;

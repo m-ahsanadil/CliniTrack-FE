@@ -1,3 +1,5 @@
+import { ReportStatus } from "./enum";
+
 // User information embedded in reports
 interface User {
   _id: string;
@@ -9,7 +11,7 @@ interface User {
 interface DataFilters {
   startDate: string; // ISO date string (YYYY-MM-DD)
   endDate: string;   // ISO date string (YYYY-MM-DD)
-  status: string;
+  status: ReportStatus.FAILED | ReportStatus.GENERATED | ReportStatus.PENDING;
 }
 
 // Individual report record
@@ -21,7 +23,7 @@ export interface Report {
   reportType: string;
   generatedByUserId: User | null;
   dataFilters: DataFilters;
-  status: string;
+  status: ReportStatus.FAILED | ReportStatus.GENERATED | ReportStatus.PENDING;
   createdBy: string;
   updatedBy: string;
   createdAt: string;       // ISO datetime string
@@ -45,7 +47,7 @@ export interface ReportRequest {
   reportType: string;
   generatedByUserId: string; // just the user ID (not full object)
   dataFilters: DataFilters;
-  status: string;
+  status: ReportStatus.FAILED | ReportStatus.GENERATED | ReportStatus.PENDING;
   createdBy: string;
   updatedBy: string;
 }

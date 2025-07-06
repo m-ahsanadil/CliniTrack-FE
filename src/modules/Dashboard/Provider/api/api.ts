@@ -9,9 +9,9 @@ export const providerApi = {
         },
 
         // Getting basic info
-        getBasicInfo: (): Promise<ProviderBasicInfoResponse> => {
-                return apiService.get(ENDPOINTS.PROVIDER.GET_BASIC_INFO);
-        },
+        // getBasicInfo: (): Promise<ProviderBasicInfoResponse> => {
+        //         return apiService.get(ENDPOINTS.PROVIDER.GET_BASIC_INFO);
+        // },
 
         getById: (id: string | number): Promise<{ success: boolean; data: Provider }> => {
                 return apiService.get(ENDPOINTS.PROVIDER.GET_BY_ID(id))

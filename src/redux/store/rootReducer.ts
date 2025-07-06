@@ -2,7 +2,6 @@ import { combineReducers, UnknownAction } from "redux";
 
 // Import Reducers
 import authReducer, { logout } from "@/src/modules/Authentication/auth/api/slice"
-import doctorReducer from "@/src/modules/Dashboard/doctor/api/slice";
 import billingReducer from "@/src/modules/Dashboard/billing/api/slice";
 import appointmentReducer from "@/src/modules/Dashboard/appointments/api/slice";
 import medicalRecordReducer from "@/src/modules/Dashboard/medicalRecords/api/slice";
@@ -18,7 +17,6 @@ const placeholderReducer = (state = {}) => state;
 
 const appReducer = combineReducers({
     auth: authReducer,
-    doctor: doctorReducer,
     invoice: billingReducer,
     appointment: appointmentReducer,
     medicalRecord: medicalRecordReducer,

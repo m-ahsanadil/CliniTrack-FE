@@ -36,7 +36,7 @@ import { profileApi } from "../modules/Authentication/profile/api/api"
 
 export default function Header() {
     const router = useRouter()
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    // const fileInputRef = useRef<HTMLInputElement | null>(null);
     const previousUrlRef = useRef<string | null>(null);
     const pathname = usePathname()
     const dispatch = useAppDispatch();
@@ -49,7 +49,24 @@ export default function Header() {
     const currentPage = pathname.split("/").pop() || "dashboard"
 
     const handleChangePhotoClick = () => {
-        fileInputRef.current?.click();
+        console.log('🔄 Change photo clicked');
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+
+        input.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (file) {
+                console.log('📁 File selected:', file.name);
+                handlePhotoUpload(file);
+            }
+            document.body.removeChild(input);
+        };
+
+        document.body.appendChild(input);
+        input.click();
     };
 
     const goToSettings = () => {
@@ -93,7 +110,7 @@ export default function Header() {
             previousUrlRef.current = url;
             setImageUrl(url);
         } catch (err) {
-            console.error("❌ Failed to fetch photo:", err);
+            console.log("❌ Failed to fetch photo:", err);
         } finally {
             setLoading(false);
         }
@@ -231,16 +248,10 @@ export default function Header() {
                                 </span>
                             </div>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleChangePhotoClick}>
+                            <DropdownMenuItem onClick={handleChangePhotoClick}
+                            >
                                 <Camera className="mr-2 h-4 w-4" />
                                 Change Photo
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={onFileChange}
-                                    className="hidden"
-                                />
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={goToSettings}>
@@ -292,6 +303,7 @@ export default function Header() {
                     />
                 </div>
             </div>
+            
         </header >
     )
 }

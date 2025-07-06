@@ -22,6 +22,31 @@ export interface RecentMedicalRecord {
     date: string;
 }
 
+export interface SuperAdmin {
+    superadmin: AdminData;
+    Profile: string;
+    welcomeMessage: string;
+    accessMessage: string;
+    Department: string;
+    stats: StatItem[];
+    recentAppointments: Appointment[]; // currently an empty array
+    recentMedicalRecords: RecentMedicalRecord[];
+}
+
+export interface SuperAdminGetResponse {
+    success: true;
+    message?: string;
+    data: SuperAdmin;
+}
+
+export interface SuperAdminGetErrorResponse {
+    success: false;
+    message: string;
+    data?: string;
+}
+
+export type SuperAdminGetApiResponse = SuperAdminGetResponse | SuperAdminGetErrorResponse;
+
 // GET ADMIN
 export interface Admin {
     admin: AdminData;
@@ -106,3 +131,18 @@ export interface StaffGetErrorResponse {
 }
 
 export type StaffGetApiResponse = StaffGetResponse | StaffGetErrorResponse;
+
+
+export interface AppointmentCountGetResponse {
+    success: boolean;
+    count: number;
+    message: string;
+}
+
+export interface AppointmentStatsGetResponse {
+    success: boolean;
+    stats: {
+        [key: string]: number; // e.g., "Scheduled": 2, or could be other statuses
+    };
+    message: string;
+}

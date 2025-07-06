@@ -15,6 +15,7 @@ import { ReactNode } from 'react';
 import { useAppSelector } from '@/src/redux/store/reduxHook';
 import { useRoleValidation } from '@/src/redux/hook/useRoleValidation';
 import { DashboardLoading } from '@/src/components/Loading';
+import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 // import { notFound } from 'next/navigation';
 
 
@@ -36,7 +37,6 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         invoices,
         patientFormOpen, setPatientFormOpen,
         appointmentFormOpen, setAppointmentFormOpen,
-        medicalRecordFormOpen, setMedicalRecordFormOpen,
         invoiceFormOpen, setInvoiceFormOpen,
         reportsModalOpen, setReportsModalOpen,
         calendarViewOpen, setCalendarViewOpen,
@@ -48,6 +48,11 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         handleEditAppointment,
         handleSaveAppointment
     } = useGlobalUI();
+
+    const {
+        medicalRecordFormOpen,
+        setMedicalRecordFormOpen,
+    } = useMedicalRecord();
 
     // Show loading while validation is happening OR while still loading
     if (isValidating || loginLoading) {
@@ -100,15 +105,12 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     mode={'create'}
                 />
 
-                <MedicalRecordForm
-                    open={medicalRecordFormOpen}
-                    onOpenChange={setMedicalRecordFormOpen}
-                    record={editingItem}
-                    onSave={handleSaveMedicalRecord}
-                    patients={patientBasicInfo}
-                    provider={providerBasicInfo}
-                    mode={'create'}
-                />
+                {medicalRecordFormOpen && (
+                    <MedicalRecordForm
+                        open={medicalRecordFormOpen}
+                        onOpenChange={setMedicalRecordFormOpen}
+                    />
+                )}
 
                 <InvoiceForm
                     open={invoiceFormOpen}

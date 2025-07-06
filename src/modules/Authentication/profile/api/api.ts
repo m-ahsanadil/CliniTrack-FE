@@ -11,6 +11,7 @@ export const profileApi = {
     update: (payload: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
         return apiService.put(ENDPOINTS.AUTH.UPDATE, payload);
     },
+    
     upload_photo: (formData: FormData) => {
         return apiService.put(ENDPOINTS.AUTH.UPLOAD_PHOTO, formData); 
     },

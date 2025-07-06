@@ -4,10 +4,19 @@ export const ENDPOINTS = {
     // Auth endpoints
     AUTH: {
         REGISTER: `/auth/register`, // POST
+        SUPER_ADMIN_LOGIN: '/auth/super-admin/login', //POST
         LOGIN: `/auth/login`, // POST
+        GET_PHOTO: (id: string | number) => `/auth/photo/${id}`,
+        UPDATE: '/auth/profile',
+        UPLOAD_PHOTO: '/auth/upload-photo',
     },
 
     DASHBOARD: {
+        GET_SUPER_ADMIN: '/dashboards/super-admin', // GET
+        CREATE_SUPER_ADMIN: '/dashboards/super-admin/create', // POST
+        UPDATE_SUPER_ADMIN: (id: string | number) => `/dashboards/super-admin/users/${id}/password`, // UPDATE PASSWORD FOR ADMIN
+        GET_SUPER_ADMIN_USER: '/dashboards/super-admin/users', // GET ADMIN USERS BY SUPER ADMIN
+
         GET_ADMIN: '/dashboards/admin',
         GET_DOCTOR: '/dashboards/doctor',
         GET_STAFF: '/dashboards/staff',
@@ -32,22 +41,22 @@ export const ENDPOINTS = {
         CREATE: `/medical-records`, // POST
         UPDATE: (id: string | number) => `/medical-records/${id}`, // PUT
         DELETE: (id: string | number) => `/medical-records/${id}`, // DELETE
+        GET_SELECTED: '/medical-records/patients-providers', // GET
     },
 
     // Patient endpoints
     PATIENT: {
         GET_ALL: `/patients`, // GET
-        GET_BASIC_INFO: `/patients/basic-info`,
         GET_BY_ID: (id: string | number) => `/patients/${id}`, // GET
         CREATE: `/patients`, // POST
         UPDATE: (id: string | number) => `/patients/${id}`, // PUT
         DELETE: (id: string | number) => `/patients/${id}`, // DELETE
+        GET_PATIENT_NAME: '/patients/names/patient' // GET
     },
 
     // Provider endpoints
     PROVIDER: {
         GET_ALL: `/providers`, // GET
-        GET_BASIC_INFO: `/providers/basic-info`,
         GET_BY_ID: (id: string | number) => `/providers/${id}`, // GET
         CREATE: `/providers`, // POST
         UPDATE: (id: string | number) => `/providers/${id}`, // PUT
@@ -65,12 +74,12 @@ export const ENDPOINTS = {
 
     // Appointment endpoints
     APPOINTMENT: {
-        GET_COUNT: `/appointments/count`,
-        GET_STATS: `/appointments/stats`,
         GET_ALL: `/appointments`, // GET
         GET_BY_ID: (id: string | number) => `/appointments/${id}`, // GET
         CREATE: `/appointments`, // POST
         UPDATE: (id: string | number) => `/appointments/${id}`, // PUT
+        CANCEL_APPOINTMENT: (id: string | number) => `/appointments/${id}/cancel`, //PATCH
+        RESCHEDULE_APPOINTMENT: (id: string | number) => `/appointments/${id}/reschedule`, //PATCH
         DELETE: (id: string | number) => `/appointments/${id}`, // DELETE
     },
 

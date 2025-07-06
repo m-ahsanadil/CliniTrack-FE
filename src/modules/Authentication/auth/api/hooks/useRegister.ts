@@ -42,21 +42,22 @@ export const useRegister = (onSuccessCallback?: () => void) => {
         setLoading(true)
         setServerErrorMessage('')
         setServerSuccessMessage('')
-        // Prepare credentials object matching RegisterRequest interface
-        const credentials: RegisterRequest = {
-            username: values.username,
-            email: values.email,
-            password: values.password,
-            fullName: values.fullName,
-            role: values.role as UserRole,
-            dob: values.dob,
-            education: values.education,
-            experience: values.experience
-        }
-
-        const response: RegisterApiResponse = await registerApi.register(credentials)
 
         try {
+            // Prepare credentials object matching RegisterRequest interface
+            const credentials: RegisterRequest = {
+                username: values.username,
+                email: values.email,
+                password: values.password,
+                fullName: values.fullName,
+                role: values.role as UserRole,
+                dob: values.dob,
+                education: values.education,
+                experience: values.experience
+            }
+
+            const response: RegisterApiResponse = await registerApi.register(credentials)
+
             if (response.success === true) {
                 // Success case
                 setServerErrorMessage('')
@@ -101,6 +102,7 @@ export const useRegister = (onSuccessCallback?: () => void) => {
             action.setSubmitting(false)
         }
     }
+
 
     const formik = useFormik({
         initialValues: initialRegisterValues,

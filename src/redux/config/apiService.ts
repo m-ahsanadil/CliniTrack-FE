@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
 import { persistor, store } from '../store/store';
 import { logout } from '@/src/modules/Authentication/auth/api/slice';
+import { useRouter } from 'next/router';
 
 
 class ApiService {
@@ -101,12 +102,10 @@ class ApiService {
             }
 
             // Redirect to login page
-            // Note: You might need to handle routing differently based on your setup
             if (typeof window !== 'undefined') {
-                window.location.href = '/';
-                // Or if using Next.js router:
-                // const { default: Router } = await import('next/router');
-                // Router.push('/');
+                const router = useRouter();
+                router.push('/');
+
             }
 
         } catch (logoutError) {
@@ -201,7 +200,8 @@ class ApiService {
     async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         return this.handleRequest(() => this.axiosInstance.patch<T>(url, data, config));
     }
-    async downloadFile(url: string, config: AxiosRequestConfig = {}): Promise<Blob> {
+    
+    async downloadFile(url: string, config: AxiosRequestConfig = {}): Promise<Blob | null> {
         try {
             const response = await this.axiosInstance.get<Blob>(url, {
                 ...config,
@@ -211,13 +211,15 @@ class ApiService {
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 const formattedError = this.formatError(error);
-                console.error('❌ Download Error:', formattedError);
+                console.log('❌ Download Error:', formattedError);
 
-                const enhancedError = new Error(formattedError.message);
-                (enhancedError as any).axiosError = formattedError;
-                throw enhancedError;
+                // Show user-friendly notification instead of throwing
+                // toast.error('Failed to download file');
+                // Or return null to indicate failure
+                return null;
             }
-            throw error;
+            console.error('Unexpected error:', error);
+            return null;
         }
     }
 

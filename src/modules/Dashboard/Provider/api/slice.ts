@@ -68,21 +68,21 @@ export const updateProvider = createAsyncThunk<
 });
 
 
-export const fetchProviderBasicInfo = createAsyncThunk(
-  'provider/fetchBasicInfo',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await providerApi.getBasicInfo();
-      if (response.success) {
-        return response;
-      } else {
-        return rejectWithValue(response.message || 'Failed to fetch provider basic info');
-      }
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch provider basic info');
-    }
-  }
-);
+// export const fetchProviderBasicInfo = createAsyncThunk(
+//   'provider/fetchBasicInfo',
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const response = await providerApi.getBasicInfo();
+//       if (response.success) {
+//         return response;
+//       } else {
+//         return rejectWithValue(response.message || 'Failed to fetch provider basic info');
+//       }
+//     } catch (error: any) {
+//       return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch provider basic info');
+//     }
+//   }
+// );
 
 
 // Async thunk for deleting a provider
@@ -156,23 +156,23 @@ const providerSlice = createSlice({
       })
 
       // FETCH THE BASIC INFO
-      .addCase(fetchProviderBasicInfo.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchProviderBasicInfo.fulfilled, (state, action: PayloadAction<ProviderBasicInfoResponse>) => {
-        state.loading = false;
-        state.basicInfo = action.payload.data;
-        state.count = action.payload.count;
-        state.success = action.payload.success;
-      })
-      .addCase(fetchProviderBasicInfo.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-        state.basicInfo = [];
-        state.count = 0;
-        state.success = false;
-      })
+      // .addCase(fetchProviderBasicInfo.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchProviderBasicInfo.fulfilled, (state, action: PayloadAction<ProviderBasicInfoResponse>) => {
+      //   state.loading = false;
+      //   state.basicInfo = action.payload.data;
+      //   state.count = action.payload.count;
+      //   state.success = action.payload.success;
+      // })
+      // .addCase(fetchProviderBasicInfo.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload as string;
+      //   state.basicInfo = [];
+      //   state.count = 0;
+      //   state.success = false;
+      // })
 
       // CREATE
       .addCase(createProvider.pending, (state) => {

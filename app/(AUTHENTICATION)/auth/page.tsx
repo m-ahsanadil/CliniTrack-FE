@@ -1,5 +1,5 @@
 import Login from "@/src/modules/Authentication/auth";
 
 export default function LoginPage() {
-    return <Login />;
+    return <Login isSuperAdmin={false} />;
 }
