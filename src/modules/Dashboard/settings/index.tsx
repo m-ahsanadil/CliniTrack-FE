@@ -3,25 +3,25 @@
 // Import components
 import { FormikHelpers, useFormik } from 'formik'
 import { RoleGuard } from "@/components/role-guard"
-import { Loader2, Shield, } from "lucide-react"
+import { AlertCircle, Loader2, Shield, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from "next/image";
 
 // hook
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { SettingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/settings/page"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useToast } from "@/hooks/use-toast"
 import { clearErrors, getProfile, updateProfile } from '../../Authentication/profile/api/slice'
 import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 import { updateProfileValidationSchema } from '@/src/validation/schemas'
-import { useProfilePhoto } from '../../Authentication/profile/api/useProfilePhotoFetcher'
+import { usePhoto } from '../../Authentication/profile/api/usePhoto'
 
 interface UpdateProfileFormValues {
     name: string;
@@ -37,17 +37,17 @@ interface UpdateProfileFormValues {
 
 export default function index({ dashboardId, role }: SettingProps) {
     const { profile, isFetching, updateError, isUpdating } = useAppSelector(state => state.profile)
+
     const {
         photoUrl,
-        previewUrl,
-        uploadPhoto,
-        isAnyLoading,
+        loading: isPhotoLoading,
         error,
-        showPreview
-    } = useProfilePhoto(profile?._id ?? "");
+        fileInputRef,
+        handleUploadClick,
+        handleImageChange,
+    } = usePhoto();
 
     const dispatch = useAppDispatch()
-    const router = useRouter()
     const { toast } = useToast()
 
     useEffect(() => {
@@ -127,9 +127,11 @@ export default function index({ dashboardId, role }: SettingProps) {
     // ✅ loader rendered AFTER hooks
     if (isFetching || !profile) {
         return (
-            <div className="flex justify-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
+            <div className="flex flex-col items-center justify-center py-10 text-center text-slate-600">
+                <Loader2 className="w-6 h-6 animate-spin mb-2" />
+                <p className="text-sm font-medium">Loading profile data...</p>
             </div>
+
         );
     }
 
@@ -162,59 +164,43 @@ export default function index({ dashboardId, role }: SettingProps) {
                                 <form className="space-y-4" onSubmit={formik.handleSubmit}>
                                     <div className="space-y-2">
                                         <Label htmlFor="photo" className="text-slate-700">Profile Photo</Label>
+                                        <div
+                                            title="Click to change profile photo"
+                                            className="relative w-32 h-32 flex items-center justify-center cursor-pointer group"
+                                            onClick={handleUploadClick}
+                                        >
+                                            {/* Spinning Dashed Border (behind image) */}
+                                            {isPhotoLoading && (
+                                                <div className="absolute w-full h-full rounded-full border-4 border-dashed border-blue-500 animate-spin z-0" />
+                                            )}
 
-                                        <div className="relative w-24 h-24">
-                                            {/* Fallback: Show first letter if no photo or preview */}
-                                            {!previewUrl && !photoUrl && (
-                                                <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-700 font-semibold text-2xl rounded-full border">
-                                                    {formik.values.name?.charAt(0).toUpperCase() || "?"}
+                                            {/* Error fallback overlay */}
+                                            {error && (
+                                                <div className="absolute inset-0 rounded-full bg-red-100 flex items-center justify-center z-20">
+                                                    <AlertCircle className="h-6 w-6 text-red-600" />
                                                 </div>
                                             )}
 
-                                            {/* Show Preview */}
-                                            {previewUrl && (
-                                                <img
-                                                    src={previewUrl}
-                                                    alt="Preview"
-                                                    className="w-full h-full rounded-full object-cover border"
+                                            {/* Image */}
+                                            <div className="relative w-28 h-28 rounded-full overflow-hidden border border-gray-300 z-10 bg-white">
+                                                <Image
+                                                    src={photoUrl || '/default-avatar.png'}
+                                                    alt="User Avatar"
+                                                    fill
+                                                    className="object-cover transition duration-200 group-hover:opacity-75"
+                                                    priority
                                                 />
-                                            )}
-
-                                            {/* Show existing photo */}
-                                            {!previewUrl && photoUrl && (
-                                                <img
-                                                    src={photoUrl}
-                                                    alt="Profile"
-                                                    className="w-full h-full rounded-full object-cover border"
-                                                />
-                                            )}
-
-                                            {/* Loader overlay */}
-                                            {isAnyLoading && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
-                                                    <Loader2 className="w-6 h-6 text-white animate-spin" />
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
-
                                         <Input
                                             id="photo"
                                             type="file"
                                             accept="image/*"
-                                            disabled={isAnyLoading}
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    uploadPhoto(file);
-                                                }
-                                            }}
+                                            ref={fileInputRef}
+                                            onChange={handleImageChange}
+                                            className="hidden"
                                         />
-
-                                        {error && (
-                                            <p className="text-sm text-red-500">Failed: {error}</p>
-                                        )}
                                     </div>
-
 
                                     <div className="space-y-2">
                                         <Label htmlFor="name" className="text-slate-700">Full Name</Label>
@@ -294,7 +280,7 @@ export default function index({ dashboardId, role }: SettingProps) {
                                         <Label htmlFor="username" className="text-slate-700">
                                             Username
                                         </Label>
-                                        <Input id="username" defaultValue={profile?.username} className="border-slate-300" />
+                                        <Input id="username" disabled defaultValue={profile?.username} className="border-slate-300" />
                                         {/* {formik.touched. && formik.errors.name && (
                                             <p className="text-red-500 text-sm">{formik.errors.name}</p>
                                         )} */}
@@ -304,7 +290,7 @@ export default function index({ dashboardId, role }: SettingProps) {
                                         <Label htmlFor="email" className="text-slate-700">
                                             Email Address
                                         </Label>
-                                        <Input id="email" type="email" defaultValue={profile?.email || ""} className="border-slate-300" />
+                                        <Input id="email" type="email" disabled defaultValue={profile?.email || ""} className="border-slate-300" />
                                     </div>
 
                                     <div className="space-y-2">
@@ -316,21 +302,18 @@ export default function index({ dashboardId, role }: SettingProps) {
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Role</Label>
-                                        <p className="text-sm text-slate-900 bg-slate-100 px-3 py-2 rounded-md border border-slate-200">{profile?.role}</p>
+                                        <Input disabled defaultValue={profile?.role || ""} className="border-slate-300" />
+                                        {/* <p className="text-sm text-slate-900 bg-slate-100 px-3 py-2 rounded-md border border-slate-200">{profile?.role}</p> */}
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Created At</Label>
-                                        <p className="text-sm text-slate-900 bg-slate-100 px-3 py-2 rounded-md border border-slate-200">
-                                            {new Date(profile?.createdAt).toLocaleString()}
-                                        </p>
+                                        <Input disabled defaultValue={new Date(profile?.createdAt).toLocaleString()} className="border-slate-300" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Last Updated</Label>
-                                        <p className="text-sm text-slate-900 bg-slate-100 px-3 py-2 rounded-md border border-slate-200">
-                                            {new Date(profile?.updatedAt).toLocaleString()}
-                                        </p>
+                                        <Input disabled defaultValue={new Date(profile?.updatedAt).toLocaleString()} className="border-slate-300" />
                                     </div>
 
 

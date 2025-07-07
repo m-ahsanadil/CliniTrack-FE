@@ -3,9 +3,10 @@ import apiService from "@/src/redux/config/apiService";
 import { GetUserProfileApiResponse, UpdateProfileRequest, UpdateProfileResponse, UploadPhotoResponse } from "./types";
 
 export const profileApi = {
-    get_photo: (id: string | number): Promise<Blob | null> => {
-        return apiService.downloadFile(ENDPOINTS.AUTH.GET_PHOTO(id));
-    },
+    get_photo: (id: string | number): Promise<Blob> =>
+        apiService.get(ENDPOINTS.AUTH.GET_PHOTO(id), {
+            responseType: 'blob'
+        }),
 
     // Update user profile
     update: (payload: UpdateProfileRequest): Promise<UpdateProfileResponse> => {

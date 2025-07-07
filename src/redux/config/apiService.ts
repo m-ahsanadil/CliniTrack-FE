@@ -143,6 +143,10 @@ class ApiService {
     private async handleRequest<T>(requestFn: () => Promise<AxiosResponse<T>>): Promise<T> {
         try {
             const response = await requestFn();
+            // If it's a blob, return as-is
+            if (response.config.responseType === 'blob') {
+                return response.data as T;
+            }
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -198,29 +202,7 @@ class ApiService {
     async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         return this.handleRequest(() => this.axiosInstance.patch<T>(url, data, config));
     }
-
-    async downloadFile(url: string, config: AxiosRequestConfig = {}): Promise<Blob | null> {
-        try {
-            const response = await this.axiosInstance.get<Blob>(url, {
-                ...config,
-                responseType: 'blob',
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const formattedError = this.formatError(error);
-                console.log('❌ Download Error:', formattedError);
-
-                // Show user-friendly notification instead of throwing
-                // toast.error('Failed to download file');
-                // Or return null to indicate failure
-                return null;
-            }
-            console.error('Unexpected error:', error);
-            return null;
-        }
-    }
-
+    
     // Utility method to check if server is reachable
     async healthCheck(): Promise<boolean> {
         try {

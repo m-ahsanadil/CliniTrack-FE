@@ -29,14 +29,8 @@ import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { logout } from "../modules/Authentication/auth/api/slice"
 import { persistor } from "../redux/store/store"
-import { PURGE } from "redux-persist"
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react"
-// import { profileApi } from "../modules/Authentication/profile/api/api"
 import { UserRole } from "../enum"
-import { useProfilePhoto } from "../modules/Authentication/profile/api/useProfilePhotoFetcher"
-// import { UploadPhotoApiResponse } from "../modules/Authentication/profile/api/types"
-// import { clearPhotoUrl, fetchProfilePhoto, uploadProfilePhoto } from "../modules/Authentication/profile/api/slice"
-
+import { usePhoto } from "../modules/Authentication/profile/api/usePhoto"
 
 
 export default function Header() {
@@ -46,39 +40,17 @@ export default function Header() {
     const { user } = useAppSelector(state => state.auth);
     const {
         photoUrl,
-        previewUrl,
-        isLoading: isPhotoLoading,
-        isUploading,
-        error: photoError,
-        uploadPhoto,
-        isAnyLoading,
-        showPreview,
-        hasPhoto,
-        lastUploadSuccess
-    } = useProfilePhoto(user?.id || '');
+        loading: isPhotoLoading,
+        error,
+        fileInputRef,
+        handleUploadClick,
+        handleImageChange,
+    } = usePhoto();
+
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
 
 
     const currentPage = pathname.split("/").pop() || "dashboard"
-
-    const handleChangePhotoClick = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.style.display = 'none';
-
-        input.onchange = (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-                uploadPhoto(file);
-            }
-            document.body.removeChild(input);
-        };
-
-        document.body.appendChild(input);
-        input.click();
-    };
-
 
     const goToSettings = () => {
         router.push(`/${user?.id}/${user?.role}/settings`)
@@ -87,7 +59,6 @@ export default function Header() {
     const goToBilling = () => {
         router.push(`/${user?.id}/${user?.role}/billing`)
     }
-
 
     const goToSupport = () => {
         router.push(`/${user?.id}/${user?.role}/support`)
@@ -100,28 +71,10 @@ export default function Header() {
         router.push('/');
     };
 
-
-    // Show success message
-    useEffect(() => {
-        if (lastUploadSuccess) {
-            // You can use a toast library here
-            console.log('✅ Upload successful:', lastUploadSuccess);
-            // toast.success(lastUploadSuccess);
-        }
-    }, [lastUploadSuccess]);
-
-    // Show error messages
-    useEffect(() => {
-        if (photoError) {
-            console.error('❌ Photo error:', photoError);
-            // toast.error(photoError);
-        }
-    }, [photoError]);
-
     // Determine what to show in avatar
     const getAvatarContent = () => {
         // Show loading spinner during any loading state
-        if (isAnyLoading) {
+        if (isPhotoLoading) {
             return (
                 <AvatarFallback className="bg-slate-200">
                     <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
@@ -130,7 +83,7 @@ export default function Header() {
         }
 
         // Show error state
-        if (photoError && !showPreview) {
+        if (error) {
             return (
                 <AvatarFallback className="bg-red-100 text-red-600 text-xs">
                     <AlertCircle className="h-4 w-4" />
@@ -139,18 +92,18 @@ export default function Header() {
         }
 
         // Show preview image during upload (highest priority)
-        if (showPreview && previewUrl) {
-            return (
-                <AvatarImage
-                    src={previewUrl}
-                    alt="Preview"
-                    className="object-cover"
-                />
-            );
-        }
+        // if (showPreview && previewUrl) {
+        //     return (
+        //         <AvatarImage
+        //             src={previewUrl}
+        //             alt="Preview"
+        //             className="object-cover"
+        //         />
+        //     );
+        // }
 
         // Show actual photo if available
-        if (hasPhoto && photoUrl) {
+        if (photoUrl) {
             return (
                 <AvatarImage
                     src={photoUrl}
@@ -248,11 +201,36 @@ export default function Header() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="p-1 rounded-full"
-                                disabled={isAnyLoading}
+                                className="p-1 rounded-full relative" // added relative here
+                                disabled={isPhotoLoading}
                             >
-                                <Avatar className="h-7 w-7">
-                                    {getAvatarContent()}
+                                {/* Spinner Ring */}
+                                {/* {isPhotoLoading && (
+                                    <div className="absolute inset-0 rounded-full border-2 border-dashed border-blue-500 animate-spin z-10" />
+                                )} */}
+
+                                {/* Avatar below spinner */}
+                                <Avatar className="h-7 w-7 z-20 relative overflow-hidden">
+                                    {isPhotoLoading ? (
+                                        <AvatarFallback className="bg-slate-200">
+                                            <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                                        </AvatarFallback>
+                                    ) : error ? (
+                                        <AvatarFallback className="bg-red-100 text-red-600 text-xs">
+                                            <AlertCircle className="h-4 w-4" />
+                                        </AvatarFallback>
+                                    ) : photoUrl ? (
+                                        <AvatarImage
+                                            src={photoUrl}
+                                            alt={`${user?.fullName || user?.username || 'User'}'s profile photo`}
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <AvatarFallback className="bg-blue-600 text-white text-xs">
+                                            {user?.fullName?.split(" ").map(n => n[0]).join("").toUpperCase() ||
+                                                user?.username?.charAt(0).toUpperCase() || "U"}
+                                        </AvatarFallback>
+                                    )}
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
@@ -265,9 +243,9 @@ export default function Header() {
                                 </span>
                             </div>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleChangePhotoClick} disabled={isAnyLoading}>
+                            <DropdownMenuItem onClick={handleUploadClick} disabled={isPhotoLoading}>
                                 <Camera className="mr-2 h-4 w-4" />
-                                {isAnyLoading ? "Uploading..." : "Change Photo"}
+                                {isPhotoLoading ? "Uploading..." : "Change Photo"}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={goToSettings}>
@@ -319,6 +297,14 @@ export default function Header() {
                     />
                 </div>
             </div>
+
+            <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+            />
 
         </header >
     )
