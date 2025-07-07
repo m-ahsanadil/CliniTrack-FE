@@ -12,25 +12,71 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, CalendarIcon, Loader2, Upload, X } from "lucide-react"
-import patientIdGenerator from "../utils/patientIdGenerator"
 import { Medication, Patient, PatientPostRequest } from "../modules/Dashboard/patients/api/types"
 import { generateId } from "../utils/idGenerator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, parseISO } from "date-fns"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { Gender, GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
+import { FormikHelpers, useFormik } from 'formik'
+
 import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
+import { usePatient } from "../redux/providers/contexts/PatientContext"
+import { patientValidationSchema } from "../validation/schemas"
+
+interface PatientFormValues {
+  patientId: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string; // ISO date string
+  gender: string;
+  ssn: string;
+  phone: string;
+  email: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  emergencyContact: {
+    name: string;
+    relationship: string;
+    phone: string;
+    email: string;
+  };
+  allergies: string[];
+  chronicConditions: string[];
+  currentMedications: {
+    name: string;
+    dosage: string;
+    frequency: string;
+    prescribedBy: string;
+    startDate: string;
+  }[];
+  insurance: {
+    provider: string;
+    policyNumber: string;
+    groupNumber: string;
+    subscriberId: string;
+    relationshipToSubscriber: string;
+    effectiveDate: string; // ISO date string
+    expirationDate: string; // ISO date string
+  };
+  status: PatientStatus.ACTIVE | PatientStatus.DECEASED | PatientStatus.INACTIVE;
+  registrationDate: string; // ISO date string
+  preferredLanguage: string;
+  createdBy: string;
+  updatedBy: string;
+}
 
 interface PatientFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  patient?: any
-  mode: 'create' | 'edit'
-  onSave: (patient: Patient) => void
 }
 
-
-const initialFormState: PatientPostRequest = {
+const initialPatientValues: PatientFormValues = {
   patientId: "",
   firstName: "",
   lastName: "",
@@ -39,7 +85,6 @@ const initialFormState: PatientPostRequest = {
   ssn: "",
   phone: "",
   email: "",
-  preferredLanguage: "",
   address: {
     street: "",
     city: "",
@@ -53,6 +98,9 @@ const initialFormState: PatientPostRequest = {
     phone: "",
     email: ""
   },
+  allergies: [],
+  chronicConditions: [],
+  currentMedications: [],
   insurance: {
     provider: "",
     policyNumber: "",
@@ -62,111 +110,117 @@ const initialFormState: PatientPostRequest = {
     effectiveDate: "",
     expirationDate: ""
   },
-  allergies: [],
-  chronicConditions: [],
-  currentMedications: [],
-  status: "",
+  status: PatientStatus.ACTIVE,
   registrationDate: "",
+  preferredLanguage: "",
   createdBy: "",
   updatedBy: ""
 }
 
-export default function PatientForm({ mode, open, onOpenChange, patient, onSave }: PatientFormProps) {
-  const dispatch = useAppDispatch()
-  const { createError, createLoading, createSuccess, updateError, updateLoading, updateSuccess } = useAppSelector(state => state.patients)
-  const [formData, setFormData] = useState<PatientPostRequest>(initialFormState)
-  const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [selectedBirthDate, setSelectedBirthDate] = useState<Date | undefined>(patient?.dateOfBirth ? new Date(patient?.dateOfBirth) : new Date())
-  const [medicationInput, setMedicationInput] = useState<string>("")
 
-  useEffect(() => {
-    if (mode === 'edit' && patient) {
-      setFormData({
+export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
+  const dispatch = useAppDispatch()
+
+  // CONTEXT STATES
+  const {
+    isEditing,
+    setIsEditing,
+    patient,
+    setPatient,
+    handleSavePatient,
+    setPatientFormOpen,
+  } = usePatient();
+
+  // REDUX STATE
+  const {
+    createError,
+    createLoading,
+    createSuccess,
+    updateError,
+    updateLoading,
+    updateSuccess,
+  } = useAppSelector(state => state.patients)
+
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [birthDate, setBirthDate] = useState<Date | undefined>();
+
+
+  // Determine mode based on editingItem
+  const mode = isEditing ? 'edit' : 'create';
+  const isLoading = isEditing ? updateLoading : createLoading;
+  const errorMessage = isEditing ? updateError : createError;
+
+  const getInitialValues = (): PatientFormValues => {
+    if (mode === "edit" && patient) {
+      return {
         patientId: patient.patientId || "",
         firstName: patient.firstName || "",
         lastName: patient.lastName || "",
-        dateOfBirth: patient.dateOfBirth || "",
-        gender: patient.gender || Gender.UNKNOWN,
+        dateOfBirth: patient.dateOfBirth ? format(parseISO(patient.dateOfBirth), "yyyy-MM-dd") : "",
+        gender: patient.gender || "",
         ssn: patient.ssn || "",
-        phone: patient.phone || "",
+        phone: patient.phone,
         email: patient.email || "",
-        preferredLanguage: patient.preferredLanguage || Language.ENGLISH,
         address: {
           street: patient.address?.street || "",
           city: patient.address?.city || "",
           state: patient.address?.state || "",
           zipCode: patient.address?.zipCode || "",
-          country: patient.address?.country || "",
+          country: patient.address?.country || ""
         },
         emergencyContact: {
           name: patient.emergencyContact?.name || "",
-          relationship: patient.emergencyContact?.relationship || Relationship.OTHER,
+          relationship: patient.emergencyContact?.relationship || "",
           phone: patient.emergencyContact?.phone || "",
-          email: patient.emergencyContact?.email || "",
+          email: patient.emergencyContact?.email || ""
         },
+        allergies: Array.isArray(patient.allergies) ? patient.allergies : [],
+        chronicConditions: Array.isArray(patient.chronicConditions) ? patient.chronicConditions : [],
+        currentMedications: Array.isArray(patient.currentMedications) ? patient.currentMedications.map(med => ({
+          _id: med._id || "",
+          name: med.name || "",
+          dosage: med.dosage || "",
+          frequency: med.frequency || "",
+          prescribedBy: med.prescribedBy || "",
+          startDate: med.startDate ? format(parseISO(med.startDate), "yyyy-MM-dd") : ""
+        })) : [],
         insurance: {
           provider: patient.insurance?.provider || "",
           policyNumber: patient.insurance?.policyNumber || "",
           groupNumber: patient.insurance?.groupNumber || "",
           subscriberId: patient.insurance?.subscriberId || "",
-          relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || Relationship.SELF,
-          effectiveDate: patient.insurance?.effectiveDate || "",
-          expirationDate: patient.insurance?.expirationDate || "",
+          relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || "",
+          effectiveDate: patient.insurance?.effectiveDate ? format(parseISO(patient.insurance.effectiveDate), "yyyy-MM-dd") : "",
+          expirationDate: ""
         },
-        allergies: patient.allergies || [],
-        chronicConditions: patient.chronicConditions || [],
-        currentMedications: patient.currentMedications?.map((med: { name: any; dosage: any; frequency: any; prescribedBy: any; startDate: any }) => ({
-          name: med.name,
-          dosage: med.dosage,
-          frequency: med.frequency,
-          prescribedBy: med.prescribedBy,
-          startDate: med.startDate
-        })) || [],
         status: patient.status || PatientStatus.ACTIVE,
-        registrationDate: patient.registrationDate || new Date().toISOString(),
+        registrationDate: patient.registrationDate ? format(parseISO(patient.registrationDate), "yyyy-MM-dd") : "",
+        preferredLanguage: patient.preferredLanguage || "",
         createdBy: patient.createdBy || "",
         updatedBy: patient.updatedBy || ""
-      })
-      setProfileImage(patient.profileImage || null)
-      if (patient.dateOfBirth) {
-        setSelectedBirthDate(new Date(patient.dateOfBirth))
       }
-    } else if (mode === 'create') {
-      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
-      setFormData({
-        ...initialFormState,
-        patientId: newId,
-        registrationDate: new Date().toISOString(),
-        createdBy: "current_user_id", // Replace with actual user ID
-        updatedBy: "current_user_id" // Replace with actual user ID
-      })
-      setProfileImage(null)
-      setSelectedBirthDate(undefined)
     }
-  }, [mode, patient])
+    return initialPatientValues
+  }
 
-  useEffect(() => {
-    if (createSuccess || updateSuccess) {
-      onSave({ ...formData, profileImage } as unknown as Patient)
-      setFormData(initialFormState)
-      setProfileImage(null)
-      setSelectedBirthDate(undefined)
-      dispatch(clearCreateSuccess())
-      dispatch(clearUpdateSuccess())
-      onOpenChange(false)
+  const handlePatientForm = async (values: PatientFormValues, formikHelpers: FormikHelpers<PatientFormValues>) => {
+    try {
+      // Your form submission logic here
+      handleSavePatient(values);
+      formikHelpers.setSubmitting(false);
+      onOpenChange(false);
+    } catch (error) {
+      formikHelpers.setSubmitting(false);
+      // Handle error
     }
-  }, [createSuccess, updateSuccess, dispatch, onSave, onOpenChange])
+  }
 
-  useEffect(() => {
-    if (createError || updateError) {
-      console.error(mode === 'edit' ? updateError : createError)
-      // Optionally show error toast/notification here
-    }
-    return () => {
-      dispatch(clearCreateError())
-      dispatch(clearUpdateError())
-    }
-  }, [createError, updateError, dispatch, mode])
+  const formik = useFormik({
+    initialValues: getInitialValues(),
+    validationSchema: patientValidationSchema,
+    onSubmit: handlePatientForm,
+    enableReinitialize: true,
+  });
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -177,69 +231,35 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
     }
   }
 
+
   const regenerateId = () => {
     if (mode === 'create') {
       const newId = generateId({ prefix: "P", suffix: "CLINIC" })
-      setFormData({ ...formData, patientId: newId })
+      formik.setFieldValue('patientId', newId)
     }
   }
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-
-    const submissionData: PatientPostRequest = {
-      ...formData,
-      dateOfBirth: selectedBirthDate ? selectedBirthDate.toISOString() : formData.dateOfBirth,
-      updatedBy: "current_user_id", // Replace with actual user ID
-      registrationDate: mode === 'create' ? new Date().toISOString() : formData.registrationDate
-    }
-
-    if (mode === 'edit' && patient?._id) {
-      dispatch(updatePatients({
-        id: patient._id,
-        patientData: submissionData
-      }))
-    } else {
-      dispatch(createPatients(submissionData))
-    }
+  // Helper function to get field error
+  const getFieldError = (fieldName: string) => {
+    return formik.touched[fieldName as keyof PatientFormValues] && formik.errors[fieldName as keyof PatientFormValues]
   }
-
-  const handleMedicationChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    const medications = e.target.value.split("\n").map(item => {
-      const [name, dosage, frequency, prescribedBy, startDate] = item.split(",").map(s => s.trim())
-      return {
-        name: name || "",
-        dosage: dosage || "",
-        frequency: frequency || "",
-        prescribedBy: prescribedBy || "",
-        startDate: startDate || new Date().toISOString()
-      }
-    }).filter(med => med.name)
-    setFormData({ ...formData, currentMedications: medications })
-  }
-
-  const isLoading = mode === 'edit' ? updateLoading : createLoading
-  const currentError = mode === 'edit' ? updateError : createError
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-700">
+      <DialogContent className="max-w-2xl bg-slate-800 border-slate-700">
         <DialogHeader>
-          <DialogTitle>{mode === 'edit' ? "Edit Patient" : "Add New Patient"}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? "Add New Patient" : "Edit Patient"}</DialogTitle>
         </DialogHeader>
-
-        {currentError && (
-          <div className="text-red-500 text-sm mb-4">
-            Error: {currentError}
-          </div>
+        {errorMessage && (
+          <p className="text-red-500 rounded-md py-3 text-center bg-red-300 text-sm">{errorMessage}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={formik.handleSubmit} className="space-y-6">
           {/* Profile Image */}
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src={profileImage || "/placeholder.svg"} />
               <AvatarFallback>
-                {(formData.firstName + " " + formData.lastName)
+                {(formik.values.firstName + " " + formik.values.lastName)
                   .split(" ")
                   .map((n) => n[0])
                   .join("")}
@@ -263,29 +283,37 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
           </div>
 
           {/* Patient ID */}
-          <div className="flex items-end gap-2">
-            <div className="space-y-2 w-full">
-              <Label htmlFor="patientId">{mode === 'edit' ? 'Patient ID *' : 'Generated Patient ID'}</Label>
-              <Input
-                id="patientId"
-                readOnly
-                value={formData.patientId}
-                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                placeholder="p-001"
-                required
-                disabled={isLoading}
-              />
+
+          <div>
+            <div className="flex items-end gap-2">
+              <div className="space-y-2 w-full">
+                <Label htmlFor="patientId">{mode === 'edit' ? 'Patient ID *' : 'Generated Patient ID'}</Label>
+                <Input
+                  id="patientId"
+                  name="patientId"
+                  readOnly
+                  value={formik.values.patientId}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="p-001"
+                  disabled={isLoading}
+                />
+
+              </div>
+              {mode === 'create' && (
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={regenerateId}
+                  className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
+                >
+                  Regenerate
+                </button>
+              )}
             </div>
-            {mode === 'create' && (
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={regenerateId}
-                className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
-              >
-                Regenerate
-              </button>
+            {getFieldError('patientId') && (
+              <p className="text-red-500 text-sm">{formik.errors.patientId}</p>
             )}
           </div>
 
@@ -297,22 +325,47 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="firstName">First Name *</Label>
                 <Input
                   id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  name="firstName"
+                  value={formik.values.firstName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
-                  required
                   disabled={isLoading}
                 />
+                {getFieldError('firstName') && (
+                  <p className="text-red-500 text-sm">{formik.errors.firstName}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name *</Label>
                 <Input
                   id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  name="lastName"
+                  value={formik.values.lastName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
-                  required
+                  disabled={isLoading}
                 />
+                {getFieldError('lastName') && (
+                  <p className="text-red-500 text-sm">{formik.errors.lastName}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  value={formik.values.dateOfBirth}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600"
+                  disabled={isLoading}
+                />
+                {getFieldError('dateOfBirth') && (
+                  <p className="text-red-500 text-sm">{formik.errors.dateOfBirth}</p>
+                )}
               </div>
               {/* <div className="space-y-2">
                 <Label>Date of Birth *</Label>
@@ -347,7 +400,11 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
               </div> */}
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender *</Label>
-                <Select value={formData.gender} disabled={isLoading} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
+                <Select
+                  value={formik.values.gender}
+                  disabled={isLoading}
+                  onValueChange={(value) => formik.setFieldValue('gender', value)}
+                >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
@@ -359,23 +416,33 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     ))}
                   </SelectContent>
                 </Select>
+                {getFieldError('gender') && (
+                  <p className="text-red-500 text-sm">{formik.errors.gender}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="ssn">Social Security Number</Label>
+                <Label htmlFor="ssn">Social Security Number *</Label>
                 <Input
                   id="ssn"
-                  value={formData.ssn}
+                  name="ssn"
+                  value={formik.values.ssn}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({ ...formData, ssn: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                   placeholder="XXX-XX-XXXX"
                 />
+                {getFieldError('ssn') && (
+                  <p className="text-red-500 text-sm">{formik.errors.ssn}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="preferredLanguage">Preferred Language</Label>
+                <Label htmlFor="preferredLanguage">Preferred Language *</Label>
                 <Select
-                  value={formData.preferredLanguage}
-                  onValueChange={(value) => setFormData({ ...formData, preferredLanguage: value })}
+                  value={formik.values.preferredLanguage}
+                  onValueChange={(value) => formik.setFieldValue('preferredLanguage', value)}
                   disabled={isLoading}
                 >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
@@ -389,6 +456,9 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     ))}
                   </SelectContent>
                 </Select>
+                {getFieldError('preferredLanguage') && (
+                  <p className="text-red-500 text-sm">{formik.errors.preferredLanguage}</p>
+                )}
               </div>
             </div>
           </div>
@@ -401,23 +471,32 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                 <Label htmlFor="phone">Phone Number *</Label>
                 <Input
                   id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  name="phone"
+                  value={formik.values.phone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
-                  required
                   disabled={isLoading}
                 />
+                {getFieldError('phone') && (
+                  <p className="text-red-500 text-sm">{formik.errors.phone}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">Email Address *</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
-                  value={formData.email}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {getFieldError('email') && (
+                  <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                )}
               </div>
             </div>
           </div>
@@ -427,72 +506,83 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
             <h3 className="text-lg font-semibold text-white">Address</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="street">Street Address</Label>
+                <Label htmlFor="address.street">Street Address *</Label>
                 <Input
-                  id="street"
-                  value={formData.address.street}
+                  id="address.street"
+                  name="address.street"
+                  value={formik.values.address.street}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    address: { ...formData.address, street: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.address?.street && formik.errors.address?.street && (
+                  <p className="text-red-500 text-sm">{formik.errors.address.street}</p>
+                )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
+                  <Label htmlFor="address.city">City *</Label>
                   <Input
-                    id="city"
-                    value={formData.address.city}
+                    id="address.city"
+                    name="address.city"
+                    value={formik.values.address.city}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     disabled={isLoading}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      address: { ...formData.address, city: e.target.value }
-                    })}
                     className="bg-slate-700 border-slate-600"
                   />
+                  {formik.touched.address?.city && formik.errors.address?.city && (
+                    <p className="text-red-500 text-sm">{formik.errors.address.city}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
+                  <Label htmlFor="address.state">State *</Label>
                   <Input
-                    id="state"
-                    value={formData.address.state}
+                    id="address.state"
+                    name="address.state"
+                    value={formik.values.address.state}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     disabled={isLoading}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      address: { ...formData.address, state: e.target.value }
-                    })}
                     className="bg-slate-700 border-slate-600"
                   />
+                  {formik.touched.address?.state && formik.errors.address?.state && (
+                    <p className="text-red-500 text-sm">{formik.errors.address.state}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="zipCode">ZIP Code</Label>
+                  <Label htmlFor="address.zipCode">ZIP Code *</Label>
                   <Input
-                    id="zipCode"
-                    value={formData.address.zipCode}
+                    id="address.zipCode"
+                    name="address.zipCode"
+                    value={formik.values.address.zipCode}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     disabled={isLoading}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      address: { ...formData.address, zipCode: e.target.value }
-                    })}
                     className="bg-slate-700 border-slate-600"
                   />
+                  {formik.touched.address?.zipCode && formik.errors.address?.zipCode && (
+                    <p className="text-red-500 text-sm">{formik.errors.address.zipCode}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="address.country">Country *</Label>
                 <Input
-                  id="country"
-                  value={formData.address.country}
+                  id="address.country"
+                  name="address.country"
+                  value={formik.values.address.country}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    address: { ...formData.address, country: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                   placeholder="United States"
                 />
+                {formik.touched.address?.country && formik.errors.address?.country && (
+                  <p className="text-red-500 text-sm">{formik.errors.address.country}</p>
+                )}
               </div>
             </div>
           </div>
@@ -502,27 +592,26 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
             <h3 className="text-lg font-semibold text-white">Emergency Contact</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="emergencyName">Contact Name</Label>
+                <Label htmlFor="emergencyContact.name">Contact Name *</Label>
                 <Input
-                  id="emergencyName"
-                  value={formData.emergencyContact.name}
+                  id="emergencyContact.name"
+                  name="emergencyContact.name"
+                  value={formik.values.emergencyContact.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    emergencyContact: { ...formData.emergencyContact, name: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.emergencyContact?.name && formik.errors.emergencyContact?.name && (
+                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.name}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="emergencyRelationship">Relationship</Label>
+                <Label htmlFor="emergencyContact.relationship">Relationship *</Label>
                 <Select
-                  value={formData.emergencyContact.relationship}
+                  value={formik.values.emergencyContact.relationship}
                   disabled={isLoading}
-                  onValueChange={(value) => setFormData({
-                    ...formData,
-                    emergencyContact: { ...formData.emergencyContact, relationship: value }
-                  })}
+                  onValueChange={(value) => formik.setFieldValue('emergencyContact.relationship', value)}
                 >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select relationship" />
@@ -535,33 +624,40 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     ))}
                   </SelectContent>
                 </Select>
+                {formik.touched.emergencyContact?.relationship && formik.errors.emergencyContact?.relationship && (
+                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.relationship}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="emergencyPhone">Phone Number</Label>
+                <Label htmlFor="emergencyContact.phone">Phone Number *</Label>
                 <Input
-                  id="emergencyPhone"
-                  value={formData.emergencyContact.phone}
+                  id="emergencyContact.phone"
+                  name="emergencyContact.phone"
+                  value={formik.values.emergencyContact.phone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    emergencyContact: { ...formData.emergencyContact, phone: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.emergencyContact?.phone && formik.errors.emergencyContact?.phone && (
+                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.phone}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="emergencyEmail">Email Address</Label>
+                <Label htmlFor="emergencyContact.email">Email Address *</Label>
                 <Input
-                  id="emergencyEmail"
-                  disabled={isLoading}
+                  id="emergencyContact.email"
+                  name="emergencyContact.email"
                   type="email"
-                  value={formData.emergencyContact.email}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    emergencyContact: { ...formData.emergencyContact, email: e.target.value }
-                  })}
+                  value={formik.values.emergencyContact.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.emergencyContact?.email && formik.errors.emergencyContact?.email && (
+                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.email}</p>
+                )}
               </div>
             </div>
           </div>
@@ -571,53 +667,71 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
             <h3 className="text-lg font-semibold text-white">Insurance Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="insuranceProvider">Insurance Provider</Label>
+                <Label htmlFor="insurance.provider">Insurance Provider *</Label>
                 <Input
-                  id="insuranceProvider"
-                  value={formData.insurance.provider}
+                  id="insurance.provider"
+                  name="insurance.provider"
+                  value={formik.values.insurance.provider}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, provider: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.insurance?.provider && formik.errors.insurance?.provider && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.provider}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="policyNumber">Policy Number</Label>
+                <Label htmlFor="insurance.policyNumber">Policy Number *</Label>
                 <Input
-                  id="policyNumber"
-                  value={formData.insurance.policyNumber}
+                  id="insurance.policyNumber"
+                  name="insurance.policyNumber"
+                  value={formik.values.insurance.policyNumber}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, policyNumber: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.insurance?.policyNumber && formik.errors.insurance?.policyNumber && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.policyNumber}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="groupNumber">Group Number</Label>
+                <Label htmlFor="insurance.groupNumber">Group Number *</Label>
                 <Input
-                  id="groupNumber"
-                  value={formData.insurance.groupNumber}
+                  id="insurance.groupNumber"
+                  name="insurance.groupNumber"
+                  value={formik.values.insurance.groupNumber}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, groupNumber: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.insurance?.groupNumber && formik.errors.insurance?.groupNumber && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.groupNumber}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="relationshipToSubscriber">Relationship to Subscriber</Label>
+                <Label htmlFor="insurance.subscriberId">Subscriber ID *</Label>
+                <Input
+                  id="insurance.subscriberId"
+                  name="insurance.subscriberId"
+                  value={formik.values.insurance.subscriberId}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="bg-slate-700 border-slate-600"
+                />
+                {formik.touched.insurance?.subscriberId && formik.errors.insurance?.subscriberId && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.subscriberId}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="insurance.relationshipToSubscriber">Relationship to Subscriber *</Label>
                 <Select
-                  value={formData.insurance.relationshipToSubscriber}
+                  value={formik.values.insurance.relationshipToSubscriber}
                   disabled={isLoading}
-                  onValueChange={(value) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, relationshipToSubscriber: value }
-                  })}
+                  onValueChange={(value) => formik.setFieldValue('insurance.relationshipToSubscriber', value)}
                 >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select relationship" />
@@ -630,36 +744,41 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-
-              <div className="space-y-2">
-                <Label htmlFor="effectiveDate">Effective Date</Label>
-                <Input
-                  id="effectiveDate"
-                  type="date"
-                  disabled={isLoading}
-                  value={formData.insurance.effectiveDate}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, effectiveDate: e.target.value }
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                />
+                {formik.touched.insurance?.relationshipToSubscriber && formik.errors.insurance?.relationshipToSubscriber && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.relationshipToSubscriber}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="expirationDate">Expiration Date</Label>
+                <Label htmlFor="insurance.effectiveDate">Effective Date *</Label>
                 <Input
-                  id="expirationDate"
+                  id="insurance.effectiveDate"
+                  name="insurance.effectiveDate"
                   type="date"
+                  value={formik.values.insurance.effectiveDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   disabled={isLoading}
-                  value={formData.insurance.expirationDate}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    insurance: { ...formData.insurance, expirationDate: e.target.value }
-                  })}
                   className="bg-slate-700 border-slate-600"
                 />
+                {formik.touched.insurance?.effectiveDate && formik.errors.insurance?.effectiveDate && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.effectiveDate}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="insurance.expirationDate">Expiration Date *</Label>
+                <Input
+                  id="insurance.expirationDate"
+                  name="insurance.expirationDate"
+                  type="date"
+                  value={formik.values.insurance.expirationDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="bg-slate-700 border-slate-600"
+                />
+                {formik.touched.insurance?.expirationDate && formik.errors.insurance?.expirationDate && (
+                  <p className="text-red-500 text-sm">{formik.errors.insurance.expirationDate}</p>
+                )}
               </div>
             </div>
           </div>
@@ -669,43 +788,66 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
             <h3 className="text-lg font-semibold text-white">Medical Information</h3>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="allergies">Allergies</Label>
+                <Label htmlFor="allergies">Allergies *</Label>
                 <Textarea
                   id="allergies"
+                  name="allergies"
                   disabled={isLoading}
-                  value={Array.isArray(formData.allergies) ? formData.allergies.join(", ") : ""}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    allergies: e.target.value.split(",").map(item => item.trim()).filter(item => item)
-                  })}
+                  value={Array.isArray(formik.values.allergies) ? formik.values.allergies.join(", ") : ""}
+                  onChange={(e) => {
+                    const allergiesArray = e.target.value.split(",").map(item => item.trim()).filter(item => item);
+                    formik.setFieldValue('allergies', allergiesArray);
+                  }}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
                   placeholder="Enter allergies separated by commas"
                 />
+                {getFieldError('allergies') && (
+                  <p className="text-red-500 text-sm">{formik.errors.allergies}</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="chronicConditions">Chronic Conditions</Label>
+                <Label htmlFor="chronicConditions">Chronic Conditions *</Label>
                 <Textarea
                   id="chronicConditions"
+                  name="chronicConditions"
                   disabled={isLoading}
-                  value={Array.isArray(formData.chronicConditions) ? formData.chronicConditions.join(", ") : ""}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    chronicConditions: e.target.value.split(",").map(item => item.trim()).filter(item => item)
-                  })}
+                  value={Array.isArray(formik.values.chronicConditions) ? formik.values.chronicConditions.join(", ") : ""}
+                  onChange={(e) => {
+                    const conditionsArray = e.target.value.split(",").map(item => item.trim()).filter(item => item);
+                    formik.setFieldValue('chronicConditions', conditionsArray);
+                  }}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
                   placeholder="Enter chronic conditions separated by commas"
                 />
+                {getFieldError('chronicConditions') && (
+                  <p className="text-red-500 text-sm">{formik.errors.chronicConditions}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currentMedications">Current Medications</Label>
                 <Textarea
                   id="currentMedications"
+                  name="currentMedications"
                   disabled={isLoading}
-                  value={medicationInput}
-                  onChange={handleMedicationChange}
+                  value={formik.values.currentMedications.map(med => med.name).join(", ")}
+                  onChange={(e) => {
+                    const medication = {
+                      ...formik.values.currentMedications,
+                      name: e.target.value
+                    };
+                    formik.setFieldValue('currentMedications', medication);
+                  }}
+                  onBlur={formik.handleBlur}
                   className="bg-slate-700 border-slate-600"
                   placeholder="Enter current medications separated by commas"
                 />
+                {/* {getFieldError('currentMedications') && (
+                  <p className="text-red-500 text-sm">{formik.errors.currentMedications}</p>
+                )} */}
+
               </div>
             </div>
           </div>
@@ -715,11 +857,11 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
             <h3 className="text-lg font-semibold text-white">Status & Tags</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="status">Patient Status</Label>
+                <Label htmlFor="status">Patient Status *</Label>
                 <Select
+                  value={formik.values.status}
                   disabled={isLoading}
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                  onValueChange={(value) => formik.setFieldValue('status', value)}
                 >
                   <SelectTrigger className="bg-slate-700 border-slate-600">
                     <SelectValue placeholder="Select status" />
@@ -732,8 +874,47 @@ export default function PatientForm({ mode, open, onOpenChange, patient, onSave 
                     ))}
                   </SelectContent>
                 </Select>
+                {getFieldError('status') && (
+                  <p className="text-red-500 text-sm">{formik.errors.status}</p>
+                )}
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="registrationDate">Registration Date *</Label>
+              <Input
+                id="registrationDate"
+                name="registrationDate"
+                type="date"
+                value={formik.values.registrationDate}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={isLoading}
+                className="bg-slate-700 border-slate-600"
+              />
+              {getFieldError('registrationDate') && (
+                <p className="text-red-500 text-sm">{formik.errors.registrationDate}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="createdBy">Created By *</Label>
+              <Input
+                id="createdBy"
+                name="createdBy"
+                value={formik.values.createdBy}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={isLoading}
+                className="bg-slate-700 border-slate-600"
+                placeholder="Enter creator name"
+              />
+              {getFieldError('createdBy') && (
+                <p className="text-red-500 text-sm">{formik.errors.createdBy}</p>
+              )}
+            </div>
+
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

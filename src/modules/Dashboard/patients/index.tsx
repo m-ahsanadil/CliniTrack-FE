@@ -24,6 +24,7 @@ import { deletePatient, fetchAllPatients, clearCreateError, clearCreateSuccess, 
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 import PatientForm from "@/src/components/patient-form";
 import { UserRole } from "@/src/enum";
+import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 
 
 export default function index({ dashboardId, role }: PatientsProps) {
@@ -31,9 +32,15 @@ export default function index({ dashboardId, role }: PatientsProps) {
     // Custom hook for fetching appointments
     usePatientsFetcher();
     const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
-    const { handleAddPatient, filteredPatients } = useGlobalUI();
-    const [patientFormOpen, setPatientFormOpen] = useState(false);
+
     const [patients, setPatients] = useState<Patient | null>(null);
+   
+    const {
+        handleAddPatient,
+        handleDeletePatient,
+        handleEditPatient,
+    } = usePatient();
+
 
     const dispatch = useAppDispatch();
     // const [selectedPatients, setSelectedPatients] = useState<Patient | null>(null);
@@ -46,19 +53,19 @@ export default function index({ dashboardId, role }: PatientsProps) {
         setIsViewOpen(true);
     }
 
-    const handleEditPatient = (patient: Patient) => {
-        setPatients(patient);
-        setPatientFormOpen(true);
-    };
+    // const handleEditPatient = (patient: Patient) => {
+    //     setPatients(patient);
+    //     setPatientFormOpen(true);
+    // };
 
-    const handleSave = useCallback(() => {
-        setPatientFormOpen(false);
-    }, []);
+    // const handleSave = useCallback(() => {
+    //     setPatientFormOpen(false);
+    // }, []);
 
-    const handleDeletePatient = async (patientId: string) => {
-        await dispatch(deletePatient(patientId)).unwrap();
-        dispatch(fetchAllPatients());
-    }
+    // const handleDeletePatient = async (patientId: string) => {
+    //     await dispatch(deletePatient(patientId)).unwrap();
+    //     dispatch(fetchAllPatients());
+    // }
 
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
@@ -148,13 +155,13 @@ export default function index({ dashboardId, role }: PatientsProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-            <PatientForm
+            {/* <PatientForm
                 open={patientFormOpen}
                 onOpenChange={setPatientFormOpen}
                 mode={"edit"}
                 patient={patients}
                 onSave={handleSave}
-            />
+            /> */}
         </ProtectedRoleGuard>
 
     )

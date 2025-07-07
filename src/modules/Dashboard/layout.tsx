@@ -16,6 +16,7 @@ import { useAppSelector } from '@/src/redux/store/reduxHook';
 import { useRoleValidation } from '@/src/redux/hook/useRoleValidation';
 import { DashboardLoading } from '@/src/components/Loading';
 import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
+import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 // import { notFound } from 'next/navigation';
 
 
@@ -35,7 +36,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         // patients,
         appointments,
         invoices,
-        patientFormOpen, setPatientFormOpen,
+        // patientFormOpen, setPatientFormOpen,
         appointmentFormOpen, setAppointmentFormOpen,
         invoiceFormOpen, setInvoiceFormOpen,
         reportsModalOpen, setReportsModalOpen,
@@ -53,6 +54,11 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         medicalRecordFormOpen,
         setMedicalRecordFormOpen,
     } = useMedicalRecord();
+
+    const {
+        setPatientFormOpen,
+        patientFormOpen
+    } = usePatient()
 
     // Show loading while validation is happening OR while still loading
     if (isValidating || loginLoading) {
@@ -87,13 +93,19 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 </main>
 
                 {/* Modal Components */}
-                <PatientForm
-                    open={patientFormOpen}
-                    onOpenChange={setPatientFormOpen}
-                    patient={editingItem}
-                    onSave={handleSavePatient}
-                    mode={'create'}
-                />
+                {medicalRecordFormOpen && (
+                    <MedicalRecordForm
+                        open={medicalRecordFormOpen}
+                        onOpenChange={setMedicalRecordFormOpen}
+                    />
+                )}
+
+                {patientFormOpen && (
+                    <PatientForm
+                        open={patientFormOpen}
+                        onOpenChange={setPatientFormOpen}
+                    />
+                )}
 
                 <AppointmentForm
                     open={appointmentFormOpen}
@@ -105,12 +117,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     mode={'create'}
                 />
 
-                {medicalRecordFormOpen && (
-                    <MedicalRecordForm
-                        open={medicalRecordFormOpen}
-                        onOpenChange={setMedicalRecordFormOpen}
-                    />
-                )}
+
 
                 <InvoiceForm
                     open={invoiceFormOpen}

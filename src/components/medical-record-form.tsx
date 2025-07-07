@@ -569,7 +569,6 @@ import { CalendarIcon, Edit, Loader2, Plus, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { medicalRecordValidationSchema } from "../validation/schemas"
 import { FormikHelpers, useFormik } from 'formik'
-import { useGlobalUI } from "../redux/providers/contexts/GlobalUIContext";
 import { useMedicalRecord } from "../redux/providers/contexts/MedicalRecordContext";
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook";
 import { clearCreateError, clearUpdateError, fetchSelectedPatientProviders } from "../modules/Dashboard/medicalRecords/api/slice";
@@ -611,11 +610,11 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
   // CONTEXT STATES
   const {
     isEditing,
+    setIsEditing,
     medicalRecord,
+    setMedicalRecord,
     handleSaveMedicalRecord,
     setMedicalRecordFormOpen,
-    setMedicalRecord,
-    setIsEditing,
   } = useMedicalRecord();
 
   // REDUX STATE
@@ -673,7 +672,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
         _id: isEditing && medicalRecord?._id ? medicalRecord._id : undefined,
       };
 
-      await handleSaveMedicalRecord(finalValues);
+      handleSaveMedicalRecord(finalValues);
       actions.resetForm();
       setDate(undefined);
       // setMedicalRecordFormOpen(false);
@@ -774,7 +773,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl bg-slate-800 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             {mode === 'create' ? 'Create New Medical Record' : 'Edit Medical Record'}
@@ -840,7 +839,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
                 // onChange={formik.handleChange}
                 // onBlur={formik.handleBlur}
                 disabled
-                />
+              />
               {formik.touched.providerId && formik.errors.providerId && (
                 <p className="text-red-500 text-sm">{formik.errors.providerId}</p>
               )}

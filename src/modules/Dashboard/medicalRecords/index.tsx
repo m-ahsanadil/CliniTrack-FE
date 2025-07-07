@@ -49,37 +49,11 @@ export default function index({ dashboardId, role }: MedicalRecordProps) {
     } = useMedicalRecord();
 
     const { medicalRecords: apiMedicalRecord, deleteError, deleteLoading, count: medicalCount } = useAppSelector(state => state.medicalRecord);
-    const { basicInfo: patientsBasicInfo } = useAppSelector(state => state.patients);
-    const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider);
+
 
     // FIXED: Local state management
     const [selectedMedicalRecord, setSelectedMedicalRecord] = useState<MedicalRecordGetAll | null>(null);
-    const [deletingMedicalRecordId, setDeletingMedicalRecordId] = useState<string | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
-    const [selectedRecord, setSelectedRecord] = useState<MedicalRecordGetAll | null>(null);
-    // const [formOpen, setFormOpen] = useState(false);
-
-
-    // const handleDeleteMedicalRecord = async (medicalRecordId: string) => {
-    //     // Clear any previous delete errors
-    //     if (deleteError) {
-    //         dispatch(clearDeleteError());
-    //     }
-
-    //     // Optional: Add confirmation dialog
-    //     const confirmDelete = window.confirm("Are you sure you want to delete this appointment?");
-    //     if (!confirmDelete) return;
-
-    //     try {
-    //         setDeletingMedicalRecordId(medicalRecordId);
-    //         await dispatch(deleteMedicalRecord(medicalRecordId)).unwrap();
-    //         // Optional: Show success message
-    //     } catch (error) {
-    //         // Error is already handled by Redux state
-    //     } finally {
-    //         setDeletingMedicalRecordId(null);
-    //     }
-    // }
 
     // FIXED: Effect to handle delete errors
     useEffect(() => {

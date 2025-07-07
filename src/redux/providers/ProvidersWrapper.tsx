@@ -6,6 +6,7 @@ import ReduxProvider from "./ReduxProvider";
 import { AuthProvider } from "./contexts/auth-context";
 import { GlobalUIProvider } from "./contexts/GlobalUIContext";
 import { MedicalRecordProvider } from "./contexts/MedicalRecordContext";
+import { ContextWrapper } from "./contexts";
 
 // import { ThemeProvider } from "./ThemeProvider";
 // import { NextAuthProvider } from "./AuthProvider";
@@ -19,17 +20,11 @@ export const ProvidersWrapper: FC<ProvidersWrapperProps> = ({ children }) => {
     return (
         <AuthProvider>
             <ReduxProvider>
-                {/* <ThemeProvider>
-                <NextAuthProvider> */}
-                <GlobalUIProvider>
-                    <MedicalRecordProvider>
-                        <ToastProvider>
-                            {children}
-                        </ToastProvider>
-                    </MedicalRecordProvider>
-                </GlobalUIProvider >
-                {/* </NextAuthProvider>
-            </ThemeProvider> */}
+                <ContextWrapper>
+                    <ToastProvider>
+                        {children}
+                    </ToastProvider>
+                </ContextWrapper>
             </ReduxProvider>
         </AuthProvider>
     )
