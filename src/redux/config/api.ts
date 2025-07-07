@@ -52,7 +52,7 @@ export const ENDPOINTS = {
         CREATE: `/patients`, // POST
         UPDATE: (id: string | number) => `/patients/${id}`, // PUT
         DELETE: (id: string | number) => `/patients/${id}`, // DELETE
-        GET_PATIENT_NAME: '/patients/names/patient' // GET
+        GET_PATIENTS_NAME: '/patients/name' // GET
     },
 
     // Provider endpoints
@@ -62,6 +62,7 @@ export const ENDPOINTS = {
         CREATE: `/providers`, // POST
         UPDATE: (id: string | number) => `/providers/${id}`, // PUT
         DELETE: (id: string | number) => `/providers/${id}`, // DELETE
+        GET_PROVIDERS_NAME: '/providers/name' // GET
     },
 
     // Report endpoints

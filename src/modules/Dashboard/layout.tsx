@@ -24,8 +24,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     const { isValidating, isAuthorized } = useRoleValidation();
 
     // SELECTING DATA FROM THE REDUX
-    const provider = useAppSelector(state => state.provider.provider)
-    const patients = useAppSelector(state => state.patients.patients)
+    const { providers, basicInfo: providerNames } = useAppSelector(state => state.provider)
+    const { patients, basicInfo: patientNames } = useAppSelector(state => state.patients)
     const { basicInfo: patientBasicInfo } = useAppSelector(state => state.patients)
     const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider)
 
@@ -118,9 +118,10 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     invoice={editingItem}
                     onSave={handleSaveInvoice}
                     patients={patients}
-                    providers={provider}
+                    // providers={provider}
                     mode={'create'}
                     currentUser={undefined}
+                    providers={[]}
                 />
 
                 <ReportsModal

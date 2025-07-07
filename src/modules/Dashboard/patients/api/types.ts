@@ -35,6 +35,9 @@ export interface Medication {
 }
 
 export interface Patient {
+  address: Address;
+  emergencyContact: EmergencyContact;
+  insurance: Insurance;
   _id: string;
   patientId: string;
   firstName: string;
@@ -46,9 +49,6 @@ export interface Patient {
   ssn: string;
   phone: string;
   email: string;
-  address: Address;
-  emergencyContact: EmergencyContact;
-  insurance: Insurance;
   allergies: string[];
   chronicConditions: string[];
   currentMedications: Medication[];
@@ -134,26 +134,15 @@ export interface PatientGetByIdResponse {
   data: Patient;
 }
 
-// export interface PatientBasicInfo {
-//   _id: string;
-//   patientId: string;
-//   firstName: string;
-//   lastName: string;
-//   fullName: string;
-// }
-
-// export interface PatientBasicInfoResponse {
-//   success: boolean;
-//   count: number;
-//   message?: string
-//   data: PatientBasicInfo[];
-// }
+export interface PatientNames {
+  _id: string;
+  patientId: string;
+  fullName: string;
+}
 
 export interface PatientListGetResponse {
   success: boolean;
   count: number;
-  data: {
-    _id: string;
-    fullName: string;
-  }[];
+  message?: string;
+  data: PatientNames[];
 }

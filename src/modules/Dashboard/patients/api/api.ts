@@ -16,10 +16,10 @@ export const patientsApi = {
                 return apiService.post(ENDPOINTS.PATIENT.CREATE, patientData);
         },
 
-        // Getting basic info
-        // getBasicInfo: (): Promise<PatientBasicInfoResponse> => {
-        //         return apiService.get(ENDPOINTS.PATIENT.GET_BASIC_INFO);
-        // },
+        // Getting Doctor names
+        getPatientNames: (): Promise<PatientListGetResponse> => {
+                return apiService.get(ENDPOINTS.PATIENT.GET_PATIENTS_NAME);
+        },
 
         // Get all patients
         getAll: (): Promise<PatientGetResponse> => {
@@ -39,7 +39,4 @@ export const patientsApi = {
         // Delete patient by ID
         delete: (id: string | number): Promise<PatientDeleteApiResponse> =>
                 apiService.delete(ENDPOINTS.PATIENT.DELETE(id)),
-
-        getPatientName: (): Promise<PatientListGetResponse> =>
-                apiService.get(ENDPOINTS.PATIENT.GET_PATIENT_NAME),
 };

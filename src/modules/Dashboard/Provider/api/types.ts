@@ -9,17 +9,17 @@ export interface ProviderAddress {
 }
 
 export interface Provider {
+    address: ProviderAddress;
     _id: string;
     providerId: string;
     name: string;
     specialty: string;
     phone: string;
     email: string;
-    address: ProviderAddress;
     licenseNumber: string;
     npiNumber: string;
     clinicAffiliation: string;
-    status: ProviderStatus.ACTIVE | ProviderStatus.INACTIVE ;
+    status: ProviderStatus.ACTIVE | ProviderStatus.INACTIVE;
     createdBy: string;
     updatedBy: string;
     createdAt: string; // ISO timestamp
@@ -72,17 +72,14 @@ export interface ProviderGetByIdResponse {
 
 export type ProviderGetApiByIdResponse = ProviderGetByIdResponse | ProviderGetErrorResponse;
 
-
-export interface ProviderBasicInfo {
+export interface ProviderNames {
     _id: string;
     providerId: string;
     name: string;
-    specialty: string;
 }
-
-export interface ProviderBasicInfoResponse {
+export interface ProvideristGetResponse {
     success: boolean;
     count: number;
-    message?: string
-    data: ProviderBasicInfo[];
+    message?: string;
+    data: ProviderNames[];
 }

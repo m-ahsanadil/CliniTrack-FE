@@ -9,7 +9,7 @@ export const usePhoto = () => {
     const { user } = useAppSelector(state => state.auth)
     const { photoUrl, loading, error } = useAppSelector(state => state.photo);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    console.log(photoUrl);
+    
 
     // Fetch photo on mount
     useEffect(() => {

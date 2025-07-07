@@ -1,5 +1,4 @@
 "use client";
-import { medicalRecordApi } from "@/src/modules/Dashboard/medicalRecords/api/api";
 import { MedicalRecordGetAll, MedicalRecordPost } from "@/src/modules/Dashboard/medicalRecords/api/types";
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";

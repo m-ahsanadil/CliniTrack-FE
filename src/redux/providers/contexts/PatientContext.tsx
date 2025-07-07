@@ -1,57 +1,125 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-// import { Patients } from "@/src/constants";
+import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
+import { clearCreateError, clearCreateSuccess, clearDeleteError, clearUpdateError, clearUpdateSuccess, createPatients, deletePatient, fetchAllPatients, updatePatients } from "@/src/modules/Dashboard/patients/api/slice";
+import { Patient, PatientPostRequest } from "@/src/modules/Dashboard/patients/api/types";
 
 type PatientContextType = {
-  patients: typeof Patients;
-  setPatients: (val: typeof Patients) => void;
-  filteredPatients: typeof Patients;
+  // Data States
+  patient: Patient | null;
+  setPatient: (val: Patient | null) => void;
+
+  // ModalStates
+  patientFormOpen: boolean;
+  setPatientFormOpen: (val: boolean) => void;
+
+  //Editing states
+  isEditing: boolean;
+  setIsEditing: (val: boolean) => void;
+
+  // Filtered
+  filteredPatients: Patient[];
+
+  // Medical Record CRUD
   handleAddPatient: () => void;
-  handleEditPatient: (patient: any) => void;
-  handleSavePatient: (patientData: any) => void;
-  handleDeletePatient: (patientId: number) => void;
+  handleEditPatient: (patient: Patient) => void;
+  handleSavePatient: (patientData: PatientPostRequest) => void;
+  handleDeletePatient: (patientId: string) => void;
 };
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
 export const PatientProvider = ({ children }: { children: ReactNode }) => {
-  const [patients, setPatients] = useState(Patients);
+  const dispatch = useAppDispatch();
+  const patients = useAppSelector(state => state.patients.patients)
 
-  // Filter function (you'll need to pass searchTerm from UI context or make it a prop)
-  const filteredPatients = patients.filter(
-    (patient) =>
-      patient.name?.toLowerCase().includes("") || // You'll need to get searchTerm
-      patient.phone.includes("") ||
-      patient.email.toLowerCase().includes(""),
-  );
+  // states
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [patientFormOpen, setPatientFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const filteredPatients = patients;
+
+  const resetAllPatientFlags = () => {
+    dispatch(clearCreateError());
+    dispatch(clearCreateSuccess());
+    dispatch(clearUpdateError());
+    dispatch(clearUpdateSuccess());
+    dispatch(clearDeleteError());
+  };
 
   const handleAddPatient = () => {
-    // Implementation here - you might need to communicate with UI context for modal state
+    resetAllPatientFlags();
+
+    setPatient(null);
+    setIsEditing(false);
+    setPatientFormOpen(true);
   };
 
-  const handleEditPatient = (patient: any) => {
-    // Implementation here
+  const handleEditPatient = (patient: Patient) => {
+    resetAllPatientFlags();
+
+    setPatient(patient);
+    setIsEditing(true);
+    setPatientFormOpen(true);
   };
 
-  const handleSavePatient = (patientData: any) => {
-    // Your existing logic
+  const handleSavePatient = async (patientData: PatientPostRequest) => {
+    try {
+      resetAllPatientFlags();
+
+      let resultAction;
+      if (isEditing && patient?._id) {
+        resultAction = await dispatch(updatePatients({ id: patient._id, patientData: patientData }));
+      } else {
+        resultAction = await dispatch(createPatients(patientData));
+      }
+
+      if (createPatients.fulfilled.match(resultAction) || updatePatients.fulfilled.match(resultAction)) {
+        // Refresh the provider list
+        await dispatch(fetchAllPatients());
+
+        // Reset modal state
+        setPatientFormOpen(false);
+        setPatient(null);
+        setIsEditing(false);
+      }
+
+    } catch (err) {
+      console.error("Error in context handlePatient", err);
+    }
   };
 
-  const handleDeletePatient = (patientId: number) => {
-    // Your existing logic
+  const handleDeletePatient = async (patientId: string) => {
+    try {
+      const resultAction = await dispatch(deletePatient(patientId));
+      if (deletePatient.fulfilled.match(resultAction)) {
+        // Optionally refresh the list (though the reducer should handle this)
+        await dispatch(fetchAllPatients());
+        dispatch(clearDeleteError());
+      }
+
+    } catch (err) {
+      console.error("Error deleting patient", err);
+    }
   };
+
 
   return (
     <PatientContext.Provider
       value={{
-        patients,
-        setPatients,
+        patient,
+        setPatient,
         filteredPatients,
         handleAddPatient,
         handleEditPatient,
         handleSavePatient,
         handleDeletePatient,
+        patientFormOpen,
+        setPatientFormOpen,
+        isEditing,
+        setIsEditing,
       }}
     >
       {children}
