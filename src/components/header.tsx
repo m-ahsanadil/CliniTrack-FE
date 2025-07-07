@@ -56,7 +56,6 @@ export default function Header() {
         hasPhoto,
         lastUploadSuccess
     } = useProfilePhoto(user?.id || '');
-    // const { photoUrl, isPhotoLoading, isUploading, photoError, uploadError } = useAppSelector(state => state.profile);
     const { isSidebarOpen, setIsSidebarOpen, setReportsModalOpen, setSearchTerm, searchTerm } = useGlobalUI();
 
 
