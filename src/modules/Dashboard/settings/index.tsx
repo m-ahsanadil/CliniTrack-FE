@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { clearErrors, getProfile, updateProfile } from '../../Authentication/profile/api/slice'
 import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 import { updateProfileValidationSchema } from '@/src/validation/schemas'
+import { useProfilePhoto } from '../../Authentication/profile/api/useProfilePhotoFetcher'
 
 interface UpdateProfileFormValues {
     name: string;
@@ -35,8 +36,16 @@ interface UpdateProfileFormValues {
 }
 
 export default function index({ dashboardId, role }: SettingProps) {
-    const { profile, isFetching } = useAppSelector(state => state.profile)
-    const { updateError, isUpdating } = useAppSelector(state => state.profile)
+    const { profile, isFetching, updateError, isUpdating } = useAppSelector(state => state.profile)
+    const {
+        photoUrl,
+        previewUrl,
+        uploadPhoto,
+        isAnyLoading,
+        error,
+        showPreview
+    } = useProfilePhoto(profile?._id ?? "");
+
     const dispatch = useAppDispatch()
     const router = useRouter()
     const { toast } = useToast()
@@ -151,6 +160,62 @@ export default function index({ dashboardId, role }: SettingProps) {
                             </CardHeader>
                             <CardContent>
                                 <form className="space-y-4" onSubmit={formik.handleSubmit}>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="photo" className="text-slate-700">Profile Photo</Label>
+
+                                        <div className="relative w-24 h-24">
+                                            {/* Fallback: Show first letter if no photo or preview */}
+                                            {!previewUrl && !photoUrl && (
+                                                <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-700 font-semibold text-2xl rounded-full border">
+                                                    {formik.values.name?.charAt(0).toUpperCase() || "?"}
+                                                </div>
+                                            )}
+
+                                            {/* Show Preview */}
+                                            {previewUrl && (
+                                                <img
+                                                    src={previewUrl}
+                                                    alt="Preview"
+                                                    className="w-full h-full rounded-full object-cover border"
+                                                />
+                                            )}
+
+                                            {/* Show existing photo */}
+                                            {!previewUrl && photoUrl && (
+                                                <img
+                                                    src={photoUrl}
+                                                    alt="Profile"
+                                                    className="w-full h-full rounded-full object-cover border"
+                                                />
+                                            )}
+
+                                            {/* Loader overlay */}
+                                            {isAnyLoading && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+                                                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Input
+                                            id="photo"
+                                            type="file"
+                                            accept="image/*"
+                                            disabled={isAnyLoading}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    uploadPhoto(file);
+                                                }
+                                            }}
+                                        />
+
+                                        {error && (
+                                            <p className="text-sm text-red-500">Failed: {error}</p>
+                                        )}
+                                    </div>
+
+
                                     <div className="space-y-2">
                                         <Label htmlFor="name" className="text-slate-700">Full Name</Label>
                                         <Input id="name" {...formik.getFieldProps("name")} />
