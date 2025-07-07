@@ -8,6 +8,7 @@ export const ENDPOINTS = {
         LOGIN: `/auth/login`, // POST
         GET_PHOTO: (id: string | number) => `/auth/photo/${id}`,
         UPDATE: '/auth/profile',
+        GET_PROFILE: '/auth/user',
         UPLOAD_PHOTO: '/auth/upload-photo',
     },
 

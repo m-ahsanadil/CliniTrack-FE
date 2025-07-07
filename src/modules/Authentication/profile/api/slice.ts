@@ -1,10 +1,29 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import {
+    GetUserProfile,
+    GetUserProfileApiResponse,
     UpdateProfileRequest,
     UpdateProfileResponse,
     UploadPhotoResponse
 } from "./types";
 import { profileApi } from "./api";
+
+export const getProfile = createAsyncThunk(
+    'profile/get',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res: GetUserProfileApiResponse = await profileApi.getProfile();
+
+            if (res.success) {
+                return res.user;
+            } else {
+                return rejectWithValue(res.message);
+            }
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch profile');
+        }
+    }
+);
 
 // Async thunk for updating profile
 export const updateProfile = createAsyncThunk(
@@ -12,7 +31,7 @@ export const updateProfile = createAsyncThunk(
     async (profileData: UpdateProfileRequest, { rejectWithValue }) => {
         try {
             const response: UpdateProfileResponse = await profileApi.update(profileData);
-            
+
             if (response.success) {
                 return response;
             } else {
@@ -30,7 +49,7 @@ export const uploadProfilePhoto = createAsyncThunk(
     async (formData: FormData, { rejectWithValue }) => {
         try {
             const response: UploadPhotoResponse = await profileApi.upload_photo(formData);
-            
+
             if (response.success) {
                 return {
                     success: true,
@@ -48,22 +67,26 @@ export const uploadProfilePhoto = createAsyncThunk(
 
 interface ProfileState {
     // Profile data
-    profile: UpdateProfileResponse['user'] | null;
-    
+    // profile: UpdateProfileResponse['user'] | null;
+    profile: GetUserProfile | null;
+
+
     // Photo metadata only - no blob URLs or blobs
     photoMetadata: {
         lastUpdated: string | null;
         userId: string | null;
     };
-    
+
     // Loading states
+    isFetching: boolean;
     isUpdating: boolean;
     isUploading: boolean;
-    
+
     // Error states
+    fetchError: string | null;
     updateError: string | null;
     uploadError: string | null;
-    
+
     // Success states
     lastUploadSuccess: string | null;
 }
@@ -74,8 +97,10 @@ const initialState: ProfileState = {
         lastUpdated: null,
         userId: null
     },
+    isFetching: false,
     isUpdating: false,
     isUploading: false,
+    fetchError: null,
     updateError: null,
     uploadError: null,
     lastUploadSuccess: null,
@@ -85,22 +110,26 @@ const profileSlice = createSlice({
     name: "profile",
     initialState,
     reducers: {
+        clearFetchError: (state) => {
+            state.fetchError = null;
+        },
+
         // Clear errors
         clearErrors: (state) => {
             state.updateError = null;
             state.uploadError = null;
         },
-        
+
         // Clear success messages
         clearSuccessMessages: (state) => {
             state.lastUploadSuccess = null;
         },
-        
+
         // Reset profile state
         resetProfile: (state) => {
             return initialState;
         },
-        
+
         // Update photo metadata when photo changes
         updatePhotoMetadata: (state, action: PayloadAction<{ userId: string }>) => {
             state.photoMetadata.lastUpdated = new Date().toISOString();
@@ -109,6 +138,20 @@ const profileSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(getProfile.pending, (state) => {
+                state.isFetching = true;
+                state.fetchError = null;
+            })
+            .addCase(getProfile.fulfilled, (state, action: PayloadAction<GetUserProfile>) => {
+                state.isFetching = false;
+                state.profile = action.payload;
+                state.fetchError = null;
+            })
+            .addCase(getProfile.rejected, (state, action) => {
+                state.isFetching = false;
+                state.fetchError = action.payload as string;
+            })
+
             // Update Profile
             .addCase(updateProfile.pending, (state) => {
                 state.isUpdating = true;
@@ -123,7 +166,7 @@ const profileSlice = createSlice({
                 state.isUpdating = false;
                 state.updateError = action.payload as string;
             })
-            
+
             // Upload Profile Photo
             .addCase(uploadProfilePhoto.pending, (state) => {
                 state.isUploading = true;
@@ -146,6 +189,7 @@ const profileSlice = createSlice({
 
 export const {
     clearErrors,
+    clearFetchError,
     clearSuccessMessages,
     resetProfile,
     updatePhotoMetadata

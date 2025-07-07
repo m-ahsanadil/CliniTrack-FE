@@ -31,6 +31,53 @@ export const registerValidationSchema = Yup.object({
     .required('Role is required'),
 });
 
+export const updateProfileValidationSchema = Yup.object({
+  name: Yup.string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .required("Full name is required"),
+
+  age: Yup.number()
+    .typeError("Age must be a number")
+    .min(0, "Age must be a positive number")
+    .max(120, "Age must be realistic")
+    .required("Age is required"),
+
+  dob: Yup.string()
+    .matches(/^\d{4}-\d{2}-\d{2}$/, "Date of birth must be in YYYY-MM-DD format")
+    .required("Date of birth is required"),
+
+  speciality: Yup.string()
+    .min(2, "Speciality must be at least 2 characters")
+    .max(100, "Speciality must be less than 100 characters")
+    .required("Speciality is required"),
+
+  intro: Yup.string()
+    .min(10, "Intro must be at least 10 characters")
+    .max(500, "Intro must be less than 500 characters")
+    .required("Intro is required"),
+
+  field: Yup.string()
+    .min(2, "Field must be at least 2 characters")
+    .max(100, "Field must be less than 100 characters")
+    .required("Field is required"),
+
+  degree: Yup.string()
+    .min(2, "Degree must be at least 2 characters")
+    .max(100, "Degree must be less than 100 characters")
+    .required("Degree is required"),
+
+  education: Yup.string()
+    .min(2, "Education must be at least 2 characters")
+    .max(150, "Education must be less than 150 characters")
+    .required("Education is required"),
+
+  experience: Yup.string()
+    .min(5, "Experience must be at least 5 characters")
+    .max(300, "Experience must be less than 300 characters")
+    .required("Experience is required"),
+});
+
 export const providerValidationSchema = Yup.object({
   providerId: Yup.string().required("Provider ID is required"),
   name: Yup.string()

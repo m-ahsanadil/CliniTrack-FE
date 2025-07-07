@@ -3,6 +3,7 @@ import { UserRole } from "@/src/enum";
 export interface UserInfo {
     id: string;
     username: string;
+    name: string;
     token?: string;
     email?: string;
     role: UserRole;
@@ -11,6 +12,14 @@ export interface UserInfo {
     avatar?: string;
     department?: string;
     fullName?: string;
+    dob: string;
+    age: number;
+    education: string;
+    experience: string;
+    degree: string;
+    field: string;
+    intro: string;
+    speciality: string;
 }
 
 export interface LoginRequest {

@@ -1,3 +1,40 @@
+export interface GetUserProfile {
+    _id: string;
+    department?: string;
+    username: string;
+    email: string;
+    fullName: string;
+    role: string;
+    dob: string;
+    education: string;
+    experience: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    age: number;
+    degree: string;
+    field: string;
+    intro: string;
+    name: string;
+    speciality: string;
+    passwordHash?: string;
+}
+
+export interface GetUserProfileResponse {
+    success: boolean;
+    message: string;
+    user: GetUserProfile;
+}
+
+export interface GetUserProfileErrorResponse {
+    success: false;
+    message: string;
+}
+
+export type GetUserProfileApiResponse = | GetUserProfileResponse | GetUserProfileErrorResponse;
+
+
+
 export interface UpdateProfileRequest {
     name?: string;
     age?: number | '';
@@ -14,26 +51,7 @@ export interface UpdateProfileRequest {
 export interface UpdateProfileResponse {
     success: boolean;
     message: string;
-    user: {
-        _id: string;
-        username: string;
-        email: string;
-        fullName: string;
-        passwordHash: string;
-        role: string;
-        age: number;
-        dob: string;
-        education: string;
-        experience: string;
-        createdAt: string;
-        updatedAt: string;
-        name: string;
-        photo?: {
-            type: string;
-            data: number[]
-        }
-        __v: number
-    };
+    user: GetUserProfile
 }
 
 export interface UploadPhotoRequest {

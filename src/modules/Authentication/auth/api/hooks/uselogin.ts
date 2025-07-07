@@ -156,7 +156,16 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
                             email: demoUser.email,
                             role: demoUser.role,
                             createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString()
+                            updatedAt: new Date().toISOString(),
+                            name: "",
+                            dob: "",
+                            age: 0,
+                            education: "",
+                            experience: "",
+                            degree: "",
+                            field: "",
+                            intro: "",
+                            speciality: ""
                         },
                         token: `demo-token-${demoUser.id}`,
                     }));
