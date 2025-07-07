@@ -17,6 +17,8 @@ import { useRoleValidation } from '@/src/redux/hook/useRoleValidation';
 import { DashboardLoading } from '@/src/components/Loading';
 import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
+import { useProvider } from '@/src/redux/providers/contexts/ProviderContext';
+import { ProviderForm } from '@/src/components/provider-form';
 // import { notFound } from 'next/navigation';
 
 
@@ -54,6 +56,11 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         medicalRecordFormOpen,
         setMedicalRecordFormOpen,
     } = useMedicalRecord();
+
+    const {
+        providerFormOpen,
+        setProviderFormOpen,
+    } = useProvider()
 
     const {
         setPatientFormOpen,
@@ -104,6 +111,13 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     <PatientForm
                         open={patientFormOpen}
                         onOpenChange={setPatientFormOpen}
+                    />
+                )}
+
+                {providerFormOpen && (
+                    <ProviderForm
+                        open={providerFormOpen}
+                        onOpenChange={setProviderFormOpen}
                     />
                 )}
 

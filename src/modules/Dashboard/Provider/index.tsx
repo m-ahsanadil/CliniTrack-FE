@@ -32,13 +32,15 @@ import { ViewProviderDialog } from "./organisms/ViewProvidersDialog"
 import { deleteProvider, fetchAllProviders } from "./api/slice"
 import { ProviderForm } from "@/src/components/provider-form"
 import { UserRole } from "@/src/enum"
+import { useProvider } from "@/src/redux/providers/contexts/ProviderContext"
 
 
 export default function index({ dashboardId, role }: ProviderProps) {
     useProviderFetcher();
     const dispatch = useAppDispatch()
     const { user } = useAppSelector(state => state.auth)
-    const { provider: apiProvider } = useAppSelector(state => state.provider)
+    const { handleAddProvider, handleDeleteProvider, handleEditProvider } = useProvider();
+    const { providers: apiProvider } = useAppSelector(state => state.provider)
 
     const [createProviderFormOpen, setCreateProviderFormOpen] = useState(false);
     const [updateProviderFormOpen, setUpdateProviderFormOpen] = useState(false);
@@ -46,28 +48,10 @@ export default function index({ dashboardId, role }: ProviderProps) {
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
 
-    const handleAddProvider = () => {
-        setCreateProviderFormOpen(true);
-    }
-
-    const handleEditProvider = (provider: Provider) => {
-        setEditingItem(provider);
-        setUpdateProviderFormOpen(true);
-    }
-
-    const handleDeleteProvider = async (_id: string) => {
-        await dispatch(deleteProvider(_id)).unwrap();
-        dispatch(fetchAllProviders());
-    }
 
     const handleViewProvider = (provider: Provider) => {
         setSelectedProvider(provider);
         setIsViewOpen(true);
-    }
-
-    const handleProviderSaved = (provider: Provider) => {
-        // Refresh the provider list after successful save
-        dispatch(fetchAllProviders());
     }
 
     return (
@@ -172,7 +156,7 @@ export default function index({ dashboardId, role }: ProviderProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-            <ProviderForm
+            {/* <ProviderForm
                 open={updateProviderFormOpen}
                 provider={editingItem}
                 onOpenChange={setUpdateProviderFormOpen}
@@ -187,7 +171,7 @@ export default function index({ dashboardId, role }: ProviderProps) {
                     console.log("Created Provider:", createdProvider)
                     // You can also show a toast here or refetch list
                 }}
-            />
+            /> */}
         </ProtectedRoleGuard>
     )
 }

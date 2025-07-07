@@ -29,23 +29,42 @@ import { createProvider, fetchAllProviders, updateProvider } from "../modules/Da
 import { DepartmentName, DepartmentNameValues, ProviderStatus, ProviderStatusValues } from "../enum"
 import { generateId } from "../utils/idGenerator"
 import { providerValidationSchema } from "../validation/schemas"
+import { useProvider } from "../redux/providers/contexts/ProviderContext"
 
 interface ProviderFormProps {
     open: boolean
-    provider?: Provider | null
     onOpenChange: (open: boolean) => void
-    mode: "create" | "edit"
-    onSave?: (provider: Provider) => void
 }
 
-type ProviderFormData = Omit<ProviderRequest, "providerId" | "createdBy" | "updatedBy">
 
 
-export function ProviderForm({ open, provider, onOpenChange, mode, onSave }: ProviderFormProps) {
+export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
     const dispatch = useAppDispatch()
     const { user } = useAppSelector(state => state.auth)
     const [loading, setLoading] = useState(false)
 
+    // CONTEXT STATES
+    const {
+        isEditing,
+        setIsEditing,
+        provider,
+        setProvider,
+        handleSaveProvider,
+        setProviderFormOpen
+    } = useProvider();
+
+    const {
+        createError,
+        createLoading,
+        updateError,
+        updateLoading,
+    } = useAppSelector(state => state.provider)
+
+    // Determine mode based on editingItem
+    const mode = isEditing ? 'edit' : 'create';
+    const isLoading = isEditing ? updateLoading : createLoading;
+    const errorMessage = isEditing ? updateError : createError;
+    
     const {
         register,
         handleSubmit,
