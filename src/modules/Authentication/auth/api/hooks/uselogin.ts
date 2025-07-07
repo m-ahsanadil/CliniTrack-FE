@@ -106,11 +106,11 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
             });
 
             if (res.success) {
-                dispatch(setSuperAdminCredentials({ user: res.user, token: res.user.token,  }));
+                dispatch(setSuperAdminCredentials({ user: res.user, token: res.user.token, }));
 
                 toast({
                     title: "Super Admin Login Successful",
-                    description: `Welcome ${res.user.username}`,
+                    description: `Welcome ${res.user.role} ${res.user.username}`,
                 })
                 // Set current user for navigation
                 setCurrentUser({
@@ -209,7 +209,7 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
 
                         toast({
                             title: "Login Successful",
-                            description: `Welcome ${response.user.username}`,
+                            description: `Welcome ${response.user.fullName}`,
                         })
 
                         // Set current user for navigation
