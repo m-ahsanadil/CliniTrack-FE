@@ -773,7 +773,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-slate-800 border-slate-700">
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-800 border-slate-700 overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">
             {mode === 'create' ? 'Create New Medical Record' : 'Edit Medical Record'}

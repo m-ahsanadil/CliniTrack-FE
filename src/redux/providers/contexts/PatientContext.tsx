@@ -24,7 +24,7 @@ type PatientContextType = {
   // Medical Record CRUD
   handleAddPatient: () => void;
   handleEditPatient: (patient: Patient) => void;
-  handleSavePatient: (patientData: PatientPostRequest) => void;
+  handleSavePatient: (patientData: PatientPostRequest, onSucess?: () => void) => void;
   handleDeletePatient: (patientId: string) => void;
 };
 
@@ -65,29 +65,34 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     setPatientFormOpen(true);
   };
 
-  const handleSavePatient = async (patientData: PatientPostRequest) => {
+  const handleSavePatient = async (
+    patientData: PatientPostRequest,
+    onSuccess?: () => void
+  ) => {
     try {
       resetAllPatientFlags();
 
       let resultAction;
       if (isEditing && patient?._id) {
-        resultAction = await dispatch(updatePatients({ id: patient._id, patientData: patientData }));
+        resultAction = await dispatch(updatePatients({ id: patient._id, patientData }));
       } else {
         resultAction = await dispatch(createPatients(patientData));
       }
 
       if (createPatients.fulfilled.match(resultAction) || updatePatients.fulfilled.match(resultAction)) {
-        // Refresh the provider list
         await dispatch(fetchAllPatients());
 
-        // Reset modal state
-        setPatientFormOpen(false);
+        // Reset local context state
         setPatient(null);
         setIsEditing(false);
+        setPatientFormOpen(false);
+
+        // Call optional success callback
+        if (onSuccess) onSuccess();
       }
 
     } catch (err) {
-      console.error("Error in context handlePatient", err);
+      console.error("Error in context handleSavePatient", err);
     }
   };
 

@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, CalendarIcon, Loader2, Upload, X } from "lucide-react"
+import { Calendar, CalendarIcon, Loader2, Plus, Upload, X } from "lucide-react"
 import { Medication, Patient, PatientPostRequest } from "../modules/Dashboard/patients/api/types"
 import { generateId } from "../utils/idGenerator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -23,6 +22,7 @@ import { FormikHelpers, useFormik } from 'formik'
 import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
 import { usePatient } from "../redux/providers/contexts/PatientContext"
 import { patientValidationSchema } from "../validation/schemas"
+import { useToast } from "@/hooks/use-toast"
 
 interface PatientFormValues {
   patientId: string;
@@ -83,6 +83,7 @@ const initialPatientValues: PatientFormValues = {
   dateOfBirth: "",
   gender: "",
   ssn: "",
+  preferredLanguage: "",
   phone: "",
   email: "",
   address: {
@@ -112,7 +113,6 @@ const initialPatientValues: PatientFormValues = {
   },
   status: PatientStatus.ACTIVE,
   registrationDate: "",
-  preferredLanguage: "",
   createdBy: "",
   updatedBy: ""
 }
@@ -120,7 +120,7 @@ const initialPatientValues: PatientFormValues = {
 
 export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
   const dispatch = useAppDispatch()
-
+  const { toast } = useToast()
   // CONTEXT STATES
   const {
     isEditing,
@@ -191,7 +191,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
           subscriberId: patient.insurance?.subscriberId || "",
           relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || "",
           effectiveDate: patient.insurance?.effectiveDate ? format(parseISO(patient.insurance.effectiveDate), "yyyy-MM-dd") : "",
-          expirationDate: ""
+          expirationDate: patient.insurance?.expirationDate ? format(parseISO(patient.insurance.expirationDate), "yyyy-MM-dd") : ""
         },
         status: patient.status || PatientStatus.ACTIVE,
         registrationDate: patient.registrationDate ? format(parseISO(patient.registrationDate), "yyyy-MM-dd") : "",
@@ -203,14 +203,21 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     return initialPatientValues
   }
 
-  const handlePatientForm = async (values: PatientFormValues, formikHelpers: FormikHelpers<PatientFormValues>) => {
+  const handlePatientForm = async (values: PatientFormValues, actions: FormikHelpers<PatientFormValues>) => {
     try {
       // Your form submission logic here
-      handleSavePatient(values);
-      formikHelpers.setSubmitting(false);
-      onOpenChange(false);
+      handleSavePatient(values, () => {
+        actions.resetForm();
+        actions.setSubmitting(false);
+        onOpenChange(false); // ✅ close the dialog
+
+        // ✅ show toast
+        toast({
+          title: isEditing ? "Patient updated successfully!" : "Patient added successfully!",
+        });
+      });
     } catch (error) {
-      formikHelpers.setSubmitting(false);
+      actions.setSubmitting(false);
       // Handle error
     }
   }
@@ -221,6 +228,21 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     onSubmit: handlePatientForm,
     enableReinitialize: true,
   });
+
+  const handleAddMedication = (medication: Medication) => {
+    // Validate that required fields are present
+    if (!medication.name || !medication.dosage || !medication.frequency) {
+      return; // Don't add if required fields are missing
+    }
+
+    const newMedications = [...formik.values.currentMedications, medication];
+    formik.setFieldValue('currentMedications', newMedications);
+  };
+
+  const handleRemoveMedication = (index: number) => {
+    const filteredMedications = formik.values.currentMedications.filter((_, i) => i !== index);
+    formik.setFieldValue('currentMedications', filteredMedications);
+  };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -243,9 +265,10 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
   const getFieldError = (fieldName: string) => {
     return formik.touched[fieldName as keyof PatientFormValues] && formik.errors[fieldName as keyof PatientFormValues]
   }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-slate-800 border-slate-700">
+      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-800 border-slate-700 overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? "Add New Patient" : "Edit Patient"}</DialogTitle>
         </DialogHeader>
@@ -283,7 +306,6 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
           </div>
 
           {/* Patient ID */}
-
           <div>
             <div className="flex items-end gap-2">
               <div className="space-y-2 w-full">
@@ -787,6 +809,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Medical Information</h3>
             <div className="space-y-4">
+              {/* allergies */}
               <div className="space-y-2">
                 <Label htmlFor="allergies">Allergies *</Label>
                 <Textarea
@@ -805,6 +828,146 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                 {getFieldError('allergies') && (
                   <p className="text-red-500 text-sm">{formik.errors.allergies}</p>
                 )}
+              </div>
+
+              {/* Current Medications */}
+              <div className="space-y-2">
+                <Label className="text-white">Current Medications</Label>
+
+                {/* Add New Medication Form */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-800 rounded-lg border border-slate-600">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-medication-name">Medication Name *</Label>
+                    <Input
+                      id="new-medication-name"
+                      name="newMedicationName"
+                      className="bg-slate-700 border-slate-600"
+                      placeholder="e.g., Lisinopril"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-medication-dosage">Dosage *</Label>
+                    <Input
+                      id="new-medication-dosage"
+                      name="newMedicationDosage"
+                      className="bg-slate-700 border-slate-600"
+                      placeholder="e.g., 10mg"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-medication-frequency">Frequency *</Label>
+                    <Input
+                      id="new-medication-frequency"
+                      name="newMedicationFrequency"
+                      className="bg-slate-700 border-slate-600"
+                      placeholder="e.g., Once daily"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-medication-prescriber">Prescribed By</Label>
+                    <Input
+                      id="new-medication-prescriber"
+                      name="newMedicationPrescriber"
+                      className="bg-slate-700 border-slate-600"
+                      placeholder="e.g., Dr. Smith"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-medication-start-date">Start Date</Label>
+                    <Input
+                      id="new-medication-start-date"
+                      name="newMedicationStartDate"
+                      type="date"
+                      className="bg-slate-700 border-slate-600"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const form = document.forms[0]; // Assuming this is in a form
+                        const newMedication = {
+                          name: form.newMedicationName.value,
+                          dosage: form.newMedicationDosage.value,
+                          frequency: form.newMedicationFrequency.value,
+                          prescribedBy: form.newMedicationPrescriber.value,
+                          startDate: form.newMedicationStartDate.value
+                        };
+
+                        // Validate required fields
+                        if (!newMedication.name || !newMedication.dosage || !newMedication.frequency) {
+                          alert('Please fill in all required fields');
+                          return;
+                        }
+
+                        handleAddMedication(newMedication);
+
+                        // Clear form
+                        form.newMedicationName.value = '';
+                        form.newMedicationDosage.value = '';
+                        form.newMedicationFrequency.value = '';
+                        form.newMedicationPrescriber.value = '';
+                        form.newMedicationStartDate.value = '';
+                      }}
+                      size="sm"
+                      className="sm:h-9.5 sm:w-full"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Display Current Medications */}
+                <div className="space-y-2">
+                  {Array.isArray(formik.values.currentMedications) && formik.values.currentMedications.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No medications added yet</p>
+                  ) : (
+                    Array.isArray(formik.values.currentMedications) && formik.values.currentMedications.map((medication, index) => (
+                      <div key={index} className="flex items-center justify-between bg-slate-700/50 p-3 rounded border border-slate-600">
+                        <div className="flex-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-sm">
+                            <div>
+                              <span className="font-medium text-white">Name:</span>
+                              <p className="text-gray-300">{medication.name}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-white">Dosage:</span>
+                              <p className="text-gray-300">{medication.dosage}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-white">Frequency:</span>
+                              <p className="text-gray-300">{medication.frequency}</p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-white">Prescribed By:</span>
+                              <p className="text-gray-300">{medication.prescribedBy || 'N/A'}</p>
+                            </div>
+                          </div>
+                          {medication.startDate && (
+                            <div className="mt-2">
+                              <span className="font-medium text-white">Start Date:</span>
+                              <span className="text-gray-300 ml-2">{medication.startDate}</span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveMedication(index)}
+                          className="ml-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -826,35 +989,13 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   <p className="text-red-500 text-sm">{formik.errors.chronicConditions}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="currentMedications">Current Medications</Label>
-                <Textarea
-                  id="currentMedications"
-                  name="currentMedications"
-                  disabled={isLoading}
-                  value={formik.values.currentMedications.map(med => med.name).join(", ")}
-                  onChange={(e) => {
-                    const medication = {
-                      ...formik.values.currentMedications,
-                      name: e.target.value
-                    };
-                    formik.setFieldValue('currentMedications', medication);
-                  }}
-                  onBlur={formik.handleBlur}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="Enter current medications separated by commas"
-                />
-                {/* {getFieldError('currentMedications') && (
-                  <p className="text-red-500 text-sm">{formik.errors.currentMedications}</p>
-                )} */}
 
-              </div>
             </div>
           </div>
 
-          {/* Status and Tags */}
+          {/* Status  */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Status & Tags</h3>
+            <h3 className="text-lg font-semibold text-white">Status & Registration date</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="status">Patient Status *</Label>
@@ -878,26 +1019,26 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   <p className="text-red-500 text-sm">{formik.errors.status}</p>
                 )}
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="registrationDate">Registration Date *</Label>
+                <Input
+                  id="registrationDate"
+                  name="registrationDate"
+                  type="date"
+                  value={formik.values.registrationDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="bg-slate-700 border-slate-600"
+                />
+                {getFieldError('registrationDate') && (
+                  <p className="text-red-500 text-sm">{formik.errors.registrationDate}</p>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="registrationDate">Registration Date *</Label>
-              <Input
-                id="registrationDate"
-                name="registrationDate"
-                type="date"
-                value={formik.values.registrationDate}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={isLoading}
-                className="bg-slate-700 border-slate-600"
-              />
-              {getFieldError('registrationDate') && (
-                <p className="text-red-500 text-sm">{formik.errors.registrationDate}</p>
-              )}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="createdBy">Created By *</Label>
               <Input
@@ -914,7 +1055,22 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                 <p className="text-red-500 text-sm">{formik.errors.createdBy}</p>
               )}
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="updatedBy">Updated By *</Label>
+              <Input
+                id="updatedBy"
+                name="updatedBy"
+                value={formik.values.updatedBy}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                disabled={isLoading}
+                className="bg-slate-700 border-slate-600"
+                placeholder="Enter updater name"
+              />
+              {getFieldError('updatedBy') && (
+                <p className="text-red-500 text-sm">{formik.errors.updatedBy}</p>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

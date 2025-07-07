@@ -302,7 +302,7 @@ export const patientValidationSchema = Yup.object({
     .required('SSN is required'),
 
   phone: Yup.string()
-    .matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number')
+    // .matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number')
     .required('Phone is required'),
 
   email: Yup.string()
@@ -322,7 +322,9 @@ export const patientValidationSchema = Yup.object({
     relationship: Yup.mixed<Relationship>()
       .oneOf(RelationshipValues, 'Invalid relationship')
       .required('Relationship is required'),
-    phone: Yup.string().matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number').required('Emergency phone is required'),
+    phone: Yup.string()
+    // .matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number')
+    .required('Emergency phone is required'),
     email: Yup.string().email('Invalid email address').required('Emergency email is required'),
   }).required('Emergency contact is required'),
 
