@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
-import { persistor, store } from '../store/store';
-import { logout } from '@/src/modules/Authentication/auth/api/slice';
+// import { logout } from '@/src/modules/Authentication/auth/api/slice';
 import Router from 'next/router';
+// import { persistor, store } from '../store/store';
 
 
 class ApiService {
@@ -28,6 +28,8 @@ class ApiService {
         // Request interceptor for API calls
         this.axiosInstance.interceptors.request.use(
             async (config) => {
+                const { store, persistor } = await import('../store/store');
+
                 const state = store.getState();
                 const token = state.auth.token
 
@@ -83,7 +85,7 @@ class ApiService {
         // Response interceptor for API calls
         this.axiosInstance.interceptors.response.use(
             (response: AxiosResponse) => {
-                    console.log(`📥 ${response.status} ${response.config.url}`, response.data);
+                console.log(`📥 ${response.status} ${response.config.url}`, response.data);
                 return response
             },
             async (error: AxiosError) => {
@@ -106,6 +108,9 @@ class ApiService {
     private async handleUnauthorized() {
         try {
             console.log('🚪 Unauthorized access detected, logging out user...');
+
+            const { logout } = await import('@/src/modules/Authentication/auth/api/slice');
+            const { store, persistor } = await import('../store/store');
 
             // Dispatch logout action
             store.dispatch(logout());

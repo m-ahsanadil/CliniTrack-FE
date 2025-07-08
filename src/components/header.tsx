@@ -21,16 +21,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import {usePathname, useRouter } from 'next/navigation'
 
 // Import components
 import { RoleGuard } from "@/components/role-guard"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { logout } from "../modules/Authentication/auth/api/slice"
-import { persistor } from "../redux/store/store"
 import { UserRole } from "../enum"
 import { usePhoto } from "../modules/Authentication/profile/api/usePhoto"
+import { persistor } from "../redux/store/store"
 
 
 export default function Header() {

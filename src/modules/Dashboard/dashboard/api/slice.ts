@@ -1,7 +1,7 @@
 import { UserRole } from "@/src/enum";
-import { dashboardApi } from "./api";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Admin, Staff, Doctor, SuperAdmin, AdminGetApiResponse, StaffGetApiResponse, DoctorGetApiResponse, SuperAdminGetApiResponse } from "./types";
+import { dashboardApi } from "./api";
 
 // Union types for flexibility
 export type DashboardData = Admin | Staff | Doctor | SuperAdmin;
