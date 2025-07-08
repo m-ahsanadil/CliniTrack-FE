@@ -14,12 +14,16 @@ import { fetchProfile } from "@/src/modules/Authentication/profile/api/slice";
 import { fetchProvidersName } from "@/src/modules/Dashboard/Provider/api/slice";
 import { fetchPatientsName } from "@/src/modules/Dashboard/patients/api/slice";
 import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
+import { PatientNames } from "@/src/modules/Dashboard/patients/api/types";
+import { ProviderNames } from "@/src/modules/Dashboard/Provider/api/types";
 
 type AppointmentContextType = {
     // State
     appointment: Appointment | null;
     setAppointment: (val: Appointment | null) => void;
     profile: GetUserProfile | null;
+    patientNames: PatientNames[];
+    providerNames: ProviderNames[];
 
     // ModalStates
     appointmentFormOpen: boolean;
@@ -121,6 +125,7 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
         if (!isDataFetched || !profile || !patientNames || !providerNames) {
             await refetchData();
         }
+
         setAppointment(null);
         setIsEditing(false);
         setAppointmentFormOpen(true);
@@ -223,6 +228,8 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
                 appointment,
                 setAppointment,
                 profile,
+                patientNames,
+                providerNames,
                 setAppointmentFormOpen,
                 appointmentFormOpen,
                 isEditing,

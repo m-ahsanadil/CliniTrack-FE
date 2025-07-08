@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react"
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, parseISO } from "date-fns"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { Gender, GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
-import { FormikHelpers, useFormik } from 'formik'
+import { FormikHelpers, getIn, useFormik } from 'formik'
 
 import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
 import { usePatient } from "../redux/providers/contexts/PatientContext"
@@ -77,50 +77,8 @@ interface PatientFormProps {
   onOpenChange: (open: boolean) => void
 }
 
-const initialPatientValues: PatientFormValues = {
-  patientId: "",
-  firstName: "",
-  lastName: "",
-  dateOfBirth: "",
-  gender: "",
-  ssn: "",
-  preferredLanguage: "",
-  phone: "",
-  email: "",
-  address: {
-    street: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: ""
-  },
-  emergencyContact: {
-    name: "",
-    relationship: "",
-    phone: "",
-    email: ""
-  },
-  allergies: [],
-  chronicConditions: [],
-  currentMedications: [],
-  insurance: {
-    provider: "",
-    policyNumber: "",
-    groupNumber: "",
-    subscriberId: "",
-    relationshipToSubscriber: "",
-    effectiveDate: "",
-    expirationDate: ""
-  },
-  status: PatientStatus.ACTIVE,
-  registrationDate: "",
-  createdBy: "",
-  updatedBy: ""
-}
-
 
 export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
-  const dispatch = useAppDispatch()
   const { toast } = useToast()
   // CONTEXT STATES
   const {
@@ -130,6 +88,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     setPatient,
     handleSavePatient,
     setPatientFormOpen,
+    profile,
   } = usePatient();
 
   // REDUX STATE
@@ -143,15 +102,54 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
   } = useAppSelector(state => state.patients)
 
   const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [birthDate, setBirthDate] = useState<Date | undefined>();
 
+  const initialPatientValues: PatientFormValues = {
+    patientId: "",
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    gender: "",
+    ssn: "",
+    preferredLanguage: "",
+    phone: "",
+    email: "",
+    address: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: ""
+    },
+    emergencyContact: {
+      name: "",
+      relationship: "",
+      phone: "",
+      email: ""
+    },
+    allergies: [],
+    chronicConditions: [],
+    currentMedications: [],
+    insurance: {
+      provider: "",
+      policyNumber: "",
+      groupNumber: "",
+      subscriberId: "",
+      relationshipToSubscriber: "",
+      effectiveDate: "",
+      expirationDate: ""
+    },
+    status: PatientStatus.ACTIVE,
+    registrationDate: "",
+    createdBy: profile?.fullName || "",
+    updatedBy: profile?.fullName || ""
+  }
 
   // Determine mode based on editingItem
   const mode = isEditing ? 'edit' : 'create';
   const isLoading = isEditing ? updateLoading : createLoading;
   const errorMessage = isEditing ? updateError : createError;
 
-  const getInitialValues = (): PatientFormValues => {
+  const getInitialValues = useMemo((): PatientFormValues => {
     if (mode === "edit" && patient) {
       return {
         patientId: patient.patientId || "",
@@ -198,13 +196,13 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
         registrationDate: patient.registrationDate ? format(parseISO(patient.registrationDate), "yyyy-MM-dd") : "",
         preferredLanguage: patient.preferredLanguage || "",
         createdBy: patient.createdBy || "",
-        updatedBy: patient.updatedBy || ""
+        updatedBy: profile?.fullName || ""
       }
     }
-    return initialPatientValues
-  }
+    return initialPatientValues;
+  }, [mode, patient, profile])
 
-  const handlePatientForm = async (values: PatientFormValues, actions: FormikHelpers<PatientFormValues>) => {
+  const handlePatientForm = useCallback(async (values: PatientFormValues, actions: FormikHelpers<PatientFormValues>) => {
     try {
       // Your form submission logic here
       handleSavePatient(values, () => {
@@ -219,21 +217,25 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
       });
     } catch (error) {
       actions.setSubmitting(false);
-      // Handle error
+      toast({
+        title: "Error",
+        description: errorMessage || "An error occurred while processing your request.",
+        variant: "destructive",
+      });
     }
-  }
+  }, [handleSavePatient, isEditing, onOpenChange, toast, errorMessage]);
+
 
   const formik = useFormik({
-    initialValues: getInitialValues(),
+    initialValues: getInitialValues,
     validationSchema: patientValidationSchema,
     onSubmit: handlePatientForm,
     enableReinitialize: true,
   });
 
   const handleAddMedication = (medication: Medication) => {
-    // Validate that required fields are present
     if (!medication.name || !medication.dosage || !medication.frequency) {
-      return; // Don't add if required fields are missing
+      return;
     }
 
     const newMedications = [...formik.values.currentMedications, medication];
@@ -254,18 +256,17 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     }
   }
 
+  const handleGenerateId = useCallback(() => {
+    const newId = generateId({ prefix: "P", suffix: "CLINIC" })
+    formik.setFieldValue('patientId', newId)
+  }, [formik]);
 
-  const handleGenerateId = () => {
-    if (mode === 'create') {
-      const newId = generateId({ prefix: "P", suffix: "CLINIC" })
-      formik.setFieldValue('patientId', newId)
-    }
-  }
-
-  // Helper function to get field error
+  // Function to get field error
   const getFieldError = (fieldName: string) => {
-    return formik.touched[fieldName as keyof PatientFormValues] && formik.errors[fieldName as keyof PatientFormValues]
-  }
+    const touched = getIn(formik.touched, fieldName);
+    const error = getIn(formik.errors, fieldName);
+    return touched && error ? error : null;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

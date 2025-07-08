@@ -55,16 +55,16 @@ interface AppointmentFormProps {
 
 
 export default function AppointmentForm({ open, onOpenChange }: AppointmentFormProps) {
-  const dispatch = useAppDispatch();
   const { toast } = useToast()
-  const { basicInfo: patientNames } = useAppSelector(state => state.patients)
-  const { basicInfo: DoctorNames } = useAppSelector(state => state.provider)
+
   // CONTEXT STATES
   const {
     isEditing,
     appointment,
     handleSaveAppointment,
     profile,
+    patientNames,
+    providerNames
   } = useAppointment();
 
   //REDUX STATES
@@ -146,7 +146,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
       patientId: values.patientId,
       providerId: values.providerId,
       selectedPatient: patientNames?.find(p => p._id === values.patientId),
-      selectedProvider: DoctorNames?.find(d => d._id === values.providerId)
+      selectedProvider: providerNames?.find(d => d._id === values.providerId)
     });
 
     try {
@@ -168,7 +168,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
         variant: "destructive",
       });
     }
-  }, [handleSaveAppointment, isEditing, onOpenChange, toast, errorMessage, patientNames, DoctorNames]);
+  }, [handleSaveAppointment, isEditing, onOpenChange, toast, errorMessage, patientNames, providerNames]);
 
 
   const formik = useFormik({
@@ -228,7 +228,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
             <CardHeader>
               <CardTitle>Appointment Details</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 gap-4">
 
               {/* Appointment Number */}
               <div className="space-y-2">
@@ -262,202 +262,204 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                   <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentNumber')}</p>
                 )}
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Appointment Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="appointmentDate" className="text-slate-200">
+                    Appointment Date
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formik.values.appointmentDate
+                          ? format(new Date(formik.values.appointmentDate), "PPP")
+                          : "Pick a date"
+                        }
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
+                      <Calendar
+                        mode="single"
+                        selected={formik.values.appointmentDate ? new Date(formik.values.appointmentDate) : undefined}
+                        onSelect={(date) => formik.setFieldValue('appointmentDate', date?.toISOString().split('T')[0])}
+                        initialFocus
+                        className="text-white"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {getFieldError('appointmentDate') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentDate')}</p>
+                  )}
+                </div>
 
-              {/* Appointment Date */}
-              <div className="space-y-2">
-                <Label htmlFor="appointmentDate" className="text-slate-200">
-                  Appointment Date
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formik.values.appointmentDate
-                        ? format(new Date(formik.values.appointmentDate), "PPP")
-                        : "Pick a date"
-                      }
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
-                    <Calendar
-                      mode="single"
-                      selected={formik.values.appointmentDate ? new Date(formik.values.appointmentDate) : undefined}
-                      onSelect={(date) => formik.setFieldValue('appointmentDate', date?.toISOString().split('T')[0])}
-                      initialFocus
-                      className="text-white"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {getFieldError('appointmentDate') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentDate')}</p>
-                )}
-              </div>
+                {/* Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-slate-200">
+                    Status
+                  </Label>
+                  <Select
+                    value={formik.values.status}
+                    onValueChange={(value) => formik.setFieldValue('status', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentStatusValues.map((status) => (
+                        <SelectItem key={status} value={status} className="text-white">
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('status') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('status')}</p>
+                  )}
+                </div>
 
-              {/* Status */}
-              <div className="space-y-2">
-                <Label htmlFor="status" className="text-slate-200">
-                  Status
-                </Label>
-                <Select
-                  value={formik.values.status}
-                  onValueChange={(value) => formik.setFieldValue('status', value)}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    {AppointmentStatusValues.map((status) => (
-                      <SelectItem key={status} value={status} className="text-white">
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError('status') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('status')}</p>
-                )}
-              </div>
+                {/* Appointment Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="type" className="text-slate-200">
+                    Appointment Type
+                  </Label>
+                  <Select
+                    value={formik.values.type}
+                    onValueChange={(value) => formik.setFieldValue('type', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentTypeValues.map((type) => (
+                        <SelectItem key={type} value={type} className="text-white">
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('type') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('type')}</p>
+                  )}
+                </div>
 
-              {/* Appointment Type */}
-              <div className="space-y-2">
-                <Label htmlFor="type" className="text-slate-200">
-                  Appointment Type
-                </Label>
-                <Select
-                  value={formik.values.type}
-                  onValueChange={(value) => formik.setFieldValue('type', value)}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    {AppointmentTypeValues.map((type) => (
-                      <SelectItem key={type} value={type} className="text-white">
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError('type') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('type')}</p>
-                )}
-              </div>
+                {/* Priority */}
+                <div className="space-y-2">
+                  <Label htmlFor="priority" className="text-slate-200">
+                    Priority
+                  </Label>
+                  <Select
+                    value={formik.values.priority}
+                    onValueChange={(value) => formik.setFieldValue('priority', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentPriorityValues.map((priority) => (
+                        <SelectItem key={priority} value={priority} className="text-white">
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('priority') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('priority')}</p>
+                  )}
+                </div>
 
-              {/* Priority */}
-              <div className="space-y-2">
-                <Label htmlFor="priority" className="text-slate-200">
-                  Priority
-                </Label>
-                <Select
-                  value={formik.values.priority}
-                  onValueChange={(value) => formik.setFieldValue('priority', value)}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    {AppointmentPriorityValues.map((priority) => (
-                      <SelectItem key={priority} value={priority} className="text-white">
-                        {priority}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError('priority') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('priority')}</p>
-                )}
-              </div>
+                {/* Start Time */}
+                <div className="space-y-2">
+                  <Label htmlFor="startTime" className="text-slate-200">
+                    Start Time
+                  </Label>
+                  <Select
+                    value={formik.values.startTime}
+                    onValueChange={(value) => formik.setFieldValue('startTime', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select start time" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time} className="text-white">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('startTime') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('startTime')}</p>
+                  )}
+                </div>
 
-              {/* Start Time */}
-              <div className="space-y-2">
-                <Label htmlFor="startTime" className="text-slate-200">
-                  Start Time
-                </Label>
-                <Select
-                  value={formik.values.startTime}
-                  onValueChange={(value) => formik.setFieldValue('startTime', value)}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select start time" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time} className="text-white">
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError('startTime') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('startTime')}</p>
-                )}
-              </div>
+                {/* End Time */}
+                <div className="space-y-2">
+                  <Label htmlFor="endTime" className="text-slate-200">
+                    End Time
+                  </Label>
+                  <Select
+                    value={formik.values.endTime}
+                    onValueChange={(value) => formik.setFieldValue('endTime', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time} className="text-white">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('endTime') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('endTime')}</p>
+                  )}
+                </div>
 
-              {/* End Time */}
-              <div className="space-y-2">
-                <Label htmlFor="endTime" className="text-slate-200">
-                  End Time
-                </Label>
-                <Select
-                  value={formik.values.endTime}
-                  onValueChange={(value) => formik.setFieldValue('endTime', value)}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select end time" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time} className="text-white">
-                        {time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError('endTime') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('endTime')}</p>
-                )}
-              </div>
+                {/* Duration */}
+                <div className="space-y-2">
+                  <Label htmlFor="duration" className="text-slate-200">
+                    Duration (minutes)
+                  </Label>
+                  <Input
+                    id="duration"
+                    name="duration"
+                    type="number"
+                    value={formik.values.duration}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="30"
+                  />
+                  {getFieldError('duration') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('duration')}</p>
+                  )}
+                </div>
 
-              {/* Duration */}
-              <div className="space-y-2">
-                <Label htmlFor="duration" className="text-slate-200">
-                  Duration (minutes)
-                </Label>
-                <Input
-                  id="duration"
-                  name="duration"
-                  type="number"
-                  value={formik.values.duration}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className="bg-slate-700 border-slate-600 text-white"
-                  placeholder="30"
-                />
-                {getFieldError('duration') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('duration')}</p>
-                )}
-              </div>
+                {/* Timezone */}
+                <div className="space-y-2">
+                  <Label htmlFor="timeZone" className="text-slate-200">
+                    Time Zone
+                  </Label>
+                  <Input
+                    id="timeZone"
+                    name="timeZone"
+                    value={formik.values.timeZone}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="UTC-5"
+                  />
+                  {getFieldError('timeZone') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('timeZone')}</p>
+                  )}
+                </div>
 
-              {/* Timezone */}
-              <div className="space-y-2">
-                <Label htmlFor="timeZone" className="text-slate-200">
-                  Time Zone
-                </Label>
-                <Input
-                  id="timeZone"
-                  name="timeZone"
-                  value={formik.values.timeZone}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className="bg-slate-700 border-slate-600 text-white"
-                  placeholder="UTC-5"
-                />
-                {getFieldError('timeZone') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('timeZone')}</p>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -506,7 +508,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                     <SelectValue placeholder="Select doctor" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-700 border-slate-600">
-                    {DoctorNames?.map((doctor) => (
+                    {providerNames?.map((doctor) => (
                       <SelectItem key={doctor._id} value={doctor._id} className="text-white">
                         {doctor.name} ({doctor.providerId})
                       </SelectItem>

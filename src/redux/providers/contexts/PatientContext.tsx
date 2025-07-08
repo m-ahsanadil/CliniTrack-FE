@@ -1,15 +1,17 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
 import { clearCreateError, clearCreateSuccess, clearDeleteError, clearUpdateError, clearUpdateSuccess, createPatients, deletePatient, fetchAllPatients, updatePatients } from "@/src/modules/Dashboard/patients/api/slice";
 import { Patient, PatientPostRequest } from "@/src/modules/Dashboard/patients/api/types";
+import { fetchProfile } from "@/src/modules/Authentication/profile/api/slice";
+import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
 
 type PatientContextType = {
   // Data States
   patient: Patient | null;
   setPatient: (val: Patient | null) => void;
-
+  profile: GetUserProfile | null;
   // ModalStates
   patientFormOpen: boolean;
   setPatientFormOpen: (val: boolean) => void;
@@ -33,13 +35,46 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const dispatch = useAppDispatch();
   const patients = useAppSelector(state => state.patients.patients)
+  const { profile } = useAppSelector(state => state.profile);
 
   // states
   const [patient, setPatient] = useState<Patient | null>(null);
   const [patientFormOpen, setPatientFormOpen] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const filteredPatients = patients;
+
+  // Fetch required data when context is first loaded
+  useEffect(() => {
+    const fetchRequiredData = async () => {
+      if (!isDataFetched) {
+        try {
+          await Promise.all([
+            dispatch(fetchProfile()),
+          ]);
+          setIsDataFetched(true);
+        } catch (error) {
+          console.error("Error fetching required data:", error);
+        }
+      }
+    };
+
+    fetchRequiredData();
+  }, [dispatch, isDataFetched]);
+
+  // Re-fetch data if it's not available or if explicitly requested
+  const refetchData = async () => {
+    try {
+      await Promise.all([
+        dispatch(fetchProfile()),
+      ]);
+      setIsDataFetched(true);
+    } catch (error) {
+      console.error("Error refetching data:", error);
+    }
+  };
+
 
   const resetAllPatientFlags = () => {
     dispatch(clearCreateError());
@@ -49,16 +84,26 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     dispatch(clearDeleteError());
   };
 
-  const handleAddPatient = () => {
+  const handleAddPatient = async () => {
     resetAllPatientFlags();
+
+    // Ensure data is available before opening modal
+    if (!isDataFetched || !profile) {
+      await refetchData();
+    }
 
     setPatient(null);
     setIsEditing(false);
     setPatientFormOpen(true);
   };
 
-  const handleEditPatient = (patient: Patient) => {
+  const handleEditPatient = async (patient: Patient) => {
     resetAllPatientFlags();
+
+    // Ensure data is available before opening modal
+    if (!isDataFetched || !profile) {
+      await refetchData();
+    }
 
     setPatient(patient);
     setIsEditing(true);
@@ -116,6 +161,7 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
       value={{
         patient,
         setPatient,
+        profile,
         filteredPatients,
         handleAddPatient,
         handleEditPatient,
