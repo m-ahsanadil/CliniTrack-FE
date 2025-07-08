@@ -229,7 +229,6 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
               <CardTitle>Appointment Details</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4">
-
               {/* Appointment Number */}
               <div className="space-y-2">
                 <Label htmlFor="appointmentNumber" className="text-slate-200">
@@ -243,8 +242,9 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className="bg-slate-700 border-slate-600 text-white"
-                    placeholder="Enter appointment number"
+                    placeholder="XXX-0001-3658-XXXX"
                     readOnly={mode === 'edit'}
+                    disabled
                     autoComplete="off"
                   />
                   {mode === 'create' && (
@@ -262,6 +262,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                   <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentNumber')}</p>
                 )}
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Appointment Date */}
                 <div className="space-y-2">
