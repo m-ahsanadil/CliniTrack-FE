@@ -67,7 +67,7 @@ export default function index({ isSuperAdmin = false }: AuthProps) {
                     <p className="text-slate-300">{pageContent.subtitle}</p>
                 </div>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-1' : 'grid-cols-3'} mb-6`}>
+                    {/* <TabsList className={`grid w-full ${isSuperAdmin ? 'grid-cols-1' : 'grid-cols-3'} mb-6`}>
                         <TabsTrigger value="login">Login</TabsTrigger>
                         {!isSuperAdmin && (
                             <>
@@ -75,8 +75,11 @@ export default function index({ isSuperAdmin = false }: AuthProps) {
                                 <TabsTrigger value="demo" disabled={isSuperAdmin}>Demo Accounts</TabsTrigger>
                             </>
                         )}
+                    </TabsList> */}
+                    
+                    <TabsList className={`grid grid-cols-1 mb-6`}>
+                        <TabsTrigger value="login">Login</TabsTrigger>
                     </TabsList>
-
 
 
                     <LoginTab ref={loginRef} isSuperAdmin={isSuperAdmin} pageContent={pageContent} />

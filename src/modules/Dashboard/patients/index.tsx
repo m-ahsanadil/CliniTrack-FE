@@ -28,7 +28,7 @@ import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 export default function index({ dashboardId, role }: PatientsProps) {
 
     // Custom hook for fetching appointments
-    usePatientsFetcher();
+    // usePatientsFetcher();
     const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
 
     const [patient, setPatient] = useState<Patient | null>(null);

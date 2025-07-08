@@ -1,9 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-
 import { BASE_URI, VERSION, API_TIMEOUT } from "../constants";
-// import { logout } from '@/src/modules/Authentication/auth/api/slice';
-import Router from 'next/router';
-// import { persistor, store } from '../store/store';
 
 
 class ApiService {
@@ -121,14 +117,39 @@ class ApiService {
             }
 
             // Redirect to login page
-            if (typeof window !== 'undefined') {
-                Router.push('/');
-            }
+            // if (typeof window !== 'undefined') {
+            //     this.handleRedirect();
+            // }
 
         } catch (logoutError) {
             console.error('Error during auto logout:', logoutError);
         }
     }
+
+    // private handleRedirect() {
+    //     try {
+    //         // Dispatch a custom event that components can listen to
+    //         const redirectEvent = new CustomEvent('unauthorized-redirect', {
+    //             detail: { redirectTo: '/' }
+    //         });
+
+    //         window.dispatchEvent(redirectEvent);
+
+    //         // Also try direct redirect as fallback
+    //         setTimeout(() => {
+    //             if (typeof window !== 'undefined') {
+    //                 window.location.href = '/';
+    //             }
+    //         }, 100);
+    //     } catch (redirectError) {
+    //         console.error('Error during redirect:', redirectError);
+    //         // Ultimate fallback - force page reload to root
+    //         if (typeof window !== 'undefined') {
+    //             window.location.href = '/';
+    //         }
+    //     }
+    // }
+
 
     private formatError(error: AxiosError) {
         const errorInfo = {

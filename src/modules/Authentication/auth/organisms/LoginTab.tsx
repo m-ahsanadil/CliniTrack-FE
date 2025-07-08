@@ -47,7 +47,7 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
             return {
                 title: "Super Administrator Access",
                 description: "Secure login for system administrators only",
-                footerText: "This is a restricted access portal for super administrators only.",
+                footerText: "This is a restricted access portal for super administrators only",
                 cardStyle: "bg-white/95 backdrop-blur border-0 shadow-2xl border-red-200",
                 buttonStyle: "w-full h-12 bg-red-600 hover:bg-red-700 text-white",
                 alertStyle: "bg-red-50 border-red-200"
@@ -56,7 +56,14 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
         return {
             title: "Welcome Back",
             description: pageContent?.description || "Sign in to access your CliniTrack dashboard",
-            footerText: "For demo purposes, use the accounts in the \"Demo Accounts\" tab",
+            // footerText: "For demo purposes, use the accounts in the \"Demo Accounts\" tab",
+            footerText: (
+                <>
+                    For demonstration purposes, use the{" "}
+                    <span className="text-blue-600 font-medium">/super-admin</span>{" "}
+                    log in with username ahsan-adil and password ahsan to register a new user
+                </>
+            ),
             cardStyle: "bg-white/95 backdrop-blur border-0 shadow-2xl",
             buttonStyle: "w-full h-12 bg-blue-600 hover:bg-blue-700 text-white",
             alertStyle: "bg-blue-50 border-blue-200"
