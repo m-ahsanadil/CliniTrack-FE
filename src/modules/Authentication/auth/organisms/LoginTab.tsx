@@ -87,14 +87,34 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
                 </CardHeader>
                 <CardContent>
                     {isSuperAdmin && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <div className="flex items-center space-x-2">
-                                <AlertCircle className="h-4 w-4 text-red-600" />
-                                <p className="text-sm text-red-700 font-medium">
-                                    Restricted Access Zone
-                                </p>
+                        <>
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div className="flex items-center space-x-2">
+                                    <AlertCircle className="h-4 w-4 text-red-600" />
+                                    <p className="text-sm text-red-700 font-medium">
+                                        Restricted Access Zone
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+
+                            {/* Demo Credentials Section - Compact Version */}
+                            <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <ShieldCheck className="h-4 w-4 text-yellow-600" />
+                                    <p className="text-sm text-yellow-700 font-medium">Demo Access</p>
+                                </div>
+                                <div className="text-sm text-gray-700">
+                                    <p>
+                                        <span className="font-medium">Username:</span>{" "}
+                                        <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">ahsan-adil</code>
+                                    </p>
+                                    <p className="mt-1">
+                                        <span className="font-medium">Password:</span>{" "}
+                                        <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">ahsan</code>
+                                    </p>
+                                </div>
+                            </div>
+                        </>
                     )}
 
                     <form onSubmit={formik.handleSubmit} className="space-y-4">
