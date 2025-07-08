@@ -6,6 +6,7 @@ import {
     Trash2,
     Eye,
     Shield,
+    Loader2,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -82,68 +83,75 @@ export default function index({ dashboardId, role }: AppointmentProps) {
 
                 <Card className="bg-white border border-slate-200">
                     <CardContent className="p-6">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="text-slate-600">Patient</TableHead>
-                                    <TableHead className="text-slate-600">Date</TableHead>
-                                    <TableHead className="text-slate-600">Time</TableHead>
-                                    <TableHead className="text-slate-600">Doctor</TableHead>
-                                    <TableHead className="text-slate-600">Type</TableHead>
-                                    <TableHead className="text-slate-600">Status</TableHead>
-                                    <TableHead className="text-right text-slate-600">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {appointmentsCount === 0 && (
+                        {appointmentsLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                                <span className="ml-2 text-slate-600">Loading appointments...</span>
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-slate-500 py-6">
-                                            No appointment found. Please add a new appointment to get started.
-                                        </TableCell>
+                                        <TableHead className="text-slate-600">Patient</TableHead>
+                                        <TableHead className="text-slate-600">Date</TableHead>
+                                        <TableHead className="text-slate-600">Time</TableHead>
+                                        <TableHead className="text-slate-600">Doctor</TableHead>
+                                        <TableHead className="text-slate-600">Type</TableHead>
+                                        <TableHead className="text-slate-600">Status</TableHead>
+                                        <TableHead className="text-right text-slate-600">Actions</TableHead>
                                     </TableRow>
-                                )}
-                                {apiAppointments.map((appointment) => (
-                                    <TableRow key={appointment._id} className="hover:bg-slate-50">
-                                        <TableCell className="font-medium text-slate-900">{appointment.patientName}</TableCell>
-                                        <TableCell className="text-slate-600">{new Date(appointment.appointmentDate).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.startTime}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.providerName}</TableCell>
-                                        <TableCell className="text-slate-600">{appointment.type}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end space-x-2">
-                                                <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleEditAppointment(appointment)}
-                                                        className="text-slate-600 hover:text-slate-900"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
+                                </TableHeader>
+                                <TableBody>
+                                    {appointmentsCount === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="text-center text-slate-500 py-6">
+                                                No appointment found. Please add a new appointment to get started.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {apiAppointments.map((appointment) => (
+                                        <TableRow key={appointment._id} className="hover:bg-slate-50">
+                                            <TableCell className="font-medium text-slate-900">{appointment.patientId?.fullName}</TableCell>
+                                            <TableCell className="text-slate-600">{new Date(appointment.appointmentDate).toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-slate-600">{appointment.startTime}</TableCell>
+                                            <TableCell className="text-slate-600">{appointment.providerId?.name}</TableCell>
+                                            <TableCell className="text-slate-600">{appointment.type}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end space-x-2">
+                                                    <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
+                                                        <Eye className="h-4 w-4" />
                                                     </Button>
-                                                </RoleGuard>
-                                                <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]} >
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteAppointment(appointment._id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </RoleGuard>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEditAppointment(appointment)}
+                                                            className="text-slate-600 hover:text-slate-900"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    </RoleGuard>
+                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]} >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteAppointment(appointment._id)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </RoleGuard>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
 
-                            </TableBody>
-                        </Table>
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
             </div>

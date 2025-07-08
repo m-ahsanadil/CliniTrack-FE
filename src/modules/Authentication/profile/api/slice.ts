@@ -48,7 +48,7 @@ interface ProfileState {
     // Profile data
     profile: GetUserProfile | null;
     // Loading states
-    isFetching: boolean;
+    loading: boolean;
     isUpdating: boolean;
 
     // Error states
@@ -58,7 +58,7 @@ interface ProfileState {
 
 const initialState: ProfileState = {
     profile: null,
-    isFetching: false,
+    loading: false,
     isUpdating: false,
     fetchError: null,
     updateError: null,
@@ -85,16 +85,16 @@ const profileSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchProfile.pending, (state) => {
-                state.isFetching = true;
+                state.loading = true;
                 state.fetchError = null;
             })
             .addCase(fetchProfile.fulfilled, (state, action: PayloadAction<GetUserProfile>) => {
-                state.isFetching = false;
+                state.loading = false;
                 state.profile = action.payload;
                 state.fetchError = null;
             })
             .addCase(fetchProfile.rejected, (state, action) => {
-                state.isFetching = false;
+                state.loading = false;
                 state.fetchError = action.payload as string;
             })
 

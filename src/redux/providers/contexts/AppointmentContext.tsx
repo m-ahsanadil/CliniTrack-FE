@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import {
     Appointment,
     AppointmentFilters,
@@ -10,15 +10,24 @@ import {
 } from "@/src/modules/Dashboard/appointments/api/types";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
 import { cancelAppointment, clearCancelError, clearCreateError, clearCreateSuccess, clearDeleteError, clearError, clearRescheduleError, clearUpdateError, clearUpdateSuccess, createAppointment, deleteAppointment, fetchAllAppointments, rescheduleAppointment, updateAppointment } from "@/src/modules/Dashboard/appointments/api/slice";
+import { fetchProfile } from "@/src/modules/Authentication/profile/api/slice";
+import { fetchProvidersName } from "@/src/modules/Dashboard/Provider/api/slice";
+import { fetchPatientsName } from "@/src/modules/Dashboard/patients/api/slice";
+import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
 
 type AppointmentContextType = {
     // State
     appointment: Appointment | null;
     setAppointment: (val: Appointment | null) => void;
+    profile: GetUserProfile | null;
 
     // ModalStates
     appointmentFormOpen: boolean;
     setAppointmentFormOpen: (val: boolean) => void;
+
+    // Data fetching status
+    isDataFetched: boolean;
+    isDataLoading: boolean;
 
     //Editing states
     isEditing: boolean;
@@ -41,13 +50,57 @@ const AppointmentContext = createContext<AppointmentContextType | undefined>(und
 export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
     const dispatch = useAppDispatch();
     const appointments = useAppSelector(state => state.appointment.appointments);
+    const profileLoading = useAppSelector(state => state.profile.loading);
+    const patientsLoading = useAppSelector(state => state.patients.loading);
+    const providersLoading = useAppSelector(state => state.provider.loading);
+    const { profile } = useAppSelector(state => state.profile);
+    const patientNames = useAppSelector(state => state.patients.basicInfo);
+    const providerNames = useAppSelector(state => state.provider.basicInfo);
 
     // states
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
+    const [isDataFetched, setIsDataFetched] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
     const filteredAppointments = appointments || [];
+
+    // Calculate if data is still loading
+    const isDataLoading = profileLoading || patientsLoading || providersLoading;
+
+    // Fetch required data when context is first loaded
+    useEffect(() => {
+        const fetchRequiredData = async () => {
+            if (!isDataFetched) {
+                try {
+                    await Promise.all([
+                        dispatch(fetchProfile()),
+                        dispatch(fetchProvidersName()),
+                        dispatch(fetchPatientsName())
+                    ]);
+                    setIsDataFetched(true);
+                } catch (error) {
+                    console.error("Error fetching required data:", error);
+                }
+            }
+        };
+
+        fetchRequiredData();
+    }, [dispatch, isDataFetched]);
+
+    // Re-fetch data if it's not available or if explicitly requested
+    const refetchData = async () => {
+        try {
+            await Promise.all([
+                dispatch(fetchProfile()),
+                dispatch(fetchProvidersName()),
+                dispatch(fetchPatientsName())
+            ]);
+            setIsDataFetched(true);
+        } catch (error) {
+            console.error("Error refetching data:", error);
+        }
+    };
 
     const resetAllAppointmentFlags = () => {
         dispatch(clearCreateSuccess());
@@ -55,23 +108,32 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
         dispatch(clearUpdateError());
         dispatch(clearDeleteError());
         dispatch(clearCreateError());
-
         dispatch(clearError());
         dispatch(clearCancelError());
         dispatch(clearRescheduleError());
-
     };
 
     // CRUD Operations
-    const handleAddAppointment = () => {
+    const handleAddAppointment = async () => {
         resetAllAppointmentFlags();
+
+        // Ensure data is available before opening modal
+        if (!isDataFetched || !profile || !patientNames || !providerNames) {
+            await refetchData();
+        }
         setAppointment(null);
         setIsEditing(false);
         setAppointmentFormOpen(true);
     };
 
-    const handleEditAppointment = (appointment: Appointment) => {
+    const handleEditAppointment = async (appointment: Appointment) => {
         resetAllAppointmentFlags();
+
+        // Ensure data is available before opening modal
+        if (!isDataFetched || !profile || !patientNames || !providerNames) {
+            await refetchData();
+        }
+
         setAppointment(appointment);
         setIsEditing(true);
         setAppointmentFormOpen(true);
@@ -160,10 +222,13 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 appointment,
                 setAppointment,
+                profile,
                 setAppointmentFormOpen,
                 appointmentFormOpen,
                 isEditing,
                 setIsEditing,
+                isDataFetched,
+                isDataLoading,
                 filteredAppointments,
                 handleAddAppointment,
                 handleEditAppointment,

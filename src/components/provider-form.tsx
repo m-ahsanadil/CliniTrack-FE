@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, act } from "react"
+import { useState, useEffect, act, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import {
@@ -24,8 +24,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { Loader2, MapPin, User, Phone, Mail, Shield, Building2 } from "lucide-react"
-import { Provider, ProviderRequest } from "../modules/Dashboard/Provider/api/types"
-import { createProvider, fetchAllProviders, updateProvider } from "../modules/Dashboard/Provider/api/slice"
 import { DepartmentName, DepartmentNameValues, ProviderStatus, ProviderStatusValues } from "../enum"
 import { generateId } from "../utils/idGenerator"
 import { providerValidationSchema } from "../validation/schemas"
@@ -67,13 +65,17 @@ interface ProviderFormProps {
 export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
     const dispatch = useAppDispatch();
     const { toast } = useToast();
+    const { profile } = useAppSelector(state => state.profile)
 
     // Fetch profile when component mounts
     useEffect(() => {
-        dispatch(fetchProfile())
-    }, [dispatch])
+        if (open) {
+            if (!profile) {
+                dispatch(fetchProfile())
+            }
+        }
+    }, [open, dispatch, profile]);
 
-    const { profile } = useAppSelector(state => state.profile)
 
     const initialProviderValues: ProviderFormValues = {
         address: {
@@ -85,7 +87,7 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
         },
         providerId: "",
         name: "",
-        specialty: "",
+        specialty: DepartmentName.GASTROENTEROLOGY,
         phone: "",
         email: "",
         licenseNumber: "",
@@ -130,7 +132,7 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                 },
                 providerId: provider.providerId || "",
                 name: provider.name || "",
-                specialty: provider.specialty || "",
+                specialty: provider.specialty || DepartmentName.GASTROENTEROLOGY,
                 phone: provider.phone || "",
                 email: provider.email || "",
                 licenseNumber: provider.licenseNumber || "",
@@ -174,17 +176,10 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
         enableReinitialize: true,
     });
 
-    const handleGenerateId = () => {
+    const handleGenerateId = useCallback(() => {
         const newId = generateId({ prefix: "PROV", suffix: "DOC" })
         formik.setFieldValue('providerId', newId)
-    }
-    // Helper function to get field error
-    // const getFieldError = (fieldName: string) => {
-    //     return formik.touched[fieldName as keyof ProviderFormValues] && formik.errors[fieldName as keyof ProviderFormValues]
-    // }
-
-    // const getNestedFieldError = (section: string, field: string) =>
-    //     (formik.touched as any)[section]?.[field] && (formik.errors as any)[section]?.[field];
+    }, [formik])
 
     // Function to get field error
     const getFieldError = (fieldName: string) => {

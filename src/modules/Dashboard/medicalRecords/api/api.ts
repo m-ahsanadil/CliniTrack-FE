@@ -1,6 +1,6 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
+import { MedicalRecordDeleteResponse, MedicalRecordGetAllApiResponse, MedicalRecordGetAllResponse, MedicalRecordPost, MedicalRecordPostApiResponse, MedicalRecordPostResponse, PatientProviderResponse } from "./types";
 import apiService from "@/src/redux/config/apiService";
-import { MedicalRecordDeleteResponse, MedicalRecordGetAll, MedicalRecordGetAllApiResponse, MedicalRecordGetAllResponse, MedicalRecordPost, MedicalRecordPostApiResponse, MedicalRecordPostResponse, PatientProviderResponse } from "./types";
 
 
 export const medicalRecordApi = {

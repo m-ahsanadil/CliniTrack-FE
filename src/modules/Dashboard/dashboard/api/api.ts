@@ -1,6 +1,6 @@
 import { ENDPOINTS } from "@/src/redux/config/api";
-import apiService from "@/src/redux/config/apiService";
 import { AdminGetApiResponse, DoctorGetApiResponse, StaffGetApiResponse, SuperAdminGetApiResponse } from "./types";
+import apiService from "@/src/redux/config/apiService";
 
 export const dashboardApi = {
     getSuperAdmin: (): Promise<SuperAdminGetApiResponse> =>

@@ -20,6 +20,7 @@ export interface GetUserProfile {
     passwordHash?: string;
 }
 
+
 export interface GetUserProfileResponse {
     success: boolean;
     message: string;

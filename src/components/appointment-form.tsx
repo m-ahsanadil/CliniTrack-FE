@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { act, FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -12,11 +12,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { CalendarIcon, FileText, Loader2 } from "lucide-react"
-import { AppointmentPriority, AppointmentPriorityValues, AppointmentStatus, AppointmentStatusValues, AppointmentType, AppointmentTypeValues, DepartmentNameValues } from "@/src/enum"
+import { AppointmentPriority, AppointmentPriorityValues, AppointmentStatus, AppointmentStatusValues, AppointmentType, AppointmentTypeValues, DepartmentName, DepartmentNameValues } from "@/src/enum"
 import { Input } from "@/components/ui/input"
-import { Appointment, AppointmentRequest } from "../modules/Dashboard/appointments/api/types"
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
-import { updateAppointment } from "../modules/Dashboard/appointments/api/slice"
 import { useToast } from "@/hooks/use-toast"
 import { fetchPatientsName } from "../modules/Dashboard/patients/api/slice"
 import { fetchProvidersName } from "../modules/Dashboard/Provider/api/slice"
@@ -25,6 +23,7 @@ import { FormikHelpers, getIn, useFormik } from "formik"
 import { appointmentValidationSchema } from "../validation/schemas"
 import { generateId } from "../utils/idGenerator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchProfile } from "../modules/Authentication/profile/api/slice"
 
 interface AppointmentFormValues {
   appointmentNumber: string;
@@ -57,59 +56,18 @@ interface AppointmentFormProps {
   onOpenChange: (open: boolean) => void
 }
 
-const initialAppointmentalues: AppointmentFormValues = {
-  appointmentNumber: "",
-  patientId: "",
-  providerId: "",
-  departmentName: "",
-  appointmentDate: "",
-  startTime: "",
-  endTime: "",
-  duration: 0,
-  timeZone: "",
-  type: AppointmentType.CONSULTATION,
-  priority: AppointmentPriority.LOW,
-  status: AppointmentStatus.SCHEDULED,
-  location: {
-    facilityId: "",
-    facilityName: "",
-    roomNumber: "",
-    address: ""
-  },
-  reasonForVisit: "",
-  symptoms: [],
-  notes: "",
-  createdBy: "",
-  updatedBy: ""
-}
+
 export default function AppointmentForm({ open, onOpenChange }: AppointmentFormProps) {
   const dispatch = useAppDispatch();
   const { toast } = useToast()
-
   const { basicInfo: patientNames } = useAppSelector(state => state.patients)
   const { basicInfo: DoctorNames } = useAppSelector(state => state.provider)
-
-
-  // Fetch profile when component mounts
-  useEffect(() => {
-    if (open) {
-      if (!patientNames) {
-        dispatch(fetchPatientsName());
-      }
-      if (!DoctorNames) {
-        dispatch(fetchProvidersName());
-      }
-    }
-  }, [open, dispatch]);
-
-  console.log("Patient Names: ", patientNames);
-  console.log("Doctor Names: ", DoctorNames);
-
   // CONTEXT STATES
   const {
     isEditing,
     appointment,
     handleSaveAppointment,
+    profile,
   } = useAppointment();
 
   //REDUX STATES
@@ -122,6 +80,32 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
     updateSuccess,
     updateLoading,
   } = useAppSelector(state => state.appointment)
+
+  const initialAppointmentValues: AppointmentFormValues = {
+    appointmentNumber: "",
+    patientId: "",
+    providerId: "",
+    departmentName: DepartmentName.ANESTHESIOLOGY,
+    appointmentDate: "",
+    startTime: "",
+    endTime: "",
+    duration: 0,
+    timeZone: "",
+    type: AppointmentType.CONSULTATION,
+    priority: AppointmentPriority.LOW,
+    status: AppointmentStatus.SCHEDULED,
+    location: {
+      facilityId: "",
+      facilityName: "",
+      roomNumber: "",
+      address: ""
+    },
+    reasonForVisit: "",
+    symptoms: [],
+    notes: "",
+    createdBy: profile?.name || '',
+    updatedBy: profile?.name || ""
+  }
 
   // Determine mode based on editingItem
   const mode = isEditing ? 'edit' : 'create';
@@ -153,11 +137,11 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
         symptoms: appointment.symptoms || [],
         notes: appointment.notes || "",
         createdBy: appointment.createdBy || "",
-        updatedBy: appointment.updatedBy || ""
+        updatedBy: profile?.name || ""
       }
     }
-    return initialAppointmentalues;
-  }, [mode, appointment]);
+    return initialAppointmentValues;
+  }, [mode, appointment, profile]);
 
 
   const handleAppointmentForm = useCallback(async (values: AppointmentFormValues, actions: FormikHelpers<AppointmentFormValues>) => {
@@ -475,6 +459,8 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                 )}
               </div>
 
+
+
               {/* Time Selection */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -573,6 +559,21 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Location Details */}
+              <div>
+                <Label htmlFor="location.facilityId" className="text-slate-200">Facility ID</Label>
+                <Input
+                  id="location.facilityId"
+                  name="location.facilityId"
+                  value={formik.values.location.facilityId}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Enter facility ID"
+                />
+                {getFieldError('location.facilityId') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('location.facilityId')}</p>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="location.facilityName" className="text-slate-200">
@@ -648,6 +649,23 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                   <p className="text-red-400 text-sm mt-1">{getFieldError('reasonForVisit')}</p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="symptoms" className="text-slate-200">Symptoms</Label>
+                <Input
+                  id="symptoms"
+                  name="symptoms"
+                  value={formik.values.symptoms.join(', ')}
+                  onChange={(e) => formik.setFieldValue('symptoms', e.target.value.split(',').map(s => s.trim()))}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="e.g. Headache, Fever"
+                />
+                {getFieldError('symptoms') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('symptoms')}</p>
+                )}
+              </div>
+
 
               {/* Notes */}
               <div>

@@ -20,18 +20,11 @@ import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 import { useProvider } from '@/src/redux/providers/contexts/ProviderContext';
 import { ProviderForm } from '@/src/components/provider-form';
 import { useAppointment } from '@/src/redux/providers/contexts/AppointmentContext';
-// import { notFound } from 'next/navigation';
 
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
     const { loginLoading, user } = useAppSelector(state => state.auth)
     const { isValidating, isAuthorized } = useRoleValidation();
-
-    // SELECTING DATA FROM THE REDUX
-    const { providers, basicInfo: providerNames } = useAppSelector(state => state.provider)
-    const { patients, basicInfo: patientNames } = useAppSelector(state => state.patients)
-    const { basicInfo: patientBasicInfo } = useAppSelector(state => state.patients)
-    const { basicInfo: providerBasicInfo } = useAppSelector(state => state.provider)
 
 
     const {
@@ -139,11 +132,12 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     onOpenChange={setInvoiceFormOpen}
                     invoice={editingItem}
                     onSave={handleSaveInvoice}
-                    patients={patients}
+                    // patients={patients}
                     // providers={provider}
                     mode={'create'}
                     currentUser={undefined}
                     providers={[]}
+                    patients={[]}
                 />
 
                 <ReportsModal
