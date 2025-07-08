@@ -4,6 +4,7 @@ import {
     Edit,
     Trash2,
     Eye,
+    Loader2,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,16 +14,13 @@ import { Badge } from "@/components/ui/badge"
 // Import components
 import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants";
-import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext";
-import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
+import { useAppSelector } from "@/src/redux/store/reduxHook";
 import { PatientsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/patients/page";
 import { usePatientsFetcher } from "./api/usePatientsFetcher";
 import { ViewPatientDialog } from "./organisms/ViewPatientsDialog";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Patient } from "./api/types";
-import { deletePatient, fetchAllPatients, clearCreateError, clearCreateSuccess, clearError, clearPatients, clearUpdateError, clearUpdateSuccess, createPatients } from "./api/slice";
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
-import PatientForm from "@/src/components/patient-form";
 import { UserRole } from "@/src/enum";
 import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 
@@ -33,8 +31,8 @@ export default function index({ dashboardId, role }: PatientsProps) {
     usePatientsFetcher();
     const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
 
-    const [patients, setPatients] = useState<Patient | null>(null);
-   
+    const [patient, setPatient] = useState<Patient | null>(null);
+
     const {
         handleAddPatient,
         handleDeletePatient,
@@ -42,30 +40,15 @@ export default function index({ dashboardId, role }: PatientsProps) {
     } = usePatient();
 
 
-    const dispatch = useAppDispatch();
-    // const [selectedPatients, setSelectedPatients] = useState<Patient | null>(null);
+
     const [isViewOpen, setIsViewOpen] = useState(false);
 
 
     // FIXED: Proper type for the parameter
     const handleViewPatients = (patient: Patient) => {
-        setPatients(patient);
+        setPatient(patient);
         setIsViewOpen(true);
     }
-
-    // const handleEditPatient = (patient: Patient) => {
-    //     setPatients(patient);
-    //     setPatientFormOpen(true);
-    // };
-
-    // const handleSave = useCallback(() => {
-    //     setPatientFormOpen(false);
-    // }, []);
-
-    // const handleDeletePatient = async (patientId: string) => {
-    //     await dispatch(deletePatient(patientId)).unwrap();
-    //     dispatch(fetchAllPatients());
-    // }
 
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
@@ -85,27 +68,33 @@ export default function index({ dashboardId, role }: PatientsProps) {
 
                 <Card className="bg-white border border-slate-200">
                     <CardContent className="p-6">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="text-slate-600">Name</TableHead>
-                                    <TableHead className="text-slate-600">Age</TableHead>
-                                    <TableHead className="text-slate-600">Gender</TableHead>
-                                    <TableHead className="text-slate-600">Phone</TableHead>
-                                    <TableHead className="text-slate-600">Last Visit</TableHead>
-                                    <TableHead className="text-slate-600">Status</TableHead>
-                                    <TableHead className="text-right text-slate-600">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {patientsCount === 0 ? (
+                        {patientsLoading ? (
+                            <div className="flex justify-center py-12">
+                                <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                            </div>
+                        ) : patientsError ? (
+                            <div className="text-red-600 text-center py-6">
+                                <p>{patientsError}</p>
+                            </div>
+                        ) : apipatients.length === 0 ? (
+                            <div className="text-center text-slate-500 py-6">
+                                No patients found. Please add a new patient to get started.
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-slate-500 py-6">
-                                            No patients found. Please add a new patient to get started.
-                                        </TableCell>
+                                        <TableHead className="text-slate-600">Name</TableHead>
+                                        <TableHead className="text-slate-600">Age</TableHead>
+                                        <TableHead className="text-slate-600">Gender</TableHead>
+                                        <TableHead className="text-slate-600">Phone</TableHead>
+                                        <TableHead className="text-slate-600">Last Visit</TableHead>
+                                        <TableHead className="text-slate-600">Status</TableHead>
+                                        <TableHead className="text-right text-slate-600">Actions</TableHead>
                                     </TableRow>
-                                ) : (
-                                    apipatients.map((patient: Patient) => (
+                                </TableHeader>
+                                <TableBody>
+                                    {apipatients.map((patient: Patient) => (
                                         <TableRow key={patient._id} className="hover:bg-slate-50">
                                             <TableCell className="font-medium text-slate-900">{patient.fullName}</TableCell>
                                             <TableCell className="text-slate-600">{patient.age}</TableCell>
@@ -143,26 +132,19 @@ export default function index({ dashboardId, role }: PatientsProps) {
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
             </div>
             <ViewPatientDialog
-                patient={patients}
+                patient={patient}
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-            {/* <PatientForm
-                open={patientFormOpen}
-                onOpenChange={setPatientFormOpen}
-                mode={"edit"}
-                patient={patients}
-                onSave={handleSave}
-            /> */}
-        </ProtectedRoleGuard>
 
+        </ProtectedRoleGuard>
     )
 }

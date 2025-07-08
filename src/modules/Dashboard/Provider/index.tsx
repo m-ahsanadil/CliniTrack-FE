@@ -14,37 +14,26 @@ import { Badge } from "@/components/ui/badge"
 
 // Import form components
 import { getStatusBadgeVariant } from "@/src/constants"
-import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
-import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
 import { RoleGuard } from "@/components/role-guard"
 import { SetStateAction, useEffect, useState } from "react"
-import { useInvoiceFetcher } from "../billing/api/useInvoiceFetcher"
-import { useReportsFetcher } from "../reports/api/useReportsFetcher"
-import { usePatientsFetcher } from "../patients/api/usePatientsFetcher"
+
 // Import components
 import { ProviderProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/providers/page";
-import { ViewAppointmentDialog } from "../appointments/organisms/ViewAppointmentDialog";
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { useProviderFetcher } from "./api/useProviderFetcher"
 import { Provider } from "./api/types"
 import { ViewProviderDialog } from "./organisms/ViewProvidersDialog"
-import { deleteProvider, fetchAllProviders } from "./api/slice"
-import { ProviderForm } from "@/src/components/provider-form"
 import { UserRole } from "@/src/enum"
 import { useProvider } from "@/src/redux/providers/contexts/ProviderContext"
 
 
 export default function index({ dashboardId, role }: ProviderProps) {
     useProviderFetcher();
-    const dispatch = useAppDispatch()
     const { user } = useAppSelector(state => state.auth)
     const { handleAddProvider, handleDeleteProvider, handleEditProvider } = useProvider();
     const { providers: apiProvider } = useAppSelector(state => state.provider)
 
-    const [createProviderFormOpen, setCreateProviderFormOpen] = useState(false);
-    const [updateProviderFormOpen, setUpdateProviderFormOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<Provider | null>(null);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
 
@@ -156,22 +145,6 @@ export default function index({ dashboardId, role }: ProviderProps) {
                 isOpen={isViewOpen}
                 onClose={() => setIsViewOpen(false)}
             />
-            {/* <ProviderForm
-                open={updateProviderFormOpen}
-                provider={editingItem}
-                onOpenChange={setUpdateProviderFormOpen}
-                mode="edit"
-                onSave={handleProviderSaved}
-            />
-            <ProviderForm
-                open={createProviderFormOpen}
-                onOpenChange={setCreateProviderFormOpen}
-                mode="create"
-                onSave={(createdProvider) => {
-                    console.log("Created Provider:", createdProvider)
-                    // You can also show a toast here or refetch list
-                }}
-            /> */}
         </ProtectedRoleGuard>
     )
 }

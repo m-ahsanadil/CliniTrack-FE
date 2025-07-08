@@ -243,7 +243,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                     onBlur={formik.handleBlur}
                     className="bg-slate-700 border-slate-600 text-white"
                     placeholder="XXX-0001-3658-XXXX"
-                    readOnly={mode === 'edit'}
+                    readOnly
                     disabled
                     autoComplete="off"
                   />

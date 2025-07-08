@@ -325,8 +325,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="bg-slate-700 border-slate-600"
-                      placeholder="X-0001-3658-XXXX"
                       disabled={isLoading}
+                      placeholder="X-0001-3658-XXXX"
                     />
 
                   </div>
