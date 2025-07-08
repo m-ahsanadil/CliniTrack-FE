@@ -54,7 +54,23 @@ class ApiService {
                     baseURL: config.baseURL,
                     fullURL: `${config.baseURL}${config.url}`,
                     headers: config.headers,
+                    requestData: config.data,
+                    params: config.params,
+                    dataType: config.data instanceof FormData ? 'FormData' : typeof config.data,
                 });
+
+                // Special handling for FormData to see its contents
+                if (config.data instanceof FormData) {
+                    console.log('📎 FormData Contents:');
+                    for (let [key, value] of config.data.entries()) {
+                        console.log(`  ${key}:`, value);
+                    }
+                }
+
+                // For regular JSON data, pretty print it
+                if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+                    console.log('📤 Request Body (JSON):', JSON.stringify(config.data, null, 2));
+                }
 
                 return config;
             },
@@ -67,9 +83,7 @@ class ApiService {
         // Response interceptor for API calls
         this.axiosInstance.interceptors.response.use(
             (response: AxiosResponse) => {
-                if (process.env.NODE_ENV !== 'production') {
                     console.log(`📥 ${response.status} ${response.config.url}`, response.data);
-                }
                 return response
             },
             async (error: AxiosError) => {
@@ -202,7 +216,7 @@ class ApiService {
     async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         return this.handleRequest(() => this.axiosInstance.patch<T>(url, data, config));
     }
-    
+
     // Utility method to check if server is reachable
     async healthCheck(): Promise<boolean> {
         try {

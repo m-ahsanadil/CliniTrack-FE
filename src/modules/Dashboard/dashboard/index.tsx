@@ -436,14 +436,18 @@ import { QuickActionsSkeleton, RecentActivitySkeleton, Skeleton, StatCardSkeleto
 import { EmptyState } from './atoms/EmptyState';
 import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
+import { useAppointment } from '@/src/redux/providers/contexts/AppointmentContext';
 
 
 const Dashboard = ({ dashboardId, role }: DashboardProps) => {
     const { data, loading, error } = useDashboardData(role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN);
     const {
-        handleAddAppointment,
         handleAddInvoice,
     } = useGlobalUI()
+
+    const {
+        handleAddAppointment
+    } = useAppointment();
 
     const {
         handleAddPatient

@@ -64,10 +64,15 @@ interface ProviderFormProps {
 
 
 
-
 export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
     const dispatch = useAppDispatch();
     const { toast } = useToast();
+
+    // Fetch profile when component mounts
+    useEffect(() => {
+        dispatch(fetchProfile())
+    }, [dispatch])
+
     const { profile } = useAppSelector(state => state.profile)
 
     const initialProviderValues: ProviderFormValues = {
@@ -87,27 +92,18 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
         npiNumber: "",
         clinicAffiliation: "",
         status: ProviderStatus.ACTIVE,
-        createdBy: "",
+        createdBy: profile?.name || "",
         updatedBy: profile?.name || ""
     }
-
-    // Fetch profile when component mounts
-    useEffect(() => {
-        dispatch(fetchProfile())
-    }, [dispatch])
-
-
 
     // CONTEXT STATES
     const {
         isEditing,
-        setIsEditing,
         provider,
-        setProvider,
         handleSaveProvider,
-        setProviderFormOpen
     } = useProvider();
 
+    //REDUX STATES
     const {
         createError,
         createLoading,
@@ -163,6 +159,11 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
             });
         } catch (error) {
             actions.setSubmitting(false);
+            toast({
+                title: "Error",
+                description: errorMessage || "An error occurred while processing your request.",
+                variant: "destructive",
+            });
         }
     }
 
@@ -194,10 +195,13 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                         <User className="h-5 w-5" />
                         {mode === "create" ? "Add New Provider" : "Edit Provider"}
                     </DialogTitle>
+                    <p className="text-slate-400">
+                        {mode === 'create' ? "Fill in the details below to add a new provider to your system" : "Update the provider information using the form below"}
+                    </p>
+                    {errorMessage && (
+                        <p className="text-red-500 rounded-md py-3 text-center bg-red-300 text-sm">{errorMessage}</p>
+                    )}
                 </DialogHeader>
-                {errorMessage && (
-                    <p className="text-red-500 rounded-md py-3 text-center bg-red-300 text-sm">{errorMessage}</p>
-                )}
                 <form onSubmit={formik.handleSubmit} className="space-y-6">
                     {/* Provider Information Section */}
                     <Card className="bg-slate-800 border-slate-700 text-white">
@@ -553,11 +557,11 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                             Cancel
                         </Button>
                         <Button
-                            disabled={isLoading}
+                            disabled={formik.isSubmitting || isLoading}
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                            {isLoading ? (
+                            {formik.isSubmitting || isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     {mode === 'edit' ? 'Updating...' : 'Saving...'}

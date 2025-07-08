@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { FormEvent, useEffect, useState } from "react"
+import { act, FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -11,86 +11,138 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
-import { CalendarIcon, FileText } from "lucide-react"
-import { AppointmentPriorityValues, AppointmentStatusValues, AppointmentTypeValues, DepartmentNameValues } from "@/src/enum"
+import { CalendarIcon, FileText, Loader2 } from "lucide-react"
+import { AppointmentPriority, AppointmentPriorityValues, AppointmentStatus, AppointmentStatusValues, AppointmentType, AppointmentTypeValues, DepartmentNameValues } from "@/src/enum"
 import { Input } from "@/components/ui/input"
-import { AppointmentRequest } from "../modules/Dashboard/appointments/api/types"
-import { ProviderBasicInfo } from "../modules/Dashboard/Provider/api/types"
-import { PatientBasicInfo } from "../modules/Dashboard/patients/api/types"
-import { useAppDispatch } from "../redux/store/reduxHook"
-// import { fetchPatientBasicInfo } from "../modules/Dashboard/patients/api/slice"
-// import { fetchProviderBasicInfo } from "../modules/Dashboard/Provider/api/slice"
+import { Appointment, AppointmentRequest } from "../modules/Dashboard/appointments/api/types"
+import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
 import { updateAppointment } from "../modules/Dashboard/appointments/api/slice"
+import { useToast } from "@/hooks/use-toast"
+import { fetchPatientsName } from "../modules/Dashboard/patients/api/slice"
+import { fetchProvidersName } from "../modules/Dashboard/Provider/api/slice"
+import { useAppointment } from "../redux/providers/contexts/AppointmentContext"
+import { FormikHelpers, getIn, useFormik } from "formik"
+import { appointmentValidationSchema } from "../validation/schemas"
+import { generateId } from "../utils/idGenerator"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface AppointmentFormValues {
+  appointmentNumber: string;
+  patientId: string;
+  providerId: string;
+  departmentName: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  timeZone: string;
+  type: AppointmentType.CONSULTATION | AppointmentType.EMERGENCY | AppointmentType.FOLLOW_UP | AppointmentType.PROCEDURE;
+  priority: AppointmentPriority.HIGH | AppointmentPriority.LOW | AppointmentPriority.MEDIUM | AppointmentPriority.URGENT;
+  status: AppointmentStatus.CANCELLED | AppointmentStatus.COMPLETED | AppointmentStatus.NO_SHOW | AppointmentStatus.RESCHEDULED | AppointmentStatus.SCHEDULED;
+  location: {
+    facilityId: string;
+    facilityName: string;
+    roomNumber: string;
+    address: string;
+  };
+  reasonForVisit: string;
+  symptoms: string[];
+  notes: string;
+  createdBy: string;
+  updatedBy: string;
+}
 
 interface AppointmentFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  appointment?: any
-  mode: 'create' | 'edit'
-  onSave: (appointment: any) => void
-  patients?: any
-  providers?: any
 }
 
-export default function AppointmentForm({ open, onOpenChange, appointment, onSave, patients, providers, mode }: AppointmentFormProps) {
+const initialAppointmentalues: AppointmentFormValues = {
+  appointmentNumber: "",
+  patientId: "",
+  providerId: "",
+  departmentName: "",
+  appointmentDate: "",
+  startTime: "",
+  endTime: "",
+  duration: 0,
+  timeZone: "",
+  type: AppointmentType.CONSULTATION,
+  priority: AppointmentPriority.LOW,
+  status: AppointmentStatus.SCHEDULED,
+  location: {
+    facilityId: "",
+    facilityName: "",
+    roomNumber: "",
+    address: ""
+  },
+  reasonForVisit: "",
+  symptoms: [],
+  notes: "",
+  createdBy: "",
+  updatedBy: ""
+}
+export default function AppointmentForm({ open, onOpenChange }: AppointmentFormProps) {
   const dispatch = useAppDispatch();
+  const { toast } = useToast()
 
+  const { basicInfo: patientNames } = useAppSelector(state => state.patients)
+  const { basicInfo: DoctorNames } = useAppSelector(state => state.provider)
+
+
+  // Fetch profile when component mounts
   useEffect(() => {
-    {
-      // open &&
-      //   dispatch(fetchPatientBasicInfo())
-      // dispatch(fetchProviderBasicInfo())
+    if (open) {
+      if (!patientNames) {
+        dispatch(fetchPatientsName());
+      }
+      if (!DoctorNames) {
+        dispatch(fetchProvidersName());
+      }
     }
   }, [open, dispatch]);
 
-  const [formData, setFormData] = useState<AppointmentRequest>({
-    appointmentNumber: "",
-    patientId: "",
-    providerId: "",
-    departmentName: "",
-    appointmentDate: "",
-    startTime: "",
-    endTime: "",
-    duration: 30,
-    timeZone: "Asia/Riyadh",
-    type: "",
-    priority: "Medium",
-    status: "Scheduled",
-    location: {
-      facilityId: "",
-      facilityName: "",
-      roomNumber: "",
-      address: ""
-    },
-    reasonForVisit: "",
-    symptoms: [],
-    notes: "",
-    createdBy: "",
-    updatedBy: "",
-  })
+  console.log("Patient Names: ", patientNames);
+  console.log("Doctor Names: ", DoctorNames);
 
-  console.log(formData);
+  // CONTEXT STATES
+  const {
+    isEditing,
+    appointment,
+    handleSaveAppointment,
+  } = useAppointment();
 
+  //REDUX STATES
+  const {
+    appointments,
+    createError,
+    createLoading,
+    updateError,
+    createSuccess,
+    updateSuccess,
+    updateLoading,
+  } = useAppSelector(state => state.appointment)
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  // Determine mode based on editingItem
+  const mode = isEditing ? 'edit' : 'create';
+  const isLoading = isEditing ? updateLoading : createLoading;
+  const errorMessage = isEditing ? updateError : createError;
 
-  // Initialize form data based on mode
-  useEffect(() => {
+  const getInitialValues = useMemo((): AppointmentFormValues => {
     if (mode === 'edit' && appointment) {
-      // Edit mode: populate with existing appointment data
-      setFormData({
+      return {
         appointmentNumber: appointment.appointmentNumber || "",
-        patientId: appointment.patientId || "",
-        providerId: appointment.providerId || "",
+        patientId: appointment.patientId?._id || "",
+        providerId: appointment.providerId?._id || "",
         departmentName: appointment.departmentName || "",
         appointmentDate: appointment.appointmentDate || "",
         startTime: appointment.startTime || "",
         endTime: appointment.endTime || "",
-        duration: appointment.duration || 30,
-        timeZone: appointment.timeZone || "Asia/Riyadh",
-        type: appointment.type || "",
-        priority: appointment.priority || "Medium",
-        status: appointment.status || "Scheduled",
+        duration: appointment.duration || 0,
+        timeZone: appointment.timeZone || "",
+        type: appointment.type || AppointmentType.CONSULTATION,
+        priority: appointment.priority || AppointmentPriority.LOW,
+        status: appointment.status || AppointmentStatus.SCHEDULED,
         location: {
           facilityId: appointment.location?.facilityId || "",
           facilityName: appointment.location?.facilityName || "",
@@ -101,253 +153,69 @@ export default function AppointmentForm({ open, onOpenChange, appointment, onSav
         symptoms: appointment.symptoms || [],
         notes: appointment.notes || "",
         createdBy: appointment.createdBy || "",
-        updatedBy: appointment.updatedBy || "",
-        // reminderSent: appointment.reminderSent || false,
-      })
-      setSelectedDate(appointment.appointmentDate ? new Date(appointment.appointmentDate) : undefined)
-    } else if (mode === 'create') {
-      // Create mode: reset to default values
-      const defaultFormData = {
-        appointmentNumber: "", // Will be auto-generated
-        patientId: "",
-        providerId: "",
-        departmentName: "",
-        appointmentDate: "",
-        startTime: "",
-        endTime: "",
-        duration: 30,
-        timeZone: "Asia/Riyadh",
-        type: "",
-        priority: "Medium",
-        status: "Scheduled",
-        location: {
-          facilityId: "",
-          facilityName: "",
-          roomNumber: "",
-          address: ""
-        },
-        reasonForVisit: "",
-        symptoms: [],
-        notes: "",
-        createdBy: "system", // Assuming you have current user context
-        updatedBy: "system",
+        updatedBy: appointment.updatedBy || ""
       }
-      setFormData(defaultFormData)
-      setSelectedDate(undefined)
     }
-  }, [mode, appointment, open])
+    return initialAppointmentalues;
+  }, [mode, appointment]);
 
-  // Helper function to calculate end time based on start time and duration
-  const calculateEndTime = (startTime: string, durationMinutes: number) => {
-    if (!startTime) return ""
 
-    // Parse start time (assuming format like "10:00 AM")
-    const [time, period] = startTime.split(' ')
-    const [hours, minutes] = time.split(':').map(Number)
-
-    // Convert to 24-hour format
-    let hour24 = hours
-    if (period === 'PM' && hours !== 12) hour24 += 12
-    if (period === 'AM' && hours === 12) hour24 = 0
-
-    // Add duration
-    const startDate = new Date()
-    startDate.setHours(hour24, minutes, 0, 0)
-    startDate.setMinutes(startDate.getMinutes() + durationMinutes)
-
-    // Convert back to 12-hour format
-    const endHour = startDate.getHours()
-    const endMinute = startDate.getMinutes()
-    const endPeriod = endHour >= 12 ? 'PM' : 'AM'
-    const displayHour = endHour === 0 ? 12 : endHour > 12 ? endHour - 12 : endHour
-
-    return `${displayHour}:${endMinute.toString().padStart(2, '0')} ${endPeriod}`
-  }
-
-  // Update end time when start time or duration changes
-  useEffect(() => {
-    if (formData.startTime && formData.duration) {
-      const calculatedEndTime = calculateEndTime(formData.startTime, formData.duration)
-      setFormData(prev => ({ ...prev, endTime: calculatedEndTime }))
-    }
-  }, [formData.startTime, formData.duration])
-
-  // Update appointment date when selectedDate changes
-  useEffect(() => {
-    if (selectedDate) {
-      setFormData(prev => ({
-        ...prev,
-        appointmentDate: selectedDate.toISOString()
-      }))
-    }
-  }, [selectedDate])
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-
-    // Enhanced validation for required fields
-    const requiredFields = [
-      { field: formData.patientId, name: 'Patient' },
-      { field: formData.providerId, name: 'Provider/Doctor' },
-      { field: formData.departmentName, name: 'Department' },
-      { field: selectedDate, name: 'Appointment Date' },
-      { field: formData.startTime, name: 'Start Time' },
-      { field: formData.endTime, name: 'End Time' },
-      { field: formData.type, name: 'Appointment Type' },
-      { field: formData.priority, name: 'Priority' },
-      { field: formData.location.facilityName, name: 'Facility Name' },
-      { field: formData.reasonForVisit, name: 'Reason for Visit' }
-    ]
-
-    const missingFields = requiredFields.filter(({ field }) => !field)
-
-    if (missingFields.length > 0) {
-      const fieldNames = missingFields.map(({ name }) => name).join(', ')
-      alert(`Please fill in all required fields: ${fieldNames}`)
-      return
-    }
-
-    // Get selected patient and provider info for additional data
-    const selectedPatient = patients?.find((p: PatientBasicInfo) => p._id.toString() === formData.patientId)
-    const selectedProvider = providers?.find((p: ProviderBasicInfo) => p._id.toString() === formData.providerId)
-
-    const appointmentData = {
-      ...formData,
-      appointmentNumber: mode === 'edit' ? formData.appointmentNumber : `AP-${Date.now().toString().slice(-8)}`, // Generate appointment number for new appointments
-      appointmentDate: selectedDate ? selectedDate.toISOString() : formData.appointmentDate,
-      updatedBy: "system",
-      // Add any computed fields
-      patientName: selectedPatient?.name, // For display purposes
-      providerName: selectedProvider?.name, // For display purposes
-      id: mode === 'edit' ? appointment?._id : Date.now(),
-    }
+  const handleAppointmentForm = useCallback(async (values: AppointmentFormValues, actions: FormikHelpers<AppointmentFormValues>) => {
+    console.log('🆔 ID Validation:', {
+      patientId: values.patientId,
+      providerId: values.providerId,
+      selectedPatient: patientNames?.find(p => p._id === values.patientId),
+      selectedProvider: DoctorNames?.find(d => d._id === values.providerId)
+    });
 
     try {
-      if (mode === 'edit' && appointment?._id) {
-        // Dispatch update appointment action
-        const resultAction = await dispatch(updateAppointment({
-          id: appointment._id,
-          appointmentData: appointmentData
-        }));
+      handleSaveAppointment(values, () => {
+        actions.resetForm();
+        actions.setSubmitting(false);
+        onOpenChange(false);
+        toast({
+          title: isEditing ? "Appointment Updated" : "Appointment Created",
+          description: isEditing ? "Appointment updated successfully!" : "Appointment created successfully!",
+        });
+      })
 
-        // Check if the update was successful
-        if (updateAppointment.fulfilled.match(resultAction)) {
-          console.log('Appointment updated successfully:', resultAction.payload);
-          onSave(resultAction.payload); // Pass the updated appointment to parent
-        } else {
-          console.error('Failed to update appointment:', resultAction.error);
-          alert('Failed to update appointment. Please try again.');
-          return;
-        }
-      } else if (mode === 'create') {
-        // Dispatch create appointment action
-        // const resultAction = await dispatch(createAppointment(appointmentData));
-
-        // // Check if the creation was successful
-        // if (createAppointment.fulfilled.match(resultAction)) {
-        //   console.log('Appointment created successfully:', resultAction.payload);
-        //   onSave(resultAction.payload); // Pass the new appointment to parent
-        // } else {
-        //   console.error('Failed to create appointment:', resultAction.error);
-        //   alert('Failed to create appointment. Please try again.');
-        //   return;
-        // }
-      }
-
-      // Close the dialog only if the operation was successful
-      onOpenChange(false)
     } catch (error) {
-      console.error('Error processing appointment:', error);
-      alert('An error occurred while processing the appointment. Please try again.');
+      actions.setSubmitting(false);
+      toast({
+        title: "Error",
+        description: errorMessage || "An error occurred while processing your request.",
+        variant: "destructive",
+      });
     }
-  }
+  }, [handleSaveAppointment, isEditing, onOpenChange, toast, errorMessage, patientNames, DoctorNames]);
 
-  //   onSave(appointmentData)
-  //   onOpenChange(false)
-  // }
 
-  const handleReset = () => {
-    if (mode === 'create') {
-      const defaultFormData = {
-        appointmentNumber: "",
-        patientId: "",
-        providerId: "",
-        departmentName: "",
-        appointmentDate: "",
-        startTime: "",
-        endTime: "",
-        duration: 30,
-        timeZone: "Asia/Riyadh",
-        type: "",
-        priority: "Medium",
-        status: "Scheduled",
-        location: {
-          facilityId: "",
-          facilityName: "",
-          roomNumber: "",
-          address: ""
-        },
-        reasonForVisit: "",
-        symptoms: [],
-        notes: "",
-        createdBy: "system",
-        updatedBy: "system",
-        reminderSent: false,
-      }
-      setFormData(defaultFormData)
-      setSelectedDate(undefined)
-    }
-  }
+  const formik = useFormik({
+    initialValues: getInitialValues,
+    validationSchema: appointmentValidationSchema,
+    onSubmit: handleAppointmentForm,
+    enableReinitialize: true,
+  });
 
-  // Helper function to validate time format and logic
-  const validateTimeSlots = (startTime: string, endTime: string) => {
-    if (!startTime || !endTime) return true // Skip validation if times not set
-
-    // Parse times and compare
-    const parseTime = (timeStr: string) => {
-      const [time, period] = timeStr.split(' ')
-      const [hours, minutes] = time.split(':').map(Number)
-      let hour24 = hours
-      if (period === 'PM' && hours !== 12) hour24 += 12
-      if (period === 'AM' && hours === 12) hour24 = 0
-      return hour24 * 60 + minutes // Return total minutes
-    }
-
-    return parseTime(startTime) < parseTime(endTime)
-  }
-
-  // Additional validation effect
-  useEffect(() => {
-    if (formData.startTime && formData.endTime) {
-      if (!validateTimeSlots(formData.startTime, formData.endTime)) {
-        console.warn('End time should be after start time')
-      }
-    }
-  }, [formData.startTime, formData.endTime])
-
-  const timeSlots = [
+  const timeSlots = useMemo(() => [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
     "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
     "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
     "05:00 PM", "05:30 PM",
-  ]
+  ], []);
 
-  const doctors = [
-    "Dr. Smith", "Dr. Johnson", "Dr. Brown", "Dr. Wilson", "Dr. Davis",
-    "Dr. Miller", "Dr. Garcia", "Dr. Rodriguez", "Dr. Martinez",
-  ]
+  const handleGenerateAppointmentId = useCallback(() => {
+    const newId = generateId({ prefix: "App", suffix: "Patient" })
+    formik.setFieldValue('appointmentNumber', newId)
+  }, [formik]);
 
-  const appointmentTypes = [
-    "Consultation", "Follow-up", "Check-up", "Treatment", "Emergency"
-  ]
 
-  const durations = [
-    "15 minutes", "30 minutes", "45 minutes", "60 minutes", "90 minutes"
-  ]
-
-  const statuses = [
-    "Scheduled", "Confirmed", "Pending", "Cancelled", "Completed"
-  ]
+  // Function to get field error
+  const getFieldError = (fieldName: string) => {
+    const touched = getIn(formik.touched, fieldName);
+    const error = getIn(formik.errors, fieldName);
+    return touched && error ? error : null;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -367,386 +235,509 @@ export default function AppointmentForm({ open, onOpenChange, appointment, onSav
             )}
           </DialogTitle>
           <p className="text-slate-400">
-            {mode === 'create'
-              ? "Fill in the details to create a new appointment"
-              : "Update the appointment information below"
-            }
+            {mode === 'create' ? "Fill in the details to create a new appointment" : "Update the appointment information below"}
           </p>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Appointment Number (Auto-generated for create mode) */}
-          {mode === 'edit' && (
-            <div className="space-y-2">
-              <Label htmlFor="appointmentNumber">Appointment Number</Label>
-              <Input
-                id="appointmentNumber"
-                value={formData.appointmentNumber}
-                readOnly
-                className="bg-slate-600 border-slate-500 text-slate-300"
-              />
-            </div>
+          {errorMessage && !isLoading && (
+            <p className="text-sm text-red-600 mb-2">{errorMessage}</p>
           )}
-
-          {/* Patient and Provider Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="patient">Patient *</Label>
-              <Select
-                value={formData.patientId}
-                onValueChange={(value) => setFormData({ ...formData, patientId: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients?.map((patient: PatientBasicInfo) => (
-                    <SelectItem key={patient._id} value={patient._id.toString()}>
-                      {patient.fullName} - {patient.patientId}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="provider">Provider/Doctor *</Label>
-              <Select
-                value={formData.providerId}
-                onValueChange={(value) => setFormData({ ...formData, providerId: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers?.map((provider: ProviderBasicInfo) => (
-                    <SelectItem key={provider._id} value={provider._id.toString()}>
-                      {provider.name} - {provider.specialty}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Department */}
-          <div className="space-y-2">
-            <Label htmlFor="department">Department *</Label>
-            <Select
-              value={formData.departmentName}
-              onValueChange={(value) => setFormData({ ...formData, departmentName: value })}
-            >
-              <SelectTrigger className="bg-slate-700 border-slate-600">
-                <SelectValue placeholder="Select department" />
-              </SelectTrigger>
-              <SelectContent>
-                {DepartmentNameValues.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date and Time */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Appointment Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal bg-slate-700 border-slate-600"
+        </DialogHeader>
+        <form onSubmit={formik.handleSubmit} className="space-y-6">
+          <Card className="bg-slate-800 border-slate-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-white">Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Appointment Number */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="appointmentNumber" className="text-slate-200">
+                    Appointment Number
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="appointmentNumber"
+                      name="appointmentNumber"
+                      value={formik.values.appointmentNumber}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Enter appointment number"
+                      readOnly={mode === 'edit'}
+                      autoComplete="off"
+                    />
+                    {mode === 'create' && (
+                      <Button
+                        type="button"
+                        onClick={handleGenerateAppointmentId}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 whitespace-nowrap"
+                        disabled={isLoading}
+                      >
+                        Generate ID
+                      </Button>
+                    )}
+                  </div>
+                  {getFieldError('appointmentNumber') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentNumber')}</p>
+                  )}
+                </div>
+                {/* Department */}
+                <div>
+                  <Label htmlFor="departmentName" className="text-slate-200">
+                    Department
+                  </Label>
+                  <Select
+                    value={formik.values.departmentName}
+                    onValueChange={(value) => formik.setFieldValue('departmentName', value)}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    initialFocus
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {DepartmentNameValues.map((dept) => (
+                        <SelectItem key={dept} value={dept} className="text-white">
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('departmentName') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('departmentName')}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Patient and Provider Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Patient Selection */}
+                <div>
+                  <Label htmlFor="patientId" className="text-slate-200">
+                    Patient Name
+                  </Label>
+                  <Select
+                    value={formik.values.patientId}
+                    onValueChange={(value) => formik.setFieldValue('patientId', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {patientNames?.map((patient) => (
+                        <SelectItem key={patient._id} value={patient._id} className="text-white">
+                          {patient.fullName} ({patient.patientId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('patientId') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('patientId')}</p>
+                  )}
+                </div>
+
+                {/* Provider Selection */}
+                <div>
+                  <Label htmlFor="providerId" className="text-slate-200">
+                    Doctor Name
+                  </Label>
+                  <Select
+                    value={formik.values.providerId}
+                    onValueChange={(value) => formik.setFieldValue('providerId', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select doctor" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {DoctorNames?.map((doctor) => (
+                        <SelectItem key={doctor._id} value={doctor._id} className="text-white">
+                          {doctor.name} ({doctor.providerId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('providerId') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('providerId')}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Appointment Type, Priority, Status */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="type" className="text-slate-200">
+                    Appointment Type
+                  </Label>
+                  <Select
+                    value={formik.values.type}
+                    onValueChange={(value) => formik.setFieldValue('type', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentTypeValues.map((type) => (
+                        <SelectItem key={type} value={type} className="text-white">
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('type') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('type')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="priority" className="text-slate-200">
+                    Priority
+                  </Label>
+                  <Select
+                    value={formik.values.priority}
+                    onValueChange={(value) => formik.setFieldValue('priority', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentPriorityValues.map((priority) => (
+                        <SelectItem key={priority} value={priority} className="text-white">
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('priority') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('priority')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="status" className="text-slate-200">
+                    Status
+                  </Label>
+                  <Select
+                    value={formik.values.status}
+                    onValueChange={(value) => formik.setFieldValue('status', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {AppointmentStatusValues.map((status) => (
+                        <SelectItem key={status} value={status} className="text-white">
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('status') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('status')}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* // Card 2: Schedule Information */}
+          <Card className="bg-slate-800 border-slate-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-white">Schedule Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Appointment Date */}
+              <div>
+                <Label htmlFor="appointmentDate" className="text-slate-200">
+                  Appointment Date
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formik.values.appointmentDate
+                        ? format(new Date(formik.values.appointmentDate), "PPP")
+                        : "Pick a date"
+                      }
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
+                    <Calendar
+                      mode="single"
+                      selected={formik.values.appointmentDate ? new Date(formik.values.appointmentDate) : undefined}
+                      onSelect={(date) => formik.setFieldValue('appointmentDate', date?.toISOString().split('T')[0])}
+                      initialFocus
+                      className="text-white"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {getFieldError('appointmentDate') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('appointmentDate')}</p>
+                )}
+              </div>
+
+              {/* Time Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="startTime" className="text-slate-200">
+                    Start Time
+                  </Label>
+                  <Select
+                    value={formik.values.startTime}
+                    onValueChange={(value) => formik.setFieldValue('startTime', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select start time" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time} className="text-white">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('startTime') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('startTime')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="endTime" className="text-slate-200">
+                    End Time
+                  </Label>
+                  <Select
+                    value={formik.values.endTime}
+                    onValueChange={(value) => formik.setFieldValue('endTime', value)}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time} className="text-white">
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('endTime') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('endTime')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="duration" className="text-slate-200">
+                    Duration (minutes)
+                  </Label>
+                  <Input
+                    id="duration"
+                    name="duration"
+                    type="number"
+                    value={formik.values.duration}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="30"
                   />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="startTime">Start Time *</Label>
-              <Select
-                value={formData.startTime}
-                onValueChange={(value) => setFormData({ ...formData, startTime: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select start time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="endTime">End Time *</Label>
-              <Select
-                value={formData.endTime}
-                onValueChange={(value) => setFormData({ ...formData, endTime: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select end time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Duration and Time Zone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes) *</Label>
-              <Select
-                value={formData.duration?.toString()}
-                onValueChange={(value) => setFormData({ ...formData, duration: parseInt(value) })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="45">45 minutes</SelectItem>
-                  <SelectItem value="60">60 minutes</SelectItem>
-                  <SelectItem value="90">90 minutes</SelectItem>
-                  <SelectItem value="120">120 minutes</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timeZone">Time Zone</Label>
-              <Select
-                value={formData.timeZone}
-                onValueChange={(value) => setFormData({ ...formData, timeZone: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select time zone" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Asia/Riyadh">Asia/Riyadh (GMT+3)</SelectItem>
-                  <SelectItem value="Asia/Dubai">Asia/Dubai (GMT+4)</SelectItem>
-                  <SelectItem value="Asia/Kuwait">Asia/Kuwait (GMT+3)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Type, Priority, and Status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Appointment Type *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AppointmentTypeValues.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority *</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AppointmentPriorityValues.map((priority) => (
-                    <SelectItem key={priority} value={priority}>
-                      {priority}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger className="bg-slate-700 border-slate-600">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AppointmentStatusValues.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Location Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-white">Location Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="facilityId">Facility ID</Label>
-                <Input
-                  id="facilityId"
-                  value={formData.location?.facilityId || ''}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    location: { ...formData.location, facilityId: e.target.value }
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="e.g., FAC-001"
-                />
+                  {getFieldError('duration') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('duration')}</p>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="facilityName">Facility Name *</Label>
+              {/* Timezone */}
+              <div>
+                <Label htmlFor="timeZone" className="text-slate-200">
+                  Time Zone
+                </Label>
                 <Input
-                  id="facilityName"
-                  value={formData.location?.facilityName || ''}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    location: { ...formData.location, facilityName: e.target.value }
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="e.g., Main Clinic"
+                  id="timeZone"
+                  name="timeZone"
+                  value={formik.values.timeZone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="UTC-5"
                 />
+                {getFieldError('timeZone') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('timeZone')}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* // Card 3: Location & Additional Information */}
+          <Card className="bg-slate-800 border-slate-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-white">Location & Additional Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Location Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="location.facilityName" className="text-slate-200">
+                    Facility Name
+                  </Label>
+                  <Input
+                    id="location.facilityName"
+                    name="location.facilityName"
+                    value={formik.values.location.facilityName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter facility name"
+                  />
+                  {getFieldError('location.facilityName') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('location.facilityName')}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="location.roomNumber" className="text-slate-200">
+                    Room Number
+                  </Label>
+                  <Input
+                    id="location.roomNumber"
+                    name="location.roomNumber"
+                    value={formik.values.location.roomNumber}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Enter room number"
+                  />
+                  {getFieldError('location.roomNumber') && (
+                    <p className="text-red-400 text-sm mt-1">{getFieldError('location.roomNumber')}</p>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="roomNumber">Room Number</Label>
+              <div>
+                <Label htmlFor="location.address" className="text-slate-200">
+                  Address
+                </Label>
                 <Input
-                  id="roomNumber"
-                  value={formData.location?.roomNumber || ''}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    location: { ...formData.location, roomNumber: e.target.value }
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="e.g., A-101"
+                  id="location.address"
+                  name="location.address"
+                  value={formik.values.location.address}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Enter facility address"
                 />
+                {getFieldError('location.address') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('location.address')}</p>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  value={formData.location?.address || ''}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    location: { ...formData.location, address: e.target.value }
-                  })}
-                  className="bg-slate-700 border-slate-600"
-                  placeholder="Full address"
+              {/* Reason for Visit */}
+              <div>
+                <Label htmlFor="reasonForVisit" className="text-slate-200">
+                  Reason for Visit
+                </Label>
+                <Textarea
+                  id="reasonForVisit"
+                  name="reasonForVisit"
+                  value={formik.values.reasonForVisit}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Enter reason for visit"
+                  rows={3}
                 />
+                {getFieldError('reasonForVisit') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('reasonForVisit')}</p>
+                )}
               </div>
-            </div>
-          </div>
 
-          {/* Reason and Symptoms */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reasonForVisit">Reason for Visit *</Label>
-              <Input
-                id="reasonForVisit"
-                value={formData.reasonForVisit}
-                onChange={(e) => setFormData({ ...formData, reasonForVisit: e.target.value })}
-                className="bg-slate-700 border-slate-600"
-                placeholder="e.g., Routine check-up"
-              />
-            </div>
+              {/* Notes */}
+              <div>
+                <Label htmlFor="notes" className="text-slate-200">
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={formik.values.notes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="Additional notes"
+                  rows={3}
+                />
+                {getFieldError('notes') && (
+                  <p className="text-red-400 text-sm mt-1">{getFieldError('notes')}</p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="symptoms">Symptoms</Label>
-              <Input
-                id="symptoms"
-                value={formData.symptoms?.join(', ') || ''}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  symptoms: e.target.value.split(',').map(s => s.trim()).filter(s => s)
-                })}
-                className="bg-slate-700 border-slate-600"
-                placeholder="Enter symptoms separated by commas (e.g., Fatigue, Headache)"
-              />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+          {/* Metadata Section */}
+          <Card className="bg-slate-800 border-slate-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-white">Metadata</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="createdBy">Created By *</Label>
+                <Input
+                  id="createdBy"
+                  name="createdBy"
+                  value={formik.values.createdBy}
+                  disabled // <-- DISABLED
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Auto-filled"
+                />
+                {getFieldError('createdBy') && (
+                  <p className="text-red-500 text-sm">{formik.errors.createdBy}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="updatedBy">Updated By *</Label>
+                <Input
+                  id="updatedBy"
+                  name="updatedBy"
+                  value={formik.values.updatedBy}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  disabled={isLoading}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Enter updater name"
+                />
+                {getFieldError('updatedBy') && (
+                  <p className="text-red-500 text-sm">{formik.errors.updatedBy}</p>
+                )}
+              </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="bg-slate-700 border-slate-600"
-              placeholder="Additional notes or special instructions"
-              rows={3}
-            />
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Action Buttons */}
-          <div className="flex justify-between pt-4">
-            <div>
-              {mode === 'create' && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleReset}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
-                  Reset Form
-                </Button>
+
+          {/* Submit Button */}
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={formik.isSubmitting || isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {formik.isSubmitting || isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === 'create' ? 'Creating...' : 'Updating...'}
+                </>
+              ) : (
+                <>
+                  {mode === 'create' ? 'Create Appointment' : 'Update Appointment'}
+                </>
               )}
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={handleSubmit}
-              >
-                {mode === 'create' ? "Schedule Appointment" : "Update Appointment"}
-              </Button>
-            </div>
+            </Button>
           </div>
         </form>
       </DialogContent>

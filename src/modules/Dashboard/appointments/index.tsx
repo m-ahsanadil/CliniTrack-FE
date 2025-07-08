@@ -26,19 +26,12 @@ import { deleteAppointment, fetchAllAppointments } from "./api/slice"
 import AppointmentForm from "@/src/components/appointment-form"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
+import { useAppointment } from "@/src/redux/providers/contexts/AppointmentContext"
 
 export default function index({ dashboardId, role }: AppointmentProps) {
     const dispatch = useAppDispatch();
     useAppointmentsFetcher()
 
-    // FIXED: Local state management
-    const [updateAppointmentFormOpen, setUpdateAppointmentFormOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<Appointment | null>(null);
-    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-    const [isViewOpen, setIsViewOpen] = useState(false);
-
-    // FIXED: Destructure Redux state properly
-    const { handleAddAppointment } = useGlobalUI();
     const {
         updateError,
         updateLoading,
@@ -46,50 +39,24 @@ export default function index({ dashboardId, role }: AppointmentProps) {
         loading: appointmentsLoading,
         error: appointmentsError,
         count: appointmentsCount
-
     } = useAppSelector(state => state.appointment);
 
-    // FIXED: Proper type for the parameter
-    // const handleViewAppointment = (appointment: Appointment) => {
-    //     setSelectedAppointment(appointment);
-    //     setIsViewOpen(true);
-    // }
+    const {
+        handleAddAppointment,
+        handleDeleteAppointment,
+        handleCancelAppointment,
+        handleEditAppointment,
+        handleRescheduleAppointment,
+    } = useAppointment();
 
-    // FIXED: Better error handling and loading state management
-    // const handleDeleteAppointment = async (appointmentId: string) => {
-    //     await dispatch(deleteAppointment(appointmentId)).unwrap();
-    //     dispatch(fetchAllAppointments());
-    // }
 
-    // FIXED: Handle view dialog close properly
-    // const handleCloseViewDialog = () => {
-    //     setIsViewOpen(false);
-    //     setSelectedAppointment(null);
-    // }
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
 
-    const handleEditAppointment = (appointment: Appointment) => {
-        console.log('Editing appointment:', appointment);
-        setEditingItem(appointment);
-        setUpdateAppointmentFormOpen(true);
-    };
-
-    const handleCloseEditForm = () => {
-        setUpdateAppointmentFormOpen(false);
-        setEditingItem(null);
-    };
 
     const handleViewAppointment = (appointment: Appointment) => {
         setSelectedAppointment(appointment);
         setIsViewOpen(true);
-    }
-
-    const handleDeleteAppointment = async (appointmentId: string) => {
-        try {
-            await dispatch(deleteAppointment(appointmentId)).unwrap();
-            await dispatch(fetchAllAppointments());
-        } catch (error) {
-            console.error('Error deleting appointment:', error);
-        }
     }
 
     const handleCloseViewDialog = () => {
@@ -97,29 +64,8 @@ export default function index({ dashboardId, role }: AppointmentProps) {
         setSelectedAppointment(null);
     }
 
-    const handleUpdatedAppointment = async (updatedAppointment: Appointment) => {
-        try {
-            // Close the form
-            setUpdateAppointmentFormOpen(false);
-
-            // Clear the editing item
-            setEditingItem(null);
-
-            // Refresh the appointments list to show updated data
-            await dispatch(fetchAllAppointments());
-
-            // Optional: Show success message
-            console.log('Appointment updated successfully:', updatedAppointment);
-
-        } catch (error) {
-            console.error('Error handling updated appointment:', error);
-            // Optional: Show error message to user
-        }
-    };
-
     return (
         <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
-
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -205,13 +151,6 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                 appointment={selectedAppointment}
                 isOpen={isViewOpen}
                 onClose={handleCloseViewDialog}
-            />
-            <AppointmentForm
-                open={updateAppointmentFormOpen}
-                appointment={editingItem}
-                onOpenChange={handleCloseEditForm}
-                mode={"edit"}
-                onSave={handleUpdatedAppointment}
             />
         </ProtectedRoleGuard>
     )

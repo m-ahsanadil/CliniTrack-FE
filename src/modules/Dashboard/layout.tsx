@@ -19,6 +19,7 @@ import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordCo
 import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 import { useProvider } from '@/src/redux/providers/contexts/ProviderContext';
 import { ProviderForm } from '@/src/components/provider-form';
+import { useAppointment } from '@/src/redux/providers/contexts/AppointmentContext';
 // import { notFound } from 'next/navigation';
 
 
@@ -39,7 +40,6 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         appointments,
         invoices,
         // patientFormOpen, setPatientFormOpen,
-        appointmentFormOpen, setAppointmentFormOpen,
         invoiceFormOpen, setInvoiceFormOpen,
         reportsModalOpen, setReportsModalOpen,
         calendarViewOpen, setCalendarViewOpen,
@@ -61,6 +61,11 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         providerFormOpen,
         setProviderFormOpen,
     } = useProvider()
+
+    const {
+        appointmentFormOpen,
+        setAppointmentFormOpen,
+    } = useAppointment();
 
     const {
         setPatientFormOpen,
@@ -120,16 +125,12 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                         onOpenChange={setProviderFormOpen}
                     />
                 )}
-
-                <AppointmentForm
-                    open={appointmentFormOpen}
-                    onOpenChange={setAppointmentFormOpen}
-                    appointment={editingItem}
-                    onSave={handleSaveAppointment}
-                    patients={patientBasicInfo}
-                    providers={providerBasicInfo}
-                    mode={'create'}
-                />
+                {appointmentFormOpen && (
+                    <AppointmentForm
+                        open={appointmentFormOpen}
+                        onOpenChange={setAppointmentFormOpen}
+                    />
+                )}
 
 
 

@@ -5,6 +5,7 @@ import { GlobalUIProvider } from "./GlobalUIContext"
 import { MedicalRecordProvider } from "./MedicalRecordContext";
 import { PatientProvider } from "./PatientContext";
 import { DoctorProvider } from "./ProviderContext";
+import { AppointmentProvider } from "./AppointmentContext";
 
 
 interface ContextWrapperProps {
@@ -17,7 +18,9 @@ export const ContextWrapper: FC<ContextWrapperProps> = ({ children }) => {
             <PatientProvider>
                 <DoctorProvider>
                     <MedicalRecordProvider>
-                        {children}
+                        <AppointmentProvider>
+                            {children}
+                        </AppointmentProvider>
                     </MedicalRecordProvider>
                 </DoctorProvider>
             </PatientProvider>
