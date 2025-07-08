@@ -31,7 +31,7 @@ import { generateId } from "../utils/idGenerator"
 import { providerValidationSchema } from "../validation/schemas"
 import { useProvider } from "../redux/providers/contexts/ProviderContext"
 import { useToast } from "@/hooks/use-toast"
-import { FormikHelpers, useFormik } from "formik"
+import { FormikHelpers, getIn, useFormik } from "formik"
 import { fetchProfile } from "../modules/Authentication/profile/api/slice"
 
 
@@ -179,13 +179,19 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
         formik.setFieldValue('providerId', newId)
     }
     // Helper function to get field error
+    // const getFieldError = (fieldName: string) => {
+    //     return formik.touched[fieldName as keyof ProviderFormValues] && formik.errors[fieldName as keyof ProviderFormValues]
+    // }
+
+    // const getNestedFieldError = (section: string, field: string) =>
+    //     (formik.touched as any)[section]?.[field] && (formik.errors as any)[section]?.[field];
+
+    // Function to get field error
     const getFieldError = (fieldName: string) => {
-        return formik.touched[fieldName as keyof ProviderFormValues] && formik.errors[fieldName as keyof ProviderFormValues]
-    }
-
-    const getNestedFieldError = (section: string, field: string) =>
-        (formik.touched as any)[section]?.[field] && (formik.errors as any)[section]?.[field];
-
+        const touched = getIn(formik.touched, fieldName);
+        const error = getIn(formik.errors, fieldName);
+        return touched && error ? error : null;
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -431,8 +437,8 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                                     placeholder="123 Main St"
                                     disabled={isLoading}
                                 />
-                                {formik.touched.address?.street && formik.errors.address?.street && (
-                                    <p className="text-red-500 text-sm">{formik.errors.address.street}</p>
+                                {getFieldError('address.street') && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError('address.street')}</p>
                                 )}
                             </div>
 
@@ -448,8 +454,8 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                                     placeholder="New York"
                                     disabled={isLoading}
                                 />
-                                {getNestedFieldError("address", "city") && (
-                                    <p className="text-red-500 text-sm">{formik.errors.address?.city}</p>
+                                {getFieldError('address.city') && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError('address.city')}</p>
                                 )}
                             </div>
 
@@ -465,8 +471,8 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                                     placeholder="NY"
                                     disabled={isLoading}
                                 />
-                                {formik.touched.address?.state && formik.errors.address?.state && (
-                                    <p className="text-red-500 text-sm">{formik.errors.address.state}</p>
+                                {getFieldError('address.state') && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError('address.state')}</p>
                                 )}
                             </div>
 
@@ -482,8 +488,8 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                                     placeholder="10001"
                                     disabled={isLoading}
                                 />
-                                {formik.touched.address?.zipCode && formik.errors.address?.zipCode && (
-                                    <p className="text-red-500 text-sm">{formik.errors.address.zipCode}</p>
+                                {getFieldError('address.zipCode') && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError('address.zipCode')}</p>
                                 )}
                             </div>
 
@@ -499,8 +505,8 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                                     placeholder="USA"
                                     disabled={isLoading}
                                 />
-                                {formik.touched.address?.country && formik.errors.address?.country && (
-                                    <p className="text-red-500 text-sm">{formik.errors.address.country}</p>
+                                {getFieldError('address.country') && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError('address.country')}</p>
                                 )}
                             </div>
 
@@ -561,7 +567,7 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
                             type="submit"
                             className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                            {formik.isSubmitting || isLoading ? (
+                            {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     {mode === 'edit' ? 'Updating...' : 'Saving...'}

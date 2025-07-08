@@ -727,7 +727,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
               disabled={formik.isSubmitting || isLoading}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {formik.isSubmitting || isLoading ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {mode === 'create' ? 'Creating...' : 'Updating...'}
