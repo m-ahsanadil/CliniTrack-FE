@@ -5,7 +5,7 @@ CliniTrack is a responsive and scalable medical dashboard system built for clini
 
 ## 🔗 Live Demo
 
-[Coming Soon]
+[clini-track.ahsanadil.com/](https://clini-track.ahsanadil.com/)
 
 ## 🧩 Features
 
