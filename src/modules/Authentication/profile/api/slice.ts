@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { profileApi } from "./api";
 
-export const getProfile = createAsyncThunk(
+export const fetchProfile = createAsyncThunk(
     'profile/get',
     async (_, { rejectWithValue }) => {
         try {
@@ -84,16 +84,16 @@ const profileSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getProfile.pending, (state) => {
+            .addCase(fetchProfile.pending, (state) => {
                 state.isFetching = true;
                 state.fetchError = null;
             })
-            .addCase(getProfile.fulfilled, (state, action: PayloadAction<GetUserProfile>) => {
+            .addCase(fetchProfile.fulfilled, (state, action: PayloadAction<GetUserProfile>) => {
                 state.isFetching = false;
                 state.profile = action.payload;
                 state.fetchError = null;
             })
-            .addCase(getProfile.rejected, (state, action) => {
+            .addCase(fetchProfile.rejected, (state, action) => {
                 state.isFetching = false;
                 state.fetchError = action.payload as string;
             })

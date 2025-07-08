@@ -18,7 +18,7 @@ import { useEffect } from "react"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useToast } from "@/hooks/use-toast"
-import { clearErrors, getProfile, updateProfile } from '../../Authentication/profile/api/slice'
+import { clearErrors, fetchProfile, updateProfile } from '../../Authentication/profile/api/slice'
 import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 import { updateProfileValidationSchema } from '@/src/validation/schemas'
 import { usePhoto } from '../../Authentication/profile/api/usePhoto'
@@ -52,7 +52,7 @@ export default function index({ dashboardId, role }: SettingProps) {
 
     useEffect(() => {
         if (!profile) {
-            dispatch(getProfile())
+            dispatch(fetchProfile())
         }
     }, [dispatch, profile])
 
@@ -88,7 +88,7 @@ export default function index({ dashboardId, role }: SettingProps) {
             };
 
             await dispatch(updateProfile(credentials)).unwrap();
-            await dispatch(getProfile());
+            await dispatch(fetchProfile());
 
             toast({
                 title: "Profile updated!",

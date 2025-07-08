@@ -11,7 +11,9 @@ import {
     createProvider,
     deleteProvider,
     fetchAllProviders,
-    updateProvider
+    updateProvider,
+    clearCreateSuccess,
+    clearUpdateSuccess
 } from "@/src/modules/Dashboard/Provider/api/slice";
 
 
@@ -34,7 +36,7 @@ type ProviderContextType = {
     // Medical Record CRUD
     handleAddProvider: () => void;
     handleEditProvider: (provider: Provider) => void;
-    handleSaveProvider: (providerData: ProviderRequest) => void;
+    handleSaveProvider: (providerData: ProviderRequest, onSuccess?: () => void) => void;
     handleDeleteProvider: (providerId: string) => void;
 };
 
@@ -52,12 +54,11 @@ export const DoctorProvider = ({ children }: { children: ReactNode }) => {
     const filteredProvider = providers;
 
     const resetAllProviderFlags = () => {
-        // dispatch(clearCreateSuccess());
+        dispatch(clearCreateSuccess());
+        dispatch(clearUpdateSuccess());
         dispatch(clearUpdateError());
-        // dispatch(clearUpdateSuccess());
         dispatch(clearDeleteError());
         dispatch(clearCreateError());
-        dispatch(resetSuccess());
     };
 
     const handleAddProvider = () => {
@@ -76,7 +77,7 @@ export const DoctorProvider = ({ children }: { children: ReactNode }) => {
         setProviderFormOpen(true);
     };
 
-    const handleSaveProvider = async (providerData: ProviderRequest) => {
+    const handleSaveProvider = async (providerData: ProviderRequest, onSuccess?: () => void) => {
         try {
             resetAllProviderFlags();
             let resultAction;
@@ -92,9 +93,12 @@ export const DoctorProvider = ({ children }: { children: ReactNode }) => {
                 await dispatch(fetchAllProviders());
 
                 // ✅ Reset modal state
-                setProviderFormOpen(false);
                 setProvider(null);
                 setIsEditing(false);
+                setProviderFormOpen(false);
+
+                // Call optional success callback
+                if (onSuccess) onSuccess();
             }
 
         } catch (err) {
@@ -108,7 +112,6 @@ export const DoctorProvider = ({ children }: { children: ReactNode }) => {
 
             if (deleteProvider.fulfilled.match(resultAction)) {
                 // Optionally refresh the list (though the reducer should handle this)
-                // await dispatch(fetchAllProviders());
                 dispatch(clearDeleteError());
             }
         } catch (err) {

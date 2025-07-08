@@ -86,12 +86,16 @@ interface ProviderState {
   count: number;
   success: boolean;
 
-  deleteLoading: boolean;
-  deleteError: string | null;
   createLoading: boolean;
   createError: string | null;
+  createSuccess: boolean;
+
   updateLoading: boolean;
   updateError: string | null;
+  updateSuccess: boolean;
+
+  deleteLoading: boolean;
+  deleteError: string | null;
 }
 
 const initialState: ProviderState = {
@@ -102,12 +106,16 @@ const initialState: ProviderState = {
   count: 0,
   success: false,
 
-  deleteLoading: false,
-  deleteError: null,
   createLoading: false,
   createError: null,
+  createSuccess: false,
+
   updateLoading: false,
   updateError: null,
+  updateSuccess: false,
+
+  deleteLoading: false,
+  deleteError: null,
 };
 
 // Slice
@@ -125,14 +133,20 @@ const providerSlice = createSlice({
     resetSuccess: (state) => {
       state.success = false;
     },
-    clearDeleteError: (state) => {
-      state.deleteError = null;
-    },
     clearCreateError: (state) => {
       state.createError = null;
     },
+    clearCreateSuccess: (state) => {
+      state.createSuccess = false;
+    },
     clearUpdateError: (state) => {
       state.updateError = null;
+    },
+    clearUpdateSuccess: (state) => {
+      state.updateSuccess = false;
+    },
+    clearDeleteError: (state) => {
+      state.deleteError = null;
     },
   },
   extraReducers: (builder) => {
@@ -224,6 +238,8 @@ export const {
   resetSuccess,
   clearDeleteError,
   clearCreateError,
+  clearCreateSuccess,
+  clearUpdateSuccess,
   clearUpdateError,
 } = providerSlice.actions;
 

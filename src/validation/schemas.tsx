@@ -88,7 +88,7 @@ export const providerValidationSchema = Yup.object({
     .oneOf(DepartmentNameValues, "Invalid specialty")
     .required("Specialty is required"),
   phone: Yup.string()
-    .matches(/^\+966\d{9}$/, "Phone number must be a valid Saudi format (+966XXXXXXXXX)")
+    // .matches(/^\+966\d{9}$/, "Phone number must be a valid Saudi format (+966XXXXXXXXX)")
     .required("Phone number is required"),
 
   email: Yup.string()

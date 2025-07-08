@@ -209,7 +209,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
       handleSavePatient(values, () => {
         actions.resetForm();
         actions.setSubmitting(false);
-        onOpenChange(false); // ✅ close the dialog
+        onOpenChange(false);
 
         // ✅ show toast
         toast({
@@ -254,7 +254,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
   }
 
 
-  const regenerateId = () => {
+  const handleGenerateId = () => {
     if (mode === 'create') {
       const newId = generateId({ prefix: "P", suffix: "CLINIC" })
       formik.setFieldValue('patientId', newId)
@@ -327,7 +327,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={regenerateId}
+                  onClick={handleGenerateId}
                   className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors"
                 >
                   Regenerate
