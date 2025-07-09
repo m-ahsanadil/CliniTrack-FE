@@ -16,6 +16,7 @@ export const registerValidationSchema = Yup.object({
     .max(50, 'Username must be less than 50 characters')
     .matches(/^(?=(?:.*[a-zA-Z]){4,})(?=.*\d)[a-zA-Z0-9_]+$/, 'Username must contain at least 4 letters and 1 digit')
     .required('Username is required'),
+
   email: Yup.string()
     .email('Invalid email address')
     .matches(
@@ -23,13 +24,33 @@ export const registerValidationSchema = Yup.object({
       'Email must end with @clinitrack.com and contain no digits'
     )
     .required('Email is required'),
+
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
     .required('Password is required'),
+
+  fullName: Yup.string()
+    .min(3, 'Full name must be at least 3 characters')
+    .max(100, 'Full name must be less than 100 characters')
+    .required('Full name is required'),
+
   role: Yup.string()
     .required('Role is required'),
 
+  education: Yup.string()
+    .min(2, 'Education must be at least 2 characters')
+    .max(100, 'Education must be less than 100 characters')
+    .required('Education is required'),
+
+  dob: Yup.string()
+    .matches(/^\d{4}-\d{2}-\d{2}$/, 'DOB must be in YYYY-MM-DD format')
+    .required('Date of birth is required'),
+
+  experience: Yup.string()
+    .min(1, 'Experience must be at least 1 character')
+    .max(100, 'Experience must be less than 100 characters')
+    .required('Experience is required'),
 });
 
 export const updateProfileValidationSchema = Yup.object({

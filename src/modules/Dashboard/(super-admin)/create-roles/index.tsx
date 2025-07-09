@@ -1,10 +1,10 @@
 "use client";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { UserRole, UserRoleValues } from "@/src/enum";
 import { useToast } from "@/hooks/use-toast";
 import { registerValidationSchema } from "@/src/validation/schemas";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
-import { createUsersBySuperAdmin } from "./api/slice";
+import { clearCreateError, createUsersBySuperAdmin } from "./api/slice";
 import { CreateAdmminProps } from "@/app/(DASHBOARD)/[role]/(SUPER-ADMIN)/create-admin/page";
 
 
@@ -43,27 +43,48 @@ const initialCreateAdminValues: CreateAdminFormValues = {
 export default function index({ role }: CreateAdmminProps) {
     const { toast } = useToast();
     const dispatch = useAppDispatch();
+    const {
+        createError,
+        createLoading,
+        createSuccess
+    } = useAppSelector(state => state.createUsersByAdmin);
 
-    const { createError, createLoading, createSuccess } = useAppSelector(state => state.creatUsersByAdmin);
-    const getInitialValues = useMemo((): CreateAdminFormValues => {
-        if (createSuccess === false) {
-            return {
-                username: "",
-                email: "",
-                password: "",
-                fullName: "",
-                role: "",
-                education: "",
-                dob: "",
-                experience: ""
-            }
+    useEffect(() => {
+        if (createError) {
+            toast({
+                title: "Error",
+                description: createError,
+                variant: "destructive",
+            });
+
+            const timer = setTimeout(() => {
+                dispatch(clearCreateError());
+            }, 3000);
+
+            return () => clearTimeout(timer);
         }
+    }, [createError]);
+
+    const getInitialValues = useMemo((): CreateAdminFormValues => {
+        // if (createSuccess === false) {
+        //     return {
+        //         username: "",
+        //         email: "",
+        //         password: "",
+        //         fullName: "",
+        //         role: "",
+        //         education: "",
+        //         dob: "",
+        //         experience: ""
+        //     }
+        // }
         return initialCreateAdminValues
     }, [])
 
     const handleCreateAdminForm = useCallback(async (values: CreateAdminFormValues, actions: FormikHelpers<CreateAdminFormValues>) => {
         try {
-            await dispatch(createUsersBySuperAdmin(values))
+            await dispatch(createUsersBySuperAdmin(values)).unwrap();
+
             actions.resetForm();
             actions.setSubmitting(false);
 
@@ -76,8 +97,10 @@ export default function index({ role }: CreateAdmminProps) {
                 description: "An error occurred while processing your request.",
                 variant: "destructive",
             });
+        } finally {
+            actions.resetForm();
         }
-    }, [])
+    }, [dispatch, toast])
 
     const formik = useFormik({
         initialValues: getInitialValues,
@@ -108,6 +131,8 @@ export default function index({ role }: CreateAdmminProps) {
             formik.setFieldValue('email', generatedEmail);
         }
     };
+
+
 
     // Function to get field error
     const getFieldError = (fieldName: string) => {
@@ -222,33 +247,51 @@ export default function index({ role }: CreateAdmminProps) {
                                 <Label htmlFor="dob" className="text-slate-200">
                                     Date of Birth
                                 </Label>
+
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
+                                            type="button"
                                             className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 justify-start text-left font-normal"
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {formik.values.dob
-                                                ? format(new Date(formik.values.dob), "PPP")
-                                                : "Pick a date"
-                                            }
+                                                ? format(new Date(`${formik.values.dob}T00:00:00`), "PPP") // 👈 safe way
+                                                : "Pick a date"}
                                         </Button>
                                     </PopoverTrigger>
+
                                     <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
                                         <Calendar
                                             mode="single"
-                                            selected={formik.values.dob ? new Date(formik.values.dob) : undefined}
-                                            onSelect={(date) => formik.setFieldValue('dob', date?.toISOString().split('T')[0])}
+                                            selected={
+                                                formik.values.dob
+                                                    ? new Date(`${formik.values.dob}T00:00:00`) // 👈 avoids timezone shift
+                                                    : undefined
+                                            }
+                                            onSelect={(date) =>
+                                                formik.setFieldValue("dob", date ? format(date, "yyyy-MM-dd") : "")
+                                            }
                                             initialFocus
-                                            className="text-white"
+                                            captionLayout="dropdown"
+                                            fromYear={1950}
+                                            toYear={new Date().getFullYear()}
+                                            classNames={{
+                                                caption_dropdowns: "flex gap-2 text-white",
+                                                dropdown:
+                                                    "bg-slate-800 text-white border border-slate-600 rounded px-2 py-1",
+                                                caption_label: "text-white",
+                                            }}
                                         />
                                     </PopoverContent>
                                 </Popover>
-                                {getFieldError('dob') && (
-                                    <p className="text-red-400 text-sm mt-1">{getFieldError('dob')}</p>
+
+                                {getFieldError("dob") && (
+                                    <p className="text-red-400 text-sm mt-1">{getFieldError("dob")}</p>
                                 )}
                             </div>
+
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

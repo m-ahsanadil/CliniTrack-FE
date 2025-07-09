@@ -29,7 +29,7 @@ const appReducer = combineReducers({
     reports: reportReducer,
     provider: providerReducer,
     photo: photoReducer,
-    creatUsersByAdmin: createUsersBySuperAdminReducer,
+    createUsersByAdmin: createUsersBySuperAdminReducer,
 });
 
 // Define the type for the combined state
