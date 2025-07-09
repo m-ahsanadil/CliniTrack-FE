@@ -1,18 +1,9 @@
 "use client";
 import {
-    Calendar,
-    FileText,
-    Receipt,
     Settings,
-    Users,
-    Home,
     AlertTriangle,
-    BarChart3,
-    UserCheck,
     Loader2,
     WifiOff,
-    UserPlus,
-    User,
     HelpCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,7 +14,7 @@ import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
 import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "../redux/store/reduxHook"
-import { useEffect, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useDashboardData } from "../modules/Dashboard/dashboard/api/hook/useDashboardData";
 import { UserRole } from "../enum";
 import { Admin, Doctor, Staff, SuperAdmin } from "../modules/Dashboard/dashboard/api/types";
@@ -126,6 +117,35 @@ const LoadingIndicator = () => (
         <span className="text-xs text-slate-400">Loading menu...</span>
     </div>
 );
+const NavigationItem = ({
+    item,
+    isActive,
+    onNavigate
+}: {
+    item: { label: string; icon: any; href: string };
+    isActive: boolean;
+    onNavigate: (href: string) => void;
+}) => {
+    const handleClick = useCallback(() => {
+        onNavigate(item.href);
+    }, [item.href, onNavigate]);
+
+    return (
+        <li>
+            <Button
+                variant={isActive ? "secondary" : "ghost"}
+                className="w-full justify-start text-white hover:bg-slate-800"
+                onClick={handleClick}
+            >
+                <item.icon className="mr-3 h-4 w-4" />
+                {item.label}
+            </Button>
+        </li>
+    );
+};
+
+// Memoize the component to prevent unnecessary re-renders
+const MemoizedNavigationItem = memo(NavigationItem);
 
 export default function sidebar() {
     const pathname = usePathname();
@@ -134,6 +154,8 @@ export default function sidebar() {
     const { user } = useAppSelector(state => state.auth);
     const { data: dashboardData, loading, error: dashboardError } = useDashboardData(user?.role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN);
     const { isSidebarOpen } = useGlobalUI();
+    const [isNavigating, setIsNavigating] = useState(false);
+
     const [routeVerification, setRouteVerification] = useState({
         isValid: true,
         message: ""
@@ -154,69 +176,107 @@ export default function sidebar() {
         return () => clearTimeout(timer);
     }, [loading]);
 
-    // Verify route access based on user ID and role
-    const verifyRouteAccess = () => {
+    // MEMOIZED: Dashboard menu based on user role
+    const dashboardMenu = useMemo(() => {
+        if (!dashboardData || !user?.role) return [];
+
+        switch (user.role) {
+            case UserRole.SUPER_ADMIN:
+                return (dashboardData as SuperAdmin)?.superadmin?.menu || [];
+            case UserRole.ADMIN:
+                return (dashboardData as Admin)?.admin?.menu || [];
+            case UserRole.STAFF:
+                return (dashboardData as Staff)?.admin?.menu || [];
+            case UserRole.DOCTOR:
+                return (dashboardData as Doctor)?.admin?.menu || [];
+            default:
+                return [];
+        }
+    }, [dashboardData, user?.role]);
+
+    // MEMOIZED: Sidebar items with filtered valid items
+    const sidebarItems = useMemo(() => {
+        if (!dashboardMenu || !user?.role) return [];
+
+        return dashboardMenu
+            .filter(menuItem => menuItem && menuItem.icon && menuItem.path && menuItem.label) // Filter out invalid items
+            .map(menuItem => {
+                const Icon = getIconComponent(menuItem.icon);
+                return {
+                    label: menuItem.label,
+                    icon: Icon,
+                    href: `/${user.role}/${menuItem.path}`,
+                };
+            });
+    }, [dashboardMenu, user?.role]);
+
+    // MEMOIZED: Route verification function
+    const verifyRouteAccess = useCallback(() => {
         if (!user?.role) {
             setRouteVerification({
                 isValid: false,
                 message: "User authentication required"
-            })
-            return false
+            });
+            return false;
         }
 
-        const urlRole = params?.role
+        const urlRole = params?.role;
 
-
-        // Verify role matches
         if (urlRole && urlRole !== user.role) {
             setRouteVerification({
                 isValid: false,
                 message: "Access denied: Role mismatch"
-            })
-            return false
+            });
+            return false;
         }
 
         setRouteVerification({
             isValid: true,
             message: ""
-        })
-        return true
-    }
+        });
+        return true;
+    }, [user?.role, params?.role]);
+
+    // OPTIMIZED: Navigation handler with loading state
+    const handleNavigation = useCallback((href: string) => {
+        setIsNavigating(true);
+        router.push(href);
+        // Navigation loading will be cleared when component unmounts or pathname changes
+    }, [router]);
+
+    // OPTIMIZED: Retry handler
+    const handleRetry = useCallback(() => {
+        router.refresh();
+    }, [router]);
+
+    // MEMOIZED: User role icon component
+    const UserRoleIcon = useMemo(() => {
+        return getRoleIcon(user?.role);
+    }, [user?.role]);
+
+    // MEMOIZED: User role color
+    const userRoleColor = useMemo(() => {
+        return getRoleColor(user?.role);
+    }, [user?.role]);
+
+
 
     // Run verification when user data or route changes
     useEffect(() => {
-        verifyRouteAccess()
-    }, [user?.role, pathname, params])
+        verifyRouteAccess();
+    }, [verifyRouteAccess]);
 
-    const handleRetry = () => {
-        router.refresh();
-    };
+    // Clear navigation loading when pathname changes
+    useEffect(() => {
+        setIsNavigating(false);
+    }, [pathname]);
 
-    const dashboardMenu = (() => {
-        switch (user?.role) {
-            case UserRole.SUPER_ADMIN:
-                return (dashboardData as SuperAdmin)?.superadmin?.menu;
-            case UserRole.ADMIN:
-                return (dashboardData as Admin)?.admin?.menu;
-            case UserRole.STAFF:
-                return (dashboardData as Staff)?.admin?.menu;
-            case UserRole.DOCTOR:
-                return (dashboardData as Doctor)?.admin?.menu;
-            default:
-                return [];
-        }
-    })();
-
-
-    const sidebarItems = (dashboardMenu ?? []).map((menuItem) => {
-        const Icon = getIconComponent(menuItem.icon);
-
-        return {
-            label: menuItem.label,
-            icon: Icon,
-            href: `/${user?.role}/${menuItem.path}`,
-        };
-    });
+    // PREFETCH routes for better performance
+    useEffect(() => {
+        sidebarItems.forEach(item => {
+            router.prefetch(item.href);
+        });
+    }, [sidebarItems, router]);
 
     if (loading) {
         return (
@@ -241,16 +301,12 @@ export default function sidebar() {
 
                 {/* User Role Badge */}
                 <div className="mt-3">
-                    <div
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user?.role)}`}
-                    >
-                        {(() => {
-                            const IconComponent = getRoleIcon(user?.role)
-                            return <IconComponent className="w-3 h-3 mr-1" />
-                        })()}
+                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${userRoleColor}`}>
+                        <UserRoleIcon className="w-3 h-3 mr-1" />
                         {user?.role?.toUpperCase()}
                     </div>
                 </div>
+
                 {/* Route Verification Status */}
                 {!routeVerification.isValid && (
                     <div className="mt-3 p-2 bg-red-900/20 border border-red-700 rounded-md">
@@ -258,6 +314,14 @@ export default function sidebar() {
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             {routeVerification.message}
                         </div>
+                    </div>
+                )}
+
+                {/* Navigation Loading Indicator */}
+                {isNavigating && (
+                    <div className="mt-3 flex items-center text-xs text-slate-400">
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Navigating...
                     </div>
                 )}
                 {/* User Info Display */}
@@ -275,34 +339,23 @@ export default function sidebar() {
             ) : sidebarItems.length === 0 ? (
                 <EmptyNavigationState />
             ) : (
-
-                // {/* Navigation - Scrollable */ }
-                < nav className="flex-1 overflow-y-auto p-4">
+                <nav className="flex-1 overflow-y-auto p-4">
                     <ul className="space-y-2">
                         {sidebarItems.map((item, index) => {
-                            if (!item?.icon || !item?.href) return null; // skip if not mapped
                             const isActive = pathname?.startsWith(item.href);
-
                             return (
-                                <li key={index}>
-                                    <Link href={item.href} passHref>
-                                        <Button
-                                            variant={isActive ? "secondary" : "ghost"}
-                                            className="w-full justify-start text-white hover:bg-slate-800"
-                                        >
-                                            <item.icon className="mr-3 h-4 w-4" />
-                                            {item.label}
-                                        </Button>
-                                    </Link>
-                                </li>
+                                <MemoizedNavigationItem
+                                    key={`${item.href}-${index}`} // Better key
+                                    item={item}
+                                    isActive={isActive}
+                                    onNavigate={handleNavigation}
+                                />
                             );
                         })}
                     </ul>
-
                 </nav>
-            )
-            }
+            )}
 
-        </div >
+        </div>
     )
 }
