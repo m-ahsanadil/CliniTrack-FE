@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import React, { useEffect, useState } from "react";
-import { resetUpdateStatus, updateUsersBySuperAdmin } from "../slice";
+import { resetUpdateStatus, updateUsersBySuperAdmin } from "../api/slice";
 import { Modal } from "@/src/components/Modal";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";

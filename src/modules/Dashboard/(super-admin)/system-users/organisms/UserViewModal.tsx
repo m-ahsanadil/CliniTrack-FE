@@ -1,6 +1,6 @@
 import React from "react";
 import { X, Mail, UserCircle2, Phone, MapPin, Calendar, ShieldCheck, Activity, Briefcase } from "lucide-react";
-import { User } from "../types";
+import { User } from "../api/types";
 import { usePhoto } from "@/src/modules/Authentication/profile/api/usePhoto";
 
 interface ModalProps {
