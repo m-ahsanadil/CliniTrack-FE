@@ -2,6 +2,8 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import React, { useEffect, useState } from "react";
 import { resetUpdateStatus, updateUsersBySuperAdmin } from "../slice";
 import { Modal } from "@/src/components/Modal";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 
 
@@ -14,23 +16,28 @@ interface UpdatePasswordModalProps {
 export const UpdatePasswordModal: React.FC<UpdatePasswordModalProps> = ({ open, onClose, userId }) => {
     const dispatch = useAppDispatch();
     const [newPassword, setNewPassword] = useState("");
-
+    const { toast } = useToast()
     const { updateLoading, updateError, updateSuccess } = useAppSelector(state => state.systemUsers);
 
     const handleSubmit = async () => {
         if (!newPassword.trim()) return;
 
-      await  dispatch(updateUsersBySuperAdmin({ id: userId, payload: { newPassword } }));
+        await dispatch(updateUsersBySuperAdmin({ id: userId, payload: { newPassword } }));
     };
+
+    const handleCancel = () => {
+        setNewPassword("");
+        onClose();
+    };
+
 
     // Close modal on success
     useEffect(() => {
         if (updateSuccess) {
-            setTimeout(() => {
-                onClose();
-                dispatch(resetUpdateStatus());
-                setNewPassword("");
-            }, 500);
+            toast({ description: `Password updated successfully` });
+            setNewPassword("");
+            onClose();
+            dispatch(resetUpdateStatus());
         }
     }, [updateSuccess]);
 
@@ -41,30 +48,32 @@ export const UpdatePasswordModal: React.FC<UpdatePasswordModalProps> = ({ open, 
                     <span className="block text-sm font-medium text-gray-700">New Password</span>
                     <input
                         type="password"
-                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-black"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={updateLoading}
                     />
                 </label>
 
-                {updateLoading && <p className="text-blue-600 text-sm">Updating password...</p>}
                 {updateError && <p className="text-red-600 text-sm">Error: {updateError}</p>}
-                {updateSuccess && <p className="text-green-600 text-sm">Password updated successfully!</p>}
 
                 <div className="flex justify-end gap-2">
                     <button
                         className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
-                        onClick={onClose}
+                        onClick={handleCancel}
                         disabled={updateLoading}
                     >
                         Cancel
                     </button>
                     <button
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center justify-center min-w-[100px]"
                         onClick={handleSubmit}
                         disabled={updateLoading}
                     >
-                        Update
+                        {updateLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {updateLoading ? "Updating..." : "Update"}
                     </button>
                 </div>
             </div>

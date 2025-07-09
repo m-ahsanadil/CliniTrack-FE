@@ -141,11 +141,10 @@ export default function index({ role }: SuperAdminUsersProps) {
     //     location: '',
     // });
 
-    const newToday = 9;
-    const suspendedUsers = 9;
-    const activeUsers = 4;
+    const newToday = 0;
+    const suspendedUsers = 0;
+    const activeUsers = 0;
     const totalUsers = count;
-    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     // Filter and pagination logic
     // const filteredUsers = useMemo(() => {
