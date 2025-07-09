@@ -29,6 +29,7 @@ export const registerValidationSchema = Yup.object({
     .required('Password is required'),
   role: Yup.string()
     .required('Role is required'),
+
 });
 
 export const updateProfileValidationSchema = Yup.object({
@@ -323,8 +324,8 @@ export const patientValidationSchema = Yup.object({
       .oneOf(RelationshipValues, 'Invalid relationship')
       .required('Relationship is required'),
     phone: Yup.string()
-    // .matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number')
-    .required('Emergency phone is required'),
+      // .matches(/^\+9665\d{8}$/, 'Phone number must be a valid Saudi number')
+      .required('Emergency phone is required'),
     email: Yup.string().email('Invalid email address').required('Emergency email is required'),
   }).required('Emergency contact is required'),
 

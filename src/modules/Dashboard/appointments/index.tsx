@@ -14,28 +14,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 
 // Import form components
-import { Appointments, getStatusBadgeVariant } from "@/src/constants"
-import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
+import { getStatusBadgeVariant } from "@/src/constants"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
-import { AppointmentProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/appointments/page"
 import { RoleGuard } from "@/components/role-guard"
 import { useState } from "react"
 import { ViewAppointmentDialog } from "./organisms/ViewAppointmentDialog"
 import { Appointment } from "./api/types"
 import { useAppointmentsFetcher } from "./api/useAppointmentsFetcher"
-import { deleteAppointment, fetchAllAppointments } from "./api/slice"
-import AppointmentForm from "@/src/components/appointment-form"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useAppointment } from "@/src/redux/providers/contexts/AppointmentContext"
+import { AppointmentProps } from "@/app/(DASHBOARD)/[role]/appointments/page"
 
-export default function index({ dashboardId, role }: AppointmentProps) {
-    const dispatch = useAppDispatch();
+export default function index({ role }: AppointmentProps) {
     useAppointmentsFetcher()
 
     const {
-        updateError,
-        updateLoading,
         appointments: apiAppointments,
         loading: appointmentsLoading,
         error: appointmentsError,
@@ -66,7 +60,7 @@ export default function index({ dashboardId, role }: AppointmentProps) {
     }
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -88,6 +82,10 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
                                 <span className="ml-2 text-slate-600">Loading appointments...</span>
                             </div>
+                        ) : appointmentsError ? (
+                            <div className="text-center text-red-600 py-6">
+                                <p>{appointmentsError}</p>
+                            </div>
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -104,8 +102,12 @@ export default function index({ dashboardId, role }: AppointmentProps) {
                                 <TableBody>
                                     {appointmentsCount === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="text-center text-slate-500 py-6">
-                                                No appointment found. Please add a new appointment to get started.
+                                            <TableCell colSpan={7} className="text-center py-10">
+                                                <div className="flex flex-col items-center justify-center space-y-2">
+                                                    <Shield className="w-10 h-10 text-slate-400" />
+                                                    <p className="text-slate-600">No appointment found</p>
+                                                    <p className="text-sm text-slate-400">Start by scheduling a new appointment with a doctor.</p>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -151,15 +153,16 @@ export default function index({ dashboardId, role }: AppointmentProps) {
 
                                 </TableBody>
                             </Table>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+                        )
+                        }
+                    </CardContent >
+                </Card >
+            </div >
             <ViewAppointmentDialog
                 appointment={selectedAppointment}
                 isOpen={isViewOpen}
                 onClose={handleCloseViewDialog}
             />
-        </ProtectedRoleGuard>
+        </ProtectedRoleGuard >
     )
 }

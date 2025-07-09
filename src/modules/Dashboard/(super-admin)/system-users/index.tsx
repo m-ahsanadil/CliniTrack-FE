@@ -423,12 +423,7 @@ import { useAppDispatch, useAppSelector } from '@/src/redux/store/reduxHook';
 import { UserRole, UserRoleValues, UserStatus, UserStatusValues } from '@/src/enum';
 import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
 import { User } from './api/types';
-
-
-interface SuperAdminUsersProps {
-    dashboardId: string;
-    role: string;
-}
+import { SuperAdminUsersProps } from '@/app/(DASHBOARD)/[role]/(SUPER-ADMIN)/system-users/page';
 
 
 type OptionType = { value: string; label: string } | string;
@@ -566,7 +561,7 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     }, 3000);
 };
 
-export default function EnhancedSystemUsers({ dashboardId = 'demo', role = 'super-admin' }: SuperAdminUsersProps) {
+export default function EnhancedSystemUsers({ role }: SuperAdminUsersProps) {
     const dispatch = useAppDispatch()
     const { systemUsers, loading, error, count } = useAppSelector(state => state.systemUsers);
 
@@ -727,7 +722,7 @@ export default function EnhancedSystemUsers({ dashboardId = 'demo', role = 'supe
         return user.joinDate.startsWith(today);
     }).length;
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">

@@ -1,6 +1,5 @@
 "use client";
 
-import { Appointments, Invoices, Patients } from "@/src/constants";
 import { Appointment } from "@/src/modules/Dashboard/appointments/api/types";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { MedicalRecordGetAll } from '@/src/modules/Dashboard/medicalRecords/api/types'
@@ -33,14 +32,14 @@ type GlobalUIContextType = {
   setSearchTerm: (val: string) => void;
 
   // Data States
-  patients: typeof Patients;
-  setPatients: (val: typeof Patients) => void;
-  appointments: typeof Appointments;
-  setAppointments: (val: typeof Appointments) => void;
+  // patients: typeof Patients;
+  // setPatients: (val: typeof Patients) => void;
+  // appointments: typeof Appointments;
+  // setAppointments: (val: typeof Appointments) => void;
   medicalRecords: MedicalRecordGetAll[];
   setMedicalRecords: (val: MedicalRecordGetAll[]) => void;
-  invoices: typeof Invoices;
-  setInvoices: (val: typeof Invoices) => void;
+  // invoices: typeof Invoices;
+  // setInvoices: (val: typeof Invoices) => void;
 
   // Modal States
   patientFormOpen: boolean;
@@ -59,22 +58,22 @@ type GlobalUIContextType = {
   setEditingItem: (val: any) => void;
 
   // Filtered Lists
-  filteredPatients: typeof Patients;
-  filteredAppointments: typeof Appointments;
+  // filteredPatients: typeof Patients;
+  // filteredAppointments: typeof Appointments;
   filteredMedicalRecords: MedicalRecordGetAll[];
-  filteredInvoices: typeof Invoices;
+  // filteredInvoices: typeof Invoices;
 
   // Patient CRUD
-  handleAddPatient: () => void;
-  handleEditPatient: (patient: any) => void;
-  handleSavePatient: (patientData: any) => void;
-  handleDeletePatient: (patientId: number) => void;
+  // handleAddPatient: () => void;
+  // handleEditPatient: (patient: any) => void;
+  // handleSavePatient: (patientData: any) => void;
+  // handleDeletePatient: (patientId: number) => void;
 
   // Appointment CRUD
-  handleAddAppointment: () => void;
-  handleEditAppointment: (appointment: Appointment) => void;
-  handleSaveAppointment: (appointmentData: any) => void;
-  handleDeleteAppointment: (appointmentId: number | string) => void;
+  // handleAddAppointment: () => void;
+  // handleEditAppointment: (appointment: Appointment) => void;
+  // handleSaveAppointment: (appointmentData: any) => void;
+  // handleDeleteAppointment: (appointmentId: number | string) => void;
 
   // Medical Record CRUD
   handleAddMedicalRecord: () => void;
@@ -83,10 +82,10 @@ type GlobalUIContextType = {
   handleDeleteMedicalRecord: (recordId: string) => void;
 
   // Invoice CRUD
-  handleAddInvoice: () => void;
-  handleEditInvoice: (invoice: any) => void;
-  handleSaveInvoice: (invoiceData: any) => void;
-  handleDeleteInvoice: (invoiceId: number | string) => void;
+//   handleAddInvoice: () => void;
+//   handleEditInvoice: (invoice: any) => void;
+//   handleSaveInvoice: (invoiceData: any) => void;
+//   handleDeleteInvoice: (invoiceId: number | string) => void;
 };
 
 const GlobalUIContext = createContext<GlobalUIContextType | undefined>(undefined);
@@ -106,10 +105,10 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Data States
-  const [patients, setPatients] = useState(Patients);
-  const [appointments, setAppointments] = useState(Appointments);
+  // const [patients, setPatients] = useState(Patients);
+  // const [appointments, setAppointments] = useState(Appointments);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecordGetAll[]>([]);
-  const [invoices, setInvoices] = useState(Invoices);
+  // const [invoices, setInvoices] = useState(Invoices);
 
   // Modal States
   const [patientFormOpen, setPatientFormOpen] = useState(false);
@@ -127,19 +126,19 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   // Filter functions
-  const filteredPatients = patients.filter(
-    (patient) =>
-      patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone.includes(searchTerm) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // const filteredPatients = patients.filter(
+  //   (patient) =>
+  //     patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     patient.phone.includes(searchTerm) ||
+  //     patient.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  // )
 
-  const filteredAppointments = appointments.filter(
-    (appointment) =>
-      appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.doctor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.type.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // const filteredAppointments = appointments.filter(
+  //   (appointment) =>
+  //     appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     appointment.doctor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     appointment.type.toLowerCase().includes(searchTerm.toLowerCase()),
+  // )
 
   const filteredMedicalRecords = medicalRecords.filter(
     (record) =>
@@ -148,12 +147,12 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
       record.providerId.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const filteredInvoices = invoices.filter(
-    (invoice) =>
-      invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.status.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // const filteredInvoices = invoices.filter(
+  //   (invoice) =>
+  //     invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     invoice.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     invoice.status.toLowerCase().includes(searchTerm.toLowerCase()),
+  // )
 
   // CRUD handlers
   const handleAddPatient = () => {
@@ -166,23 +165,23 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setPatientFormOpen(true)
   }
 
-  const handleSavePatient = (patientData: { id: number; name: string; age: number; gender: string; phone: string; email: string; address: string; bloodType: string; allergies: string; emergencyContact: string; insuranceProvider: string; insuranceNumber: string; status: string; lastVisit: string }) => {
-    if (editingItem) {
-      setPatients(patients.map((p) => (p.id === editingItem.id ? { ...patientData, id: editingItem.id } : p)))
-    } else {
-      setPatients([...patients, { ...patientData, id: Date.now() }])
-    }
-  }
+  // const handleSavePatient = (patientData: { id: number; name: string; age: number; gender: string; phone: string; email: string; address: string; bloodType: string; allergies: string; emergencyContact: string; insuranceProvider: string; insuranceNumber: string; status: string; lastVisit: string }) => {
+  //   if (editingItem) {
+  //     setPatients(patients.map((p) => (p.id === editingItem.id ? { ...patientData, id: editingItem.id } : p)))
+  //   } else {
+  //     setPatients([...patients, { ...patientData, id: Date.now() }])
+  //   }
+  // }
 
-  const handleDeletePatient = (patientId: number | string) => {
-    if (confirm("Are you sure you want to delete this patient?")) {
-      setPatients(patients.filter((p) => p.id !== patientId))
-      // Also remove related appointments, records, and invoices
-      setAppointments(appointments.filter((a) => a.patientId !== patientId))
-      setMedicalRecords(medicalRecords.filter((r) => r.patientId._id !== patientId))
-      setInvoices(invoices.filter((i) => i.patientId !== patientId))
-    }
-  }
+  // const handleDeletePatient = (patientId: number | string) => {
+  //   if (confirm("Are you sure you want to delete this patient?")) {
+  //     setPatients(patients.filter((p) => p.id !== patientId))
+  //     // Also remove related appointments, records, and invoices
+  //     setAppointments(appointments.filter((a) => a.patientId !== patientId))
+  //     setMedicalRecords(medicalRecords.filter((r) => r.patientId._id !== patientId))
+  //     setInvoices(invoices.filter((i) => i.patientId !== patientId))
+  //   }
+  // }
 
   const handleAddAppointment = () => {
     setEditingItem(null)
@@ -194,21 +193,21 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setAppointmentFormOpen(true)
   }
 
-  const handleSaveAppointment = (appointmentData: { id: number; patientId: number; patientName: string; date: string; time: string; doctor: string; type: string; duration: string; status: string; notes: string }) => {
-    if (editingItem) {
-      setAppointments(
-        appointments.map((a) => (a.id === editingItem.id ? { ...appointmentData, id: editingItem.id } : a)),
-      )
-    } else {
-      setAppointments([...appointments, { ...appointmentData, id: Date.now() }])
-    }
-  }
+  // const handleSaveAppointment = (appointmentData: { id: number; patientId: number; patientName: string; date: string; time: string; doctor: string; type: string; duration: string; status: string; notes: string }) => {
+  //   if (editingItem) {
+  //     setAppointments(
+  //       appointments.map((a) => (a.id === editingItem.id ? { ...appointmentData, id: editingItem.id } : a)),
+  //     )
+  //   } else {
+  //     setAppointments([...appointments, { ...appointmentData, id: Date.now() }])
+  //   }
+  // }
 
-  const handleDeleteAppointment = (appointmentId: number | string) => {
-    if (confirm("Are you sure you want to delete this appointment?")) {
-      setAppointments(appointments.filter((a) => a.id !== appointmentId))
-    }
-  }
+  // const handleDeleteAppointment = (appointmentId: number | string) => {
+  //   if (confirm("Are you sure you want to delete this appointment?")) {
+  //     setAppointments(appointments.filter((a) => a.id !== appointmentId))
+  //   }
+  // }
 
   const handleAddMedicalRecord = () => {
     setEditingItem(null)
@@ -226,7 +225,7 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
         medicalRecords.map((r) => (r._id === editingItem.id ? { ...recordData, id: editingItem.id } : r)),
       )
     } else {
-      setMedicalRecords([...medicalRecords, { ...recordData}])
+      setMedicalRecords([...medicalRecords, { ...recordData }])
     }
   }
 
@@ -246,19 +245,19 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
     setInvoiceFormOpen(true)
   }
 
-  const handleSaveInvoice = (invoiceData: { id: number; patientId: number; patientName: string; date: string; dueDate: string; service: string; amount: number; status: string; paymentMethod: string; insuranceClaim: string; items: { description: string; quantity: number; rate: number; amount: number }[]; subtotal: number; tax: number; discount: number; total: number }) => {
-    if (editingItem) {
-      setInvoices(invoices.map((i) => (i.id === editingItem.id ? { ...invoiceData, id: editingItem.id } : i)))
-    } else {
-      setInvoices([...invoices, { ...invoiceData, id: Date.now() }])
-    }
-  }
+  // const handleSaveInvoice = (invoiceData: { id: number; patientId: number; patientName: string; date: string; dueDate: string; service: string; amount: number; status: string; paymentMethod: string; insuranceClaim: string; items: { description: string; quantity: number; rate: number; amount: number }[]; subtotal: number; tax: number; discount: number; total: number }) => {
+  //   if (editingItem) {
+  //     setInvoices(invoices.map((i) => (i.id === editingItem.id ? { ...invoiceData, id: editingItem.id } : i)))
+  //   } else {
+  //     setInvoices([...invoices, { ...invoiceData, id: Date.now() }])
+  //   }
+  // }
 
-  const handleDeleteInvoice = (invoiceId: number | string) => {
-    if (confirm("Are you sure you want to delete this invoice?")) {
-      setInvoices(invoices.filter((i) => i.id !== invoiceId))
-    }
-  }
+  // const handleDeleteInvoice = (invoiceId: number | string) => {
+  //   if (confirm("Are you sure you want to delete this invoice?")) {
+  //     setInvoices(invoices.filter((i) => i.id !== invoiceId))
+  //   }
+  // }
 
   return (
     <GlobalUIContext.Provider
@@ -267,8 +266,9 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
         showPassword,
         setShowPassword,
         togglePasswordVisibility,
-
-
+        medicalRecords,
+        setMedicalRecords,
+        filteredMedicalRecords,
         toggleLoginPasswordVisibility,
         showLoginPassword,
         setShowLoginPassword,
@@ -289,14 +289,14 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
         setSearchTerm,
 
         // Data States
-        patients,
-        setPatients,
-        appointments,
-        setAppointments,
-        medicalRecords,
-        setMedicalRecords,
-        invoices,
-        setInvoices,
+        // patients,
+        // setPatients,
+        // appointments,
+        // setAppointments,
+        // medicalRecords,
+        // setMedicalRecords,
+        // invoices,
+        // setInvoices,
 
         // Modal States
         patientFormOpen,
@@ -315,22 +315,22 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
         setEditingItem,
 
         // Filtered Lists
-        filteredPatients,
-        filteredAppointments,
-        filteredMedicalRecords,
-        filteredInvoices,
+        // filteredPatients,
+        // filteredAppointments,
+        // filteredMedicalRecords,
+        // filteredInvoices,
 
         // Patient CRUD
-        handleAddPatient,
-        handleEditPatient,
-        handleSavePatient,
-        handleDeletePatient,
+        // handleAddPatient,
+        // handleEditPatient,
+        // handleSavePatient,
+        // handleDeletePatient,
 
         // Appointment CRUD
-        handleAddAppointment,
-        handleEditAppointment,
-        handleSaveAppointment,
-        handleDeleteAppointment,
+        // handleAddAppointment,
+        // handleEditAppointment,
+        // handleSaveAppointment,
+        // handleDeleteAppointment,
 
         // Medical Record CRUD
         handleAddMedicalRecord,
@@ -339,10 +339,10 @@ export const GlobalUIProvider = ({ children }: { children: ReactNode }) => {
         handleDeleteMedicalRecord,
 
         // Invoice CRUD
-        handleAddInvoice,
-        handleEditInvoice,
-        handleSaveInvoice,
-        handleDeleteInvoice,
+        // handleAddInvoice,
+        // handleEditInvoice,
+        // handleSaveInvoice,
+        // handleDeleteInvoice,
       }}
     >
       {children}

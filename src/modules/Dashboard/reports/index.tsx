@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
-import { ReportsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/reports/page";
 import { useState, useEffect } from "react"
 import { Report } from './api/types';
 import { fetchAllReports } from './api/slice';
@@ -29,6 +28,7 @@ import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
 import { formatDate } from "@/src/utils/dateFormatter"
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 import { UserRole } from '@/src/enum';
+import { ReportsProps } from '@/app/(DASHBOARD)/[role]/reports/page';
 
 
 interface QuickReport {
@@ -45,7 +45,7 @@ interface ReportType {
     roles: string[];
 }
 
-export default function Reports({ dashboardId, role }: ReportsProps) {
+export default function Reports({  role }: ReportsProps) {
     // Custom hook for fetching appointments
     const dispatch = useAppDispatch()
     useReportsFetcher();
@@ -189,7 +189,7 @@ export default function Reports({ dashboardId, role }: ReportsProps) {
     }, []);
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">

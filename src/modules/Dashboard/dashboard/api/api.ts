@@ -5,6 +5,7 @@ import apiService from "@/src/redux/config/apiService";
 export const dashboardApi = {
     getSuperAdmin: (): Promise<SuperAdminGetApiResponse> =>
         apiService.get(ENDPOINTS.DASHBOARD.GET_SUPER_ADMIN),
+    
     getAdmin: (): Promise<AdminGetApiResponse> =>
         apiService.get(ENDPOINTS.DASHBOARD.GET_ADMIN),
 

@@ -28,18 +28,10 @@ export function useRoleValidation() {
         }
 
         const roleFromUrl = params.role as string;
-        const idFromUrl = params.dashboardId as string;
 
         // Check role mismatch
         if (user.role !== roleFromUrl) {
-            const correctPath = `/${user.id}/${user.role}/dashboard`;
-            router.push(correctPath);
-            return;
-        }
-
-        // Check ID mismatch (users can only access their own dashboard)
-        if (user.id !== idFromUrl) {
-            const correctPath = `/${user.id}/${user.role}/dashboard`;
+            const correctPath = `/${user.role}/dashboard`;
             router.push(correctPath);
             return;
         }

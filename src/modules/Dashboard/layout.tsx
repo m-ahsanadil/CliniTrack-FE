@@ -30,19 +30,19 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     const {
         isSidebarOpen, setIsSidebarOpen,
         // patients,
-        appointments,
-        invoices,
+        // appointments,
+        // invoices,
         // patientFormOpen, setPatientFormOpen,
         invoiceFormOpen, setInvoiceFormOpen,
         reportsModalOpen, setReportsModalOpen,
         calendarViewOpen, setCalendarViewOpen,
         editingItem,
-        handleSaveInvoice,
-        handleSavePatient,
+        // handleSaveInvoice,
+        // handleSavePatient,
         handleSaveMedicalRecord,
-        handleAddAppointment,
-        handleEditAppointment,
-        handleSaveAppointment
+        // handleAddAppointment,
+        // handleEditAppointment,
+        // handleSaveAppointment
     } = useGlobalUI();
 
     const {
@@ -74,8 +74,6 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     if (!isAuthorized || !user) {
         return null;
     }
-
-    console.log('✅ Rendering dashboard content');
 
     return (
         <div className="flex h-screen bg-slate-50">
@@ -130,31 +128,36 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                 <InvoiceForm
                     open={invoiceFormOpen}
                     onOpenChange={setInvoiceFormOpen}
-                    invoice={editingItem}
-                    onSave={handleSaveInvoice}
-                    // patients={patients}
-                    // providers={provider}
-                    mode={'create'}
-                    currentUser={undefined}
                     providers={[]}
                     patients={[]}
+                    onSave={function (invoice: any): void {
+                        throw new Error('Function not implemented.');
+                    }}
+                    mode={'create'}
+                    currentUser={undefined}
                 />
 
                 <ReportsModal
                     open={reportsModalOpen}
                     onOpenChange={setReportsModalOpen}
-                    // patients={patients}
-                    appointments={appointments}
-                    invoices={invoices}
                     patients={[]}
+                    appointments={[]}
+                    invoices={[]}
                 />
 
                 <CalendarView
                     open={calendarViewOpen}
                     onOpenChange={setCalendarViewOpen}
-                    appointments={appointments}
-                    onAddAppointment={handleAddAppointment}
-                    onEditAppointment={handleEditAppointment}
+                    appointments={[]}
+                    onAddAppointment={function (): void {
+                        throw new Error('Function not implemented.');
+                    }}
+                    onEditAppointment={function (appointment: any): void {
+                        throw new Error('Function not implemented.');
+                    }}
+                // appointments={appointments}
+                // onAddAppointment={handleAddAppointment}
+                // onEditAppointment={handleEditAppointment}
                 />
             </div>
         </div>

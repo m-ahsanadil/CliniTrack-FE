@@ -5,22 +5,21 @@ import { Shield } from "lucide-react";
 import { useAppSelector } from "../store/reduxHook";
 
 export const ProtectedRoleGuard = ({
-  dashboardId,
   role,
   children,
 }: {
-  dashboardId: string | number;
+  // dashboardId: string | number;
   role: string;
   children: React.ReactNode;
 }) => {
   const { user } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
-  const isVerified = user?.id === dashboardId && user?.role === role;
+  const isVerified = user?.role === role;
 
   useEffect(() => {
     if (user && !isVerified) {
-    //   router.replace("/unauthorized");
+      //   router.replace("/unauthorized");
     }
   }, [user, isVerified, router]);
 

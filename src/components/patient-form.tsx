@@ -89,6 +89,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     handleSavePatient,
     setPatientFormOpen,
     profile,
+    isDataFetched,
+    isDataLoading,
   } = usePatient();
 
   // REDUX STATE
@@ -100,7 +102,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     updateLoading,
     updateSuccess,
   } = useAppSelector(state => state.patients)
-
+  console.log(profile)
   const [profileImage, setProfileImage] = useState<string | null>(null)
 
   const initialPatientValues: PatientFormValues = {
@@ -274,7 +276,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? "Add New Patient" : "Edit Patient"}</DialogTitle>
         </DialogHeader>
-        {errorMessage && (
+        {errorMessage && !isLoading && (
           <p className="text-red-500 rounded-md py-3 text-center bg-red-300 text-sm">{errorMessage}</p>
         )}
 

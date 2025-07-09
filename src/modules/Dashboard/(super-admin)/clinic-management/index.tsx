@@ -9,6 +9,8 @@ import {
     Settings, Plus, Edit, Trash2, Eye, Search, Filter,
     Activity, AlertCircle, CheckCircle, Clock
 } from 'lucide-react';
+import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
+import { ClinicManagementProps } from '@/app/(DASHBOARD)/[role]/(SUPER-ADMIN)/clinic-management/page';
 
 // Mock data
 const systemMetrics = {
@@ -43,10 +45,8 @@ const clinicsData = [
     { id: 5, name: 'Pine Tree Medical', location: 'Suburbs', doctors: 18, patients: 950, status: 'Inactive', revenue: 150000 }
 ];
 
-import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
-import { ClinicManagementProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/(SUPER-ADMIN)/clinic-management/page';
 
-export default function index({ dashboardId, role }: ClinicManagementProps) {
+export default function index({ role }: ClinicManagementProps) {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedClinic, setSelectedClinic] = useState(null);
@@ -57,7 +57,7 @@ export default function index({ dashboardId, role }: ClinicManagementProps) {
         clinic.location.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const StatCard = ({ icon: Icon, title, value, change, color }) => (
+    const StatCard = ({ icon: Icon, title, value, change, color }: { title: string, value: number | string, }) => (
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
                 <div>
@@ -131,7 +131,7 @@ export default function index({ dashboardId, role }: ClinicManagementProps) {
     );
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
 
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}

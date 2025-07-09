@@ -156,7 +156,7 @@ export default function sidebar() {
 
     // Verify route access based on user ID and role
     const verifyRouteAccess = () => {
-        if (!user?.id || !user?.role) {
+        if (!user?.role) {
             setRouteVerification({
                 isValid: false,
                 message: "User authentication required"
@@ -164,18 +164,8 @@ export default function sidebar() {
             return false
         }
 
-        // Extract dashboardId and role from URL params
-        const dashboardId = params?.dashboardId
         const urlRole = params?.role
 
-        // Verify user has access to the dashboard
-        if (dashboardId && dashboardId !== user.id) {
-            setRouteVerification({
-                isValid: false,
-                message: "Access denied: Dashboard ID mismatch"
-            })
-            return false
-        }
 
         // Verify role matches
         if (urlRole && urlRole !== user.role) {
@@ -196,7 +186,7 @@ export default function sidebar() {
     // Run verification when user data or route changes
     useEffect(() => {
         verifyRouteAccess()
-    }, [user?.id, user?.role, pathname, params])
+    }, [user?.role, pathname, params])
 
     const handleRetry = () => {
         router.refresh();
@@ -224,12 +214,9 @@ export default function sidebar() {
         return {
             label: menuItem.label,
             icon: Icon,
-            href: `/${user?.id}/${user?.role}/${menuItem.path}`,
+            href: `/${user?.role}/${menuItem.path}`,
         };
     });
-
-
-
 
     if (loading) {
         return (
@@ -274,10 +261,10 @@ export default function sidebar() {
                     </div>
                 )}
                 {/* User Info Display */}
-                <div className="mt-3 text-xs text-slate-400">
+                {/* <div className="mt-3 text-xs text-slate-400">
                     <div>ID: {user?.id}</div>
                     <div>Role: {user?.role}</div>
-                </div>
+                </div> */}
             </div>
 
             {dashboardError ? (

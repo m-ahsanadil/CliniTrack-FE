@@ -412,7 +412,6 @@
 // export default memo(Dashboard);
 
 "use client";
-import { DashboardProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/dashboard/page'
 import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute'
 import React from 'react'
 import { useDashboardData } from './api/hook/useDashboardData';
@@ -437,9 +436,10 @@ import { EmptyState } from './atoms/EmptyState';
 import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 import { useAppointment } from '@/src/redux/providers/contexts/AppointmentContext';
+import { DashboardProps } from '@/app/(DASHBOARD)/[role]/dashboard/page';
 
 
-const Dashboard = ({ dashboardId, role }: DashboardProps) => {
+const Dashboard = ({  role }: DashboardProps) => {
     const { data, loading, error } = useDashboardData(role as UserRole.ADMIN | UserRole.STAFF | UserRole.DOCTOR | UserRole.SUPER_ADMIN);
     const {
         handleAddInvoice,
@@ -474,7 +474,7 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
     // Loading State
     if (loading) {
         return (
-            <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+            <ProtectedRoleGuard role={role}>
                 <div className="p-4 sm:p-6">
                     <div className="space-y-6">
                         {/* Welcome Message Skeleton */}
@@ -508,7 +508,7 @@ const Dashboard = ({ dashboardId, role }: DashboardProps) => {
 
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard  role={role}>
             <div>
                 {loading && <p>Loading dashboard...</p>}
                 {error && <p className="text-red-500">{error}</p>}

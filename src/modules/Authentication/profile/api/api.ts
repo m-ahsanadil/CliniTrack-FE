@@ -12,6 +12,7 @@ export const profileApi = {
     update: (payload: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
         return apiService.put(ENDPOINTS.AUTH.UPDATE, payload);
     },
+    
     getProfile: (): Promise<GetUserProfileApiResponse> => {
         return apiService.get(ENDPOINTS.AUTH.GET_PROFILE)
     },

@@ -12,7 +12,7 @@ import providerReducer from "@/src/modules/Dashboard/Provider/api/slice";
 import dashboardReducer from "@/src/modules/Dashboard/dashboard/api/slice";
 import systemUserReducer from "@/src/modules/Dashboard/(super-admin)/system-users/api/slice"
 import photoReducer from "@/src/modules/Authentication/profile/api/photoSlice"
-
+import createUsersBySuperAdminReducer from "@/src/modules/Dashboard/(super-admin)/create-roles/api/slice"
 
 // Temporary placeholder reducer to avoid empty combineReducers
 const placeholderReducer = (state = {}) => state;
@@ -28,7 +28,8 @@ const appReducer = combineReducers({
     patients: patientReducer,
     reports: reportReducer,
     provider: providerReducer,
-    photo: photoReducer
+    photo: photoReducer,
+    creatUsersByAdmin: createUsersBySuperAdminReducer,
 });
 
 // Define the type for the combined state

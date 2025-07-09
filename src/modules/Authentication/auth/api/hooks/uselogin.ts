@@ -37,36 +37,6 @@ interface DemoUser {
     specialization?: string
 }
 
-const demoUsers: Record<string, DemoUser> = {
-    "admin@clinitrack.com": {
-        id: "1",
-        username: "Dr. Sarah Wilson",
-        email: "admin@clinitrack.com",
-        role: UserRole.ADMIN,
-        password: "admin123",
-        avatar: "/placeholder-user.jpg",
-        department: "Administration",
-    },
-    "doctor@clinitrack.com": {
-        id: "2",
-        username: "Dr. Michael Chen",
-        email: "doctor@clinitrack.com",
-        role: UserRole.DOCTOR,
-        password: "doctor123",
-        avatar: "/placeholder-user.jpg",
-        department: "Cardiology",
-        specialization: "Interventional Cardiology",
-    },
-    "staff@clinitrack.com": {
-        id: "3",
-        username: "Jennifer Martinez",
-        email: "staff@clinitrack.com",
-        role: UserRole.STAFF,
-        password: "staff123",
-        avatar: "/placeholder-user.jpg",
-        department: "Reception",
-    },
-};
 
 export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
     const dispatch = useAppDispatch();
@@ -80,7 +50,7 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
     useEffect(() => {
         if (isNavigating && currentUser) {
             const timer = setTimeout(() => {
-                router.push(`/${currentUser.id}/${currentUser.role}/dashboard`)
+                router.push(`/${currentUser.role}/dashboard`)
             }, 2000)
 
             return () => clearTimeout(timer)
@@ -140,112 +110,61 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
             // Clear any previous errors
             dispatch(clearError());
 
-            // Check if email matches demo user
-            const demoUser = demoUsers[values.email.toLowerCase()];
 
-            if (demoUser) {
-                // Demo user login
-                dispatch(setLoading(true));
+            // Real API login
+            dispatch(setLoading(true));
 
-                if (demoUser.password === values.password) {
-                    // Set credentials for demo user
+            try {
+                const response: LoginApiResponse = await loginApi.login({
+                    usernameOrEmail: values.email,
+                    password: values.password
+                });
+
+                if (response.success) {
+                    // Successful login
                     dispatch(setCredentials({
-                        user: {
-                            id: demoUser.id,
-                            username: demoUser.username,
-                            email: demoUser.email,
-                            role: demoUser.role,
-                            createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString(),
-                            name: "",
-                            dob: "",
-                            age: 0,
-                            education: "",
-                            experience: "",
-                            degree: "",
-                            field: "",
-                            intro: "",
-                            speciality: ""
-                        },
-                        token: `demo-token-${demoUser.id}`,
+                        user: response.user,
+                        token: response.token
                     }));
 
-                    // Show success toast
                     toast({
                         title: "Login Successful",
-                        description: `Welcome ${demoUser.username}`,
+                        description: `Welcome ${response.user.fullName}`,
                     })
 
-                    // Set current user and trigger navigation
-                    setCurrentUser(demoUser);
+                    // Set current user for navigation
+                    setCurrentUser({
+                        id: response.user.id,
+                        username: response.user.username,
+                        email: response.user.email,
+                        role: response.user.role,
+                        department: response.user.department,
+                        avatar: response.user.avatar,
+                    });
                     setIsNavigating(true);
                 } else {
-                    // Wrong password for demo user
-                    dispatch(setError("Invalid password"));
-                    toast({
-                        variant: "destructive",
-                        title: "Login Failed",
-                        description: "Invalid password",
-                    })
-                }
-
-                dispatch(setLoading(false));
-            } else {
-                // Real API login
-                dispatch(setLoading(true));
-
-                try {
-                    const response: LoginApiResponse = await loginApi.login({
-                        usernameOrEmail: values.email,
-                        password: values.password
-                    });
-
-                    if (response.success) {
-                        // Successful login
-                        dispatch(setCredentials({
-                            user: response.user,
-                            token: response.token
-                        }));
-
-                        toast({
-                            title: "Login Successful",
-                            description: `Welcome ${response.user.fullName}`,
-                        })
-
-                        // Set current user for navigation
-                        setCurrentUser({
-                            id: response.user.id,
-                            username: response.user.username,
-                            email: response.user.email,
-                            role: response.user.role,
-                            department: response.user.department,
-                            avatar: response.user.avatar,
-                        });
-                        setIsNavigating(true);
-                    } else {
-                        // API returned error
-                        const errorMessage = response.message || "Login failed";
-                        dispatch(setError(errorMessage));
-                        toast({
-                            variant: "destructive",
-                            title: "Login Failed",
-                            description: errorMessage,
-                        })
-                    }
-                } catch (error: any) {
-                    const errorMessage = error?.message || "An unexpected error occurred";
-
+                    // API returned error
+                    const errorMessage = response.message || "Login failed";
                     dispatch(setError(errorMessage));
-
                     toast({
                         variant: "destructive",
                         title: "Login Failed",
                         description: errorMessage,
                     })
-                } finally {
-                    dispatch(setLoading(false));
-                    actions.setSubmitting(false)
                 }
+            } catch (error: any) {
+                const errorMessage = error?.message || "An unexpected error occurred";
+
+                dispatch(setError(errorMessage));
+
+                toast({
+                    variant: "destructive",
+                    title: "Login Failed",
+                    description: errorMessage,
+                })
+            } finally {
+                dispatch(setLoading(false));
+                actions.setSubmitting(false)
             }
         } catch (error: any) {
             const errorMessage = error?.message || "An unexpected error occurred";
@@ -281,6 +200,5 @@ export const useLogin = ({ isSuperAdmin = false }: UseLoginProps = {}) => {
         loginLoading,
         loginError,
         isNavigating,
-        demoUsers: Object.keys(demoUsers),
     }
 }

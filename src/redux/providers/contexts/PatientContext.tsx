@@ -12,6 +12,7 @@ type PatientContextType = {
   patient: Patient | null;
   setPatient: (val: Patient | null) => void;
   profile: GetUserProfile | null;
+
   // ModalStates
   patientFormOpen: boolean;
   setPatientFormOpen: (val: boolean) => void;
@@ -19,6 +20,10 @@ type PatientContextType = {
   //Editing states
   isEditing: boolean;
   setIsEditing: (val: boolean) => void;
+
+  // Data fetching status
+  isDataFetched: boolean;
+  isDataLoading: boolean;
 
   // Filtered
   filteredPatients: Patient[];
@@ -35,7 +40,7 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const dispatch = useAppDispatch();
   const patients = useAppSelector(state => state.patients.patients)
-  const { profile } = useAppSelector(state => state.profile);
+  const { profile, loading: profileLoading } = useAppSelector(state => state.profile);
 
   // states
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -44,6 +49,10 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const filteredPatients = patients;
+
+  // Calculate if data is still loading
+  const isDataLoading = profileLoading;
+
 
   // Fetch required data when context is first loaded
   useEffect(() => {
@@ -162,6 +171,8 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
         patient,
         setPatient,
         profile,
+        isDataFetched,
+        isDataLoading,
         filteredPatients,
         handleAddPatient,
         handleEditPatient,

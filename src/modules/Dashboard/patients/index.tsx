@@ -5,6 +5,7 @@ import {
     Trash2,
     Eye,
     Loader2,
+    Shield,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,6 @@ import { Badge } from "@/components/ui/badge"
 import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants";
 import { useAppSelector } from "@/src/redux/store/reduxHook";
-import { PatientsProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/patients/page";
 import { usePatientsFetcher } from "./api/usePatientsFetcher";
 import { ViewPatientDialog } from "./organisms/ViewPatientsDialog";
 import { useState } from "react";
@@ -23,12 +23,13 @@ import { Patient } from "./api/types";
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 import { UserRole } from "@/src/enum";
 import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
+import { PatientsProps } from "@/app/(DASHBOARD)/[role]/patients/page";
 
 
-export default function index({ dashboardId, role }: PatientsProps) {
+export default function index({ role }: PatientsProps) {
 
     // Custom hook for fetching appointments
-    // usePatientsFetcher();
+    usePatientsFetcher();
     const { patients: apipatients, loading: patientsLoading, error: patientsError, count: patientsCount } = useAppSelector(state => state.patients)
 
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -51,7 +52,7 @@ export default function index({ dashboardId, role }: PatientsProps) {
     }
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -69,16 +70,13 @@ export default function index({ dashboardId, role }: PatientsProps) {
                 <Card className="bg-white border border-slate-200">
                     <CardContent className="p-6">
                         {patientsLoading ? (
-                            <div className="flex justify-center py-12">
-                                <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                            <div className="flex items-center justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+                                <span className="ml-2 text-slate-600">Loading Patients...</span>
                             </div>
                         ) : patientsError ? (
                             <div className="text-red-600 text-center py-6">
                                 <p>{patientsError}</p>
-                            </div>
-                        ) : apipatients.length === 0 ? (
-                            <div className="text-center text-slate-500 py-6">
-                                No patients found. Please add a new patient to get started.
                             </div>
                         ) : (
                             <Table>
@@ -94,6 +92,17 @@ export default function index({ dashboardId, role }: PatientsProps) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
+                                    {patientsCount === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="text-center py-10">
+                                                <div className="flex flex-col items-center justify-center space-y-2">
+                                                    <Shield className="w-10 h-10 text-slate-400" />
+                                                    <p className="text-slate-600">No patients found</p>
+                                                    <p className="text-sm text-slate-400">Please add a new patient to get started.</p>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                     {apipatients.map((patient: Patient) => (
                                         <TableRow key={patient._id} className="hover:bg-slate-50">
                                             <TableCell className="font-medium text-slate-900">{patient.fullName}</TableCell>

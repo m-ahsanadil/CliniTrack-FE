@@ -21,7 +21,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 // Import components
 import { RoleGuard } from "@/components/role-guard"
@@ -53,15 +53,15 @@ export default function Header() {
     const currentPage = pathname.split("/").pop() || "dashboard"
 
     const goToSettings = () => {
-        router.push(`/${user?.id}/${user?.role}/settings`)
+        router.push(`/${user?.role}/settings`)
     }
 
     const goToBilling = () => {
-        router.push(`/${user?.id}/${user?.role}/billing`)
+        router.push(`/${user?.role}/billing`)
     }
 
     const goToSupport = () => {
-        router.push(`/${user?.id}/${user?.role}/support`)
+        router.push(`/${user?.role}/support`)
     }
 
     const handleLogout = async () => {

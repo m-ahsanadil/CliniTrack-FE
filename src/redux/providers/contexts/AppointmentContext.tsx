@@ -1,11 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
 import {
     Appointment,
-    AppointmentFilters,
     AppointmentRequest,
-    AppointmentStats,
     RescheduleAppointmentRequest
 } from "@/src/modules/Dashboard/appointments/api/types";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
@@ -54,12 +52,9 @@ const AppointmentContext = createContext<AppointmentContextType | undefined>(und
 export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
     const dispatch = useAppDispatch();
     const appointments = useAppSelector(state => state.appointment.appointments);
-    const profileLoading = useAppSelector(state => state.profile.loading);
-    const patientsLoading = useAppSelector(state => state.patients.loading);
-    const providersLoading = useAppSelector(state => state.provider.loading);
-    const { profile } = useAppSelector(state => state.profile);
-    const patientNames = useAppSelector(state => state.patients.basicInfo);
-    const providerNames = useAppSelector(state => state.provider.basicInfo);
+    const { basicInfo: patientNames, loading: patientsLoading } = useAppSelector(state => state.patients);
+    const { basicInfo: providerNames, loading: providersLoading } = useAppSelector(state => state.provider);
+    const { profile, loading: profileLoading } = useAppSelector(state => state.profile);
 
     // states
     const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -67,7 +62,8 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
     const [isDataFetched, setIsDataFetched] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    const filteredAppointments = appointments || [];
+    const filteredAppointments = useMemo(() => appointments, [appointments])
+
 
     // Calculate if data is still loading
     const isDataLoading = profileLoading || patientsLoading || providersLoading;

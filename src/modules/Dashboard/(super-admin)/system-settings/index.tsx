@@ -2,9 +2,9 @@
 import React, { createElement, useState } from 'react';
 import { Settings, Shield, Database, Mail, Globe, Bell, Key, Save, RefreshCw, AlertTriangle, CheckCircle, Server, Lock, Eye, EyeOff, User, LogOut } from 'lucide-react';
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
-import { SuperAdminSystemSettingsProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/(SUPER-ADMIN)/system-settings/page';
+import { SuperAdminSystemSettingsProps } from '@/app/(DASHBOARD)/[role]/(SUPER-ADMIN)/system-settings/page';
 
-export default function index({ dashboardId, role }: SuperAdminSystemSettingsProps) {
+export default function index({ role }: SuperAdminSystemSettingsProps) {
     const [activeTab, setActiveTab] = useState('general');
     const [showApiKey, setShowApiKey] = useState(false);
     const [saveStatus, setSaveStatus] = useState('');
@@ -555,7 +555,7 @@ export default function index({ dashboardId, role }: SuperAdminSystemSettingsPro
     };
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b">

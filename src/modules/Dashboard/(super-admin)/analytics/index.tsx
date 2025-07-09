@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { BarChart3, TrendingUp, Users, Building2, Activity, DollarSign, Calendar, Filter, Download, RefreshCw } from 'lucide-react';
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
-import { SystemAnalyticsProps } from '@/app/(DASHBOARD)/[dashboardId]/[role]/(SUPER-ADMIN)/analytics/page';
+import { SystemAnalyticsProps } from '@/app/(DASHBOARD)/[role]/(SUPER-ADMIN)/analytics/page';
 
-export default function index({ dashboardId, role }: SystemAnalyticsProps) {
+export default function index({ role }: SystemAnalyticsProps) {
     const [selectedPeriod, setSelectedPeriod] = useState('30d');
     const [selectedMetric, setSelectedMetric] = useState('overview');
 
@@ -67,7 +67,7 @@ export default function index({ dashboardId, role }: SystemAnalyticsProps) {
     ];
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
 
             <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
                 {/* Header */}

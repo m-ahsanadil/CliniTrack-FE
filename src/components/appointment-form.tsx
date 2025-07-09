@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -15,7 +15,7 @@ import { format } from "date-fns"
 import { CalendarIcon, FileText, Loader2 } from "lucide-react"
 import { AppointmentPriority, AppointmentPriorityValues, AppointmentStatus, AppointmentStatusValues, AppointmentType, AppointmentTypeValues, DepartmentName, DepartmentNameValues } from "@/src/enum"
 import { Input } from "@/components/ui/input"
-import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
+import { useAppSelector } from "../redux/store/reduxHook"
 import { useToast } from "@/hooks/use-toast"
 import { useAppointment } from "../redux/providers/contexts/AppointmentContext"
 import { FormikHelpers, getIn, useFormik } from "formik"
@@ -100,8 +100,8 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
     reasonForVisit: "",
     symptoms: [],
     notes: "",
-    createdBy: profile?.name || '',
-    updatedBy: profile?.name || ""
+    createdBy: profile?.fullName || '',
+    updatedBy: profile?.fullName || ""
   }
 
   // Determine mode based on editingItem
@@ -134,7 +134,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
         symptoms: appointment.symptoms || [],
         notes: appointment.notes || "",
         createdBy: appointment.createdBy || "",
-        updatedBy: profile?.name || ""
+        updatedBy: profile?.fullName || ""
       }
     }
     return initialAppointmentValues;
@@ -219,7 +219,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
             {mode === 'create' ? "Fill in the details to create a new appointment" : "Update the appointment information below"}
           </p>
           {errorMessage && !isLoading && (
-            <p className="text-sm text-red-600 mb-2">{errorMessage}</p>
+            <p className="text-red-500 rounded-md py-3 text-center bg-red-300 text-sm">{errorMessage}</p>
           )}
         </DialogHeader>
         <form onSubmit={formik.handleSubmit} className="space-y-6">

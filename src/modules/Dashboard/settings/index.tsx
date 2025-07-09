@@ -13,7 +13,6 @@ import Image from "next/image";
 
 // hook
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
-import { SettingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/settings/page"
 import { useEffect } from "react"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
@@ -22,6 +21,7 @@ import { clearErrors, fetchProfile, updateProfile } from '../../Authentication/p
 import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 import { updateProfileValidationSchema } from '@/src/validation/schemas'
 import { usePhoto } from '../../Authentication/profile/api/usePhoto'
+import { SettingProps } from '@/app/(DASHBOARD)/[role]/settings/page'
 
 interface UpdateProfileFormValues {
     name: string;
@@ -35,8 +35,8 @@ interface UpdateProfileFormValues {
     experience: string;
 }
 
-export default function index({ dashboardId, role }: SettingProps) {
-    const { profile, isFetching, updateError, isUpdating } = useAppSelector(state => state.profile)
+export default function index({ role }: SettingProps) {
+    const { profile, updateError, isUpdating, loading } = useAppSelector(state => state.profile)
 
     const {
         photoUrl,
@@ -125,7 +125,7 @@ export default function index({ dashboardId, role }: SettingProps) {
     }, [updateError]);
 
     // ✅ loader rendered AFTER hooks
-    if (isFetching || !profile) {
+    if (loading || !profile) {
         return (
             <div className="flex flex-col items-center justify-center py-10 text-center text-slate-600">
                 <Loader2 className="w-6 h-6 animate-spin mb-2" />
@@ -137,7 +137,7 @@ export default function index({ dashboardId, role }: SettingProps) {
 
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
 
             <RoleGuard
                 allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}

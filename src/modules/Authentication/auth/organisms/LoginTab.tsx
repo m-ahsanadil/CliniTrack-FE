@@ -9,9 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useLogin } from '../api/hooks/uselogin';
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
 
-interface LoginTabHandle {
-    quickLogin: (email: string, password: string) => void;
-}
 
 interface LoginTabProps {
     isSuperAdmin?: boolean;
@@ -26,21 +23,12 @@ interface LoginTabProps {
 
 
 
-export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmin = false, pageContent }, ref) => {
+export const LoginTab = ({ isSuperAdmin = false, pageContent}: LoginTabProps) => {
     const { formik, loginLoading, loginError, isNavigating } = useLogin();
     const {
         toggleLoginPasswordVisibility,
         showLoginPassword,
     } = useGlobalUI();
-
-    useImperativeHandle(ref, () => ({
-        quickLogin: (email: string, password: string) => {
-            formik.setValues({ email, password });
-            setTimeout(() => {
-                formik.submitForm();
-            }, 0); // ensure values are set before submit
-        },
-    }));
 
     const getLoginContent = () => {
         if (isSuperAdmin) {
@@ -217,6 +205,4 @@ export const LoginTab = forwardRef<LoginTabHandle, LoginTabProps>(({ isSuperAdmi
             </Card>
         </TabsContent>
     )
-});
-
-LoginTab.displayName = 'LoginTab';
+}

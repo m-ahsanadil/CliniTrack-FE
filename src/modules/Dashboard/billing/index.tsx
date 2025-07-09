@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge"
 import { RoleGuard } from "@/components/role-guard"
 import { getStatusBadgeVariant } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
-import { BillingProps } from "@/app/(DASHBOARD)/[dashboardId]/[role]/billing/page"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { useInvoiceFetcher } from "./api/useInvoiceFetcher"
 import { Invoice } from "./api/types"
@@ -27,9 +26,10 @@ import { deleteInvoice, fetchAllInvoices } from "./api/slice"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { formatDate } from "@/src/utils/dateFormatter"
 import { InvoiceStatus, UserRole } from "@/src/enum"
+import { BillingProps } from "@/app/(DASHBOARD)/[role]/billing/page"
 
 
-export default function index({ dashboardId, role }: BillingProps) {
+export default function index({ role }: BillingProps) {
     const dispatch = useAppDispatch();
 
     // Custom hook for fetching appointments
@@ -88,7 +88,7 @@ export default function index({ dashboardId, role }: BillingProps) {
     }
 
     return (
-        <ProtectedRoleGuard dashboardId={dashboardId} role={role}>
+        <ProtectedRoleGuard role={role}>
 
             <RoleGuard
                 allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}
