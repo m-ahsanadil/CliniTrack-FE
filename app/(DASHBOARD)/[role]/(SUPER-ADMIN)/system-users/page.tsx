@@ -4,7 +4,6 @@ export interface SuperAdminUsersProps {
     role: string
 }
 
-
 export default async function SuperAdminUsersPage({ params }: { params: Promise<SuperAdminUsersProps> }) {
     const resolvedParams = await params
 

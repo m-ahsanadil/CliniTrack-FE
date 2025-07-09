@@ -49,7 +49,7 @@ export const LoginTab = ({ isSuperAdmin = false, pageContent}: LoginTabProps) =>
                 <>
                     For demonstration purposes, use the{" "}
                     <span className="text-blue-600 font-medium">/super-admin</span>{" "}
-                    log in with username ahsan-adil and password ahsan to register a new user
+                    log in with username ahsan-adil and password ahsan-adil to register a new user
                 </>
             ),
             cardStyle: "bg-white/95 backdrop-blur border-0 shadow-2xl",
@@ -98,7 +98,7 @@ export const LoginTab = ({ isSuperAdmin = false, pageContent}: LoginTabProps) =>
                                     </p>
                                     <p className="mt-1">
                                         <span className="font-medium">Password:</span>{" "}
-                                        <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">ahsan</code>
+                                        <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">ahsan-adil</code>
                                     </p>
                                 </div>
                             </div>

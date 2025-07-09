@@ -31,3 +31,25 @@ export interface SystemUsersResponse {
 
 // Combined response type
 export type SystemUsersApiResponse = SystemUsersResponse | SystemUsersErrorResponse;
+
+export interface UpdatePasswordUser {
+    newPassword: string;
+}
+
+export interface UpdatePasswordUserResponse {
+    success: boolean;
+    message: string;
+    data?: any
+}
+
+// interfaces/error.ts
+
+export interface UpdatePasswordUserErrorResponse {
+    success: false;
+    message: string;
+    statusCode?: number; // Optional if your backend adds it
+}
+
+// Combined response type
+export type UpdatePasswordUserApiResponse = UpdatePasswordUserResponse | UpdatePasswordUserErrorResponse;
+

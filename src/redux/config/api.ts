@@ -15,7 +15,8 @@ export const ENDPOINTS = {
     DASHBOARD: {
         GET_SUPER_ADMIN: '/dashboards/super-admin', // GET
         CREATE_SUPER_ADMIN: '/dashboards/super-admin/create', // POST
-        UPDATE_SUPER_ADMIN: (id: string | number) => `/dashboards/super-admin/users/${id}/password`, // UPDATE PASSWORD FOR ADMIN
+        // UPDATE_SUPER_ADMIN: (id: string | number) => `/dashboards/super-admin/users/${id}/password`, // UPDATE PASSWORD FOR ADMIN
+        UPDATE_ADMIN_PASSWORD: (id: string | number) => `/dashboards/super-admin/users/${id}/password`,
         GET_SUPER_ADMIN_USER: '/dashboards/super-admin/users', // GET ADMIN USERS BY SUPER ADMIN
 
         GET_ADMIN: '/dashboards/admin',
