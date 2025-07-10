@@ -14,7 +14,7 @@ import CalendarView from "@/components/calendar-view"
 import { ReactNode } from 'react';
 import { useAppSelector } from '@/src/redux/store/reduxHook';
 import { useRoleValidation } from '@/src/redux/hook/useRoleValidation';
-import { DashboardLoading } from '@/src/components/Loading';
+import { DashboardLoading } from '@/src/components/ui/Loading';
 import { useMedicalRecord } from '@/src/redux/providers/contexts/MedicalRecordContext';
 import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 import { useProvider } from '@/src/redux/providers/contexts/ProviderContext';

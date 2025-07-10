@@ -17,6 +17,9 @@ import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook";
 import { clearCreateError, clearUpdateError, fetchSelectedPatientProviders } from "../modules/Dashboard/medicalRecords/api/slice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { CalendarHeader } from "./ui/CalendarHeader";
+import { formatDateForInput } from "../utils/FormatDateForInput";
+import { format, parseISO } from "date-fns";
 
 
 interface MedicalRecordFormValues {
@@ -57,15 +60,9 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
   const {
     createError,
     createLoading,
-    createSuccess,
     updateError,
     updateLoading,
-    updateSuccess,
-    selectedError,
-    selectedLoading,
   } = useAppSelector(state => state.medicalRecord);
-
-  console.log(SelectPatientProvider);
 
   const initialMedicalRecordValues: MedicalRecordFormValues = {
     patientId: "",
@@ -101,7 +98,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
         treatment: medicalRecord.treatment,
         prescription: medicalRecord.prescription,
         notes: medicalRecord.notes,
-        recordDate: medicalRecord.recordDate,
+        recordDate: formatDateForInput(medicalRecord.recordDate),
         createdBy: medicalRecord.createdBy,
         updatedBy: profile?.fullName || ""
       };
@@ -137,6 +134,11 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
     enableReinitialize: true,
   });
 
+  const [calendarDate, setCalendarDate] = useState(
+    formik.values.recordDate ? new Date(formik.values.recordDate) : new Date()
+  );
+
+
   // Get unique providers from SelectPatientProvider
   const uniqueProviders = useMemo(() => {
     const providerMap = new Map();
@@ -148,25 +150,16 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
     return Array.from(providerMap.values());
   }, [SelectPatientProvider]);
 
-  // Get patients available for selected provider or all if no provider selected
+  // Get patients - show all patients since selecting patient will auto-select provider
   const availablePatients = useMemo(() => {
-    if (!formik.values.providerId) {
-      // If no provider selected, show all patients
-      const patientMap = new Map();
-      SelectPatientProvider.forEach(item => {
-        if (!patientMap.has(item.patient._id)) {
-          patientMap.set(item.patient._id, item.patient);
-        }
-      });
-      return Array.from(patientMap.values());
-    }
-
-    // Filter patients for selected provider
-    return SelectPatientProvider
-      .filter(item => item.provider._id === formik.values.providerId)
-      .map(item => item.patient);
-  }, [SelectPatientProvider, formik.values.providerId]);
-
+    const patientMap = new Map();
+    SelectPatientProvider.forEach(item => {
+      if (!patientMap.has(item.patient._id)) {
+        patientMap.set(item.patient._id, item.patient);
+      }
+    });
+    return Array.from(patientMap.values());
+  }, [SelectPatientProvider]);
 
   // Handle provider change and reset patient if needed
   const handleProviderChange = (providerId: string) => {
@@ -227,30 +220,6 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
               <CardTitle className="text-white">Patient & Provider</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Provider Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="providerId">Provider *</Label>
-                <Select
-                  value={formik.values.providerId}
-                  onValueChange={handleProviderChange}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                    <SelectValue placeholder="Select Provider" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 text-white">
-                    {uniqueProviders.map((provider) => (
-                      <SelectItem key={provider._id} value={provider._id}>
-                        {provider.name} - {provider.id}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {getFieldError("providerId") && (
-                  <p className="text-red-500 text-sm">{formik.errors.providerId}</p>
-                )}
-              </div>
-
               {/* Patient Selection */}
               <div className="space-y-2">
                 <Label htmlFor="patientId">Patient *</Label>
@@ -272,6 +241,30 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
                 </Select>
                 {getFieldError("patientId") && (
                   <p className="text-red-500 text-sm">{formik.errors.patientId}</p>
+                )}
+              </div>
+
+              {/* Provider Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="providerId">Provider *</Label>
+                <Select
+                  value={formik.values.providerId}
+                  onValueChange={handleProviderChange}
+                  disabled
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Select Provider" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 text-white">
+                    {uniqueProviders.map((provider) => (
+                      <SelectItem key={provider._id} value={provider._id}>
+                        {provider.name} - {provider.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {getFieldError("providerId") && (
+                  <p className="text-red-500 text-sm">{formik.errors.providerId}</p>
                 )}
               </div>
             </CardContent>
@@ -349,26 +342,42 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
-                      className="w-full bg-slate-700 border-slate-600 text-left text-white font-normal"
+                      className="w-full bg-slate-700 border-slate-600 text-left font-normal"
                     >
                       {formik.values.recordDate ? (
-                        formik.values.recordDate
+                        // new Date(formik.values.recordDate + 'T00:00:00').toLocaleDateString('en-US', { 
+                        //   year: 'numeric', 
+                        //   month: 'long', 
+                        //   day: 'numeric' 
+                        // })
+                        format(parseISO(formik.values.recordDate + 'T00:00:00'), 'PPP')
                       ) : (
                         <span>Select date</span>
                       )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto bg-white p-0">
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarHeader
+                      date={calendarDate}
+                      onNavigate={setCalendarDate}
+                    />
                     <Calendar
                       mode="single"
-                      selected={formik.values.recordDate ? new Date(formik.values.recordDate) : undefined}
+                      selected={formik.values.recordDate ? new Date(formik.values.recordDate + 'T00:00:00') : undefined}
                       onSelect={(date) => {
                         if (date) {
-                          const isoDate = date.toISOString().split("T")[0];
-                          formik.setFieldValue("recordDate", isoDate);
+                          // Use local date without timezone conversion
+                          const year = date.getFullYear();
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const localDate = `${year}-${month}-${day}`;
+                          formik.setFieldValue("recordDate", localDate);
                         }
                       }}
+                      month={calendarDate}
+                      onMonthChange={setCalendarDate}
+                      className="border-none"
                     />
                   </PopoverContent>
                 </Popover>

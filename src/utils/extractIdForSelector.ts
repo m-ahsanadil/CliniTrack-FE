@@ -1,4 +1,4 @@
-  export const extractId = (value: any): string => {
+ export const extractId = (value: any): string => {
     if (typeof value === 'string') {
       return value;
     }
