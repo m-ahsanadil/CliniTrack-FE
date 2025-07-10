@@ -7,6 +7,7 @@ import {
   MedicalRecordPost,
   MedicalRecordPostApiResponse,
   MedicalRecordPostResponse,
+  PatientProvider,
   PatientProviderResponse,
 
 } from "./types";
@@ -126,7 +127,7 @@ interface MedicalRecordState {
   updateError: string | null;
   updateSuccess: boolean;
 
-  selectedPatients: PatientProviderResponse["data"]; // New
+  selectedPatients: PatientProvider[]; // New
   selectedLoading: boolean; // New
   selectedError: string | null; // New
 }

@@ -47,6 +47,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
     setIsEditing,
     profile,
     medicalRecord,
+    SelectPatientProvider,
     setMedicalRecord,
     handleSaveMedicalRecord,
     setMedicalRecordFormOpen,
@@ -62,8 +63,9 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
     updateSuccess,
     selectedError,
     selectedLoading,
-    selectedPatients,
   } = useAppSelector(state => state.medicalRecord);
+
+  console.log(SelectPatientProvider);
 
   const initialMedicalRecordValues: MedicalRecordFormValues = {
     patientId: "",
@@ -82,12 +84,19 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
   const isLoading = isEditing ? updateLoading : createLoading;
   const errorMessage = isEditing ? updateError : createError;
 
+  // Helper function to extract ID from object or return string as-is
+  const extractId = (value: any): string => {
+    if (typeof value === 'string') return value;
+    if (value && typeof value === 'object' && value._id) return value._id;
+    return '';
+  };
+
   // Determine initial values based on mode
   const getInitialValues = useMemo((): MedicalRecordFormValues => {
     if (mode === "edit" && medicalRecord) {
       return {
-        patientId: "",
-        providerId: "",
+        patientId: extractId(medicalRecord.patientId),
+        providerId: extractId(medicalRecord.providerId),
         diagnosis: medicalRecord.diagnosis,
         treatment: medicalRecord.treatment,
         prescription: medicalRecord.prescription,
@@ -128,9 +137,68 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
     enableReinitialize: true,
   });
 
+  // Get unique providers from SelectPatientProvider
+  const uniqueProviders = useMemo(() => {
+    const providerMap = new Map();
+    SelectPatientProvider.forEach(item => {
+      if (!providerMap.has(item.provider._id)) {
+        providerMap.set(item.provider._id, item.provider);
+      }
+    });
+    return Array.from(providerMap.values());
+  }, [SelectPatientProvider]);
+
+  // Get patients available for selected provider or all if no provider selected
+  const availablePatients = useMemo(() => {
+    if (!formik.values.providerId) {
+      // If no provider selected, show all patients
+      const patientMap = new Map();
+      SelectPatientProvider.forEach(item => {
+        if (!patientMap.has(item.patient._id)) {
+          patientMap.set(item.patient._id, item.patient);
+        }
+      });
+      return Array.from(patientMap.values());
+    }
+
+    // Filter patients for selected provider
+    return SelectPatientProvider
+      .filter(item => item.provider._id === formik.values.providerId)
+      .map(item => item.patient);
+  }, [SelectPatientProvider, formik.values.providerId]);
+
+
+  // Handle provider change and reset patient if needed
+  const handleProviderChange = (providerId: string) => {
+    formik.setFieldValue('providerId', providerId);
+
+    // Check if current patient is still available with new provider
+    const isPatientAvailable = SelectPatientProvider.some(
+      item => item.provider._id === providerId && item.patient._id === formik.values.patientId
+    );
+
+    if (!isPatientAvailable) {
+      formik.setFieldValue('patientId', ''); // Reset patient selection
+    }
+  };
+
+  // Handle patient change and automatically set provider
+  const handlePatientChange = (patientId: string) => {
+    formik.setFieldValue('patientId', patientId);
+
+    // Find the provider for this patient
+    const patientProvider = SelectPatientProvider.find(
+      item => item.patient._id === patientId
+    );
+
+    if (patientProvider) {
+      formik.setFieldValue('providerId', patientProvider.provider._id);
+    }
+  };
+
   const handleCancel = () => {
-    setMedicalRecordFormOpen(false);
     setMedicalRecord(null);
+    setMedicalRecordFormOpen(false);
     setIsEditing(false);
   };
 
@@ -156,29 +224,179 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
         <form onSubmit={formik.handleSubmit} className="space-y-6 py-4">
           <Card className="bg-slate-800 border-slate-700 text-white">
             <CardHeader>
-              <CardTitle></CardTitle>
+              <CardTitle className="text-white">Patient & Provider</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Provider Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="providerId">Provider *</Label>
+                <Select
+                  value={formik.values.providerId}
+                  onValueChange={handleProviderChange}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Select Provider" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 text-white">
+                    {uniqueProviders.map((provider) => (
+                      <SelectItem key={provider._id} value={provider._id}>
+                        {provider.name} - {provider.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {getFieldError("providerId") && (
+                  <p className="text-red-500 text-sm">{formik.errors.providerId}</p>
+                )}
+              </div>
 
+              {/* Patient Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="patientId">Patient *</Label>
+                <Select
+                  value={formik.values.patientId}
+                  onValueChange={handlePatientChange}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                    <SelectValue placeholder="Select Patient" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 text-white">
+                    {availablePatients.map((patient) => (
+                      <SelectItem key={patient._id} value={patient._id}>
+                        {patient.name} - {patient.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {getFieldError("patientId") && (
+                  <p className="text-red-500 text-sm">{formik.errors.patientId}</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700 text-white">
             <CardHeader>
-              <CardTitle></CardTitle>
+              <CardTitle className="text-white">Diagnosis & Treatment</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="diagnosis">Diagnosis *</Label>
+                <Input
+                  id="diagnosis"
+                  name="diagnosis"
+                  value={formik.values.diagnosis}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Enter diagnosis"
+                  disabled={isLoading}
+                />
+                {getFieldError("diagnosis") && (
+                  <p className="text-red-500 text-sm">{formik.errors.diagnosis}</p>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="treatment">Treatment *</Label>
+                  <Textarea
+                    id="treatment"
+                    name="treatment"
+                    value={formik.values.treatment}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600"
+                    placeholder="Describe treatment"
+                    disabled={isLoading}
+                  />
+                  {getFieldError("treatment") && (
+                    <p className="text-red-500 text-sm">{formik.errors.treatment}</p>
+                  )}
+                </div>
 
+                {/* Prescriptions */}
+                <div className="space-y-2">
+                  <Label htmlFor="prescription">Prescription *</Label>
+                  <Textarea
+                    id="prescription"
+                    name="prescription"
+                    value={formik.values.prescription}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className="bg-slate-700 border-slate-600"
+                    placeholder="Enter prescription"
+                    disabled={isLoading}
+                  />
+                  {getFieldError("prescription") && (
+                    <p className="text-red-500 text-sm">{formik.errors.prescription}</p>
+                  )}
+                </div>
+
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800 border-slate-700 text-white">
             <CardHeader>
-              <CardTitle></CardTitle>
+              <CardTitle className="text-white">Notes & Record Date</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="recordDate">Record Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className="w-full bg-slate-700 border-slate-600 text-left text-white font-normal"
+                    >
+                      {formik.values.recordDate ? (
+                        formik.values.recordDate
+                      ) : (
+                        <span>Select date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto bg-white p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formik.values.recordDate ? new Date(formik.values.recordDate) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          const isoDate = date.toISOString().split("T")[0];
+                          formik.setFieldValue("recordDate", isoDate);
+                        }
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {getFieldError("recordDate") && (
+                  <p className="text-red-500 text-sm">{formik.errors.recordDate}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={formik.values.notes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="bg-slate-700 border-slate-600"
+                  placeholder="Optional notes..."
+                  disabled={isLoading}
+                />
+                {getFieldError("notes") && (
+                  <p className="text-red-500 text-sm">{formik.errors.notes}</p>
+                )}
+              </div>
+
 
             </CardContent>
+
           </Card>
 
           {/* Metadata Section */}

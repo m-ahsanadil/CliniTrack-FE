@@ -1,8 +1,8 @@
 "use client";
-import { MedicalRecordGetAll, MedicalRecordPost } from "@/src/modules/Dashboard/medicalRecords/api/types";
+import { MedicalRecordGetAll, MedicalRecordPost, PatientProvider } from "@/src/modules/Dashboard/medicalRecords/api/types";
 import { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
-import { clearCreateError, clearCreateSuccess, clearDeleteError, clearError, clearUpdateError, clearUpdateSuccess, createMedicalRecord, deleteMedicalRecord, fetchAllMedicalRecord, updateMedicalRecord } from "@/src/modules/Dashboard/medicalRecords/api/slice";
+import { clearCreateError, clearCreateSuccess, clearDeleteError, clearError, clearUpdateError, clearUpdateSuccess, createMedicalRecord, deleteMedicalRecord, fetchAllMedicalRecord, fetchSelectedPatientProviders, updateMedicalRecord } from "@/src/modules/Dashboard/medicalRecords/api/slice";
 import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
 import { fetchProfile } from "@/src/modules/Authentication/profile/api/slice";
 
@@ -12,6 +12,8 @@ type MedicalRecordContextType = {
     medicalRecord: MedicalRecordGetAll | null;
     setMedicalRecord: (val: MedicalRecordGetAll | null) => void;
     profile: GetUserProfile | null;
+
+    SelectPatientProvider: PatientProvider[]
 
     // ModalStates
     medicalRecordFormOpen: boolean;
@@ -42,12 +44,12 @@ export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => 
     const medicalRecords = useAppSelector(state => state.medicalRecord.medicalRecords)
     const { profile } = useAppSelector(state => state.profile);
     const profileLoading = useAppSelector(state => state.profile.loading);
-
     // states
     const [medicalRecord, setMedicalRecord] = useState<MedicalRecordGetAll | null>(null);
     const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false);
     const [isDataFetched, setIsDataFetched] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const SelectPatientProvider = useAppSelector(state => state.medicalRecord.selectedPatients)
 
     const filteredMedicalRecords = useMemo(() => medicalRecords, [medicalRecords]);
 
@@ -60,6 +62,7 @@ export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => 
             if (!isDataFetched) {
                 try {
                     await Promise.all([
+                        dispatch(fetchSelectedPatientProviders()),
                         dispatch(fetchProfile()),
 
                     ]);
@@ -77,6 +80,7 @@ export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => 
     const refetchData = async () => {
         try {
             await Promise.all([
+                dispatch(fetchSelectedPatientProviders()),
                 dispatch(fetchProfile()),
             ]);
             setIsDataFetched(true);
@@ -171,6 +175,7 @@ export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => 
             value={{
                 medicalRecord,
                 setMedicalRecord,
+                SelectPatientProvider,
                 profile,
                 isDataFetched,
                 isDataLoading,

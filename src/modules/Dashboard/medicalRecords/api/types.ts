@@ -98,17 +98,21 @@ export interface MedicalRecordDeleteResponse {
     data?: string;
 }
 
+export interface PatientProvider {
+    patient: {
+        _id: string;
+        id: string;
+        name: string;
+    };
+    provider: {
+        _id: string;
+        id: string;
+        name: string;
+    };
+}
+
 export interface PatientProviderResponse {
     success: boolean;
     count: number;
-    data: {
-        patient: {
-            id: string;
-            name: string;
-            provider: {
-                id: string;
-                name: string;
-            };
-        };
-    }[];
+    data: PatientProvider[];
 }
