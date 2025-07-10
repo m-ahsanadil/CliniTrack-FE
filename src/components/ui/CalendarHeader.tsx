@@ -13,8 +13,9 @@ export const CalendarHeader = ({ date, onNavigate }: CalendarHeaderProps) => {
     const currentMonth = date.getMonth();
 
     // Generate year range (you can adjust this range as needed)
-    const currentYearNum = new Date().getFullYear();
-    const yearRange = Array.from({ length: 20 }, (_, i) => currentYearNum - 10 + i);
+    const startYear = 1947;
+    const endYear = new Date().getFullYear();
+    const yearRange = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
 
     const months = [
         "January", "February", "March", "April", "May", "June",

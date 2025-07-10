@@ -1,19 +1,23 @@
 "use client"
 
 // Import components
-import { FormikHelpers, useFormik } from 'formik'
+import { FormikHelpers, getIn, useFormik } from 'formik'
 import { RoleGuard } from "@/components/role-guard"
-import { AlertCircle, Loader2, Shield, } from "lucide-react"
+import { AlertCircle, CalendarIcon, Loader2, Shield, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format, parseISO } from 'date-fns';
+import { CalendarHeader } from '@/src/components/ui/CalendarHeader';
+import { Calendar } from '@/components/ui/calendar';
 
 // hook
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useToast } from "@/hooks/use-toast"
@@ -22,6 +26,7 @@ import { UpdateProfileRequest } from '../../Authentication/profile/api/types'
 import { updateProfileValidationSchema } from '@/src/validation/schemas'
 import { usePhoto } from '../../Authentication/profile/api/usePhoto'
 import { SettingProps } from '@/app/(DASHBOARD)/[role]/settings/page'
+import { formatDateToString } from '@/src/utils/FormatDateToString'
 
 interface UpdateProfileFormValues {
     name: string;
@@ -114,6 +119,17 @@ export default function index({ role }: SettingProps) {
         enableReinitialize: true
     });
 
+    const [dates, setDates] = useState(formik.values.dob ? new Date(formik.values.dob) : new Date()
+    );
+
+
+    // Function to get field error
+    const getFieldError = (fieldName: string) => {
+        const touched = getIn(formik.touched, fieldName);
+        const error = getIn(formik.errors, fieldName);
+        return touched && error ? error : null;
+    };
+
     useEffect(() => {
         if (updateError) {
             toast({
@@ -204,75 +220,111 @@ export default function index({ role }: SettingProps) {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="name" className="text-slate-700">Full Name</Label>
-                                        <Input id="name" {...formik.getFieldProps("name")} />
-                                        {formik.touched.name && formik.errors.name && (
-                                            <p className="text-red-500 text-sm">{formik.errors.name}</p>
+                                        <Input id="name" {...formik.getFieldProps("name")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('name') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('name')}</p>
                                         )}
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="age" className="text-slate-700">Age</Label>
-                                        <Input id="age" type="number" {...formik.getFieldProps("age")} />
-                                        {formik.touched.age && formik.errors.age && (
-                                            <p className="text-red-500 text-sm">{formik.errors.age}</p>
+                                        <Input id="age" type="number" {...formik.getFieldProps("age")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('age') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('age')}</p>
                                         )}
                                     </div>
 
-
+                                    {/* Date Of Birth */}
                                     <div className="space-y-2">
-                                        <Label htmlFor="dob" className="text-slate-700">Date of Birth</Label>
-                                        <Input id="dob" type="date" {...formik.getFieldProps("dob")} />
-                                        {/* {formik.touched && formik.errors.name && (
-                                            <p className="text-red-500 text-sm">{formik.errors.name}</p>
-                                        )} */}
+                                        <Label htmlFor="dob" className="text-slate-700">Date Of Birth *</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                                                >
+                                                    {formik.values.dob ? (
+                                                        format(parseISO(formik.values.dob + 'T00:00:00'), 'PPP')
+                                                    ) : (
+                                                        <span>Select date</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0">
+                                                <CalendarHeader
+                                                    date={dates}
+                                                    onNavigate={setDates}
+                                                />
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={dates}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            // Use local date without timezone conversion
+                                                            const formatted = formatDateToString(date);
+                                                            formik.setFieldValue("dob", formatted);
+                                                        }
+                                                    }}
+                                                    month={dates}
+                                                    onMonthChange={setDates}
+                                                    className="border-none"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        {getFieldError('dob') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('dob')}</p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="speciality" className="text-slate-700">Speciality</Label>
-                                        <Input id="speciality" {...formik.getFieldProps("speciality")} />
-                                        {formik.touched.speciality && formik.errors.speciality && (
-                                            <p className="text-red-500 text-sm">{formik.errors.speciality}</p>
+                                        <Input id="speciality" {...formik.getFieldProps("speciality")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('speciality') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('speciality')}</p>
                                         )}
+
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="intro" className="text-slate-700">Intro</Label>
-                                        <Input id="intro" {...formik.getFieldProps("intro")} />
-                                        {formik.touched.intro && formik.errors.intro && (
-                                            <p className="text-red-500 text-sm">{formik.errors.intro}</p>
+                                        <Input id="intro" {...formik.getFieldProps("intro")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('intro') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('intro')}</p>
                                         )}
+
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="field" className="text-slate-700">Field</Label>
-                                        <Input id="field" {...formik.getFieldProps("field")} />
-                                        {formik.touched.field && formik.errors.field && (
-                                            <p className="text-red-500 text-sm">{formik.errors.field}</p>
+                                        <Input id="field" {...formik.getFieldProps("field")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('field') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('field')}</p>
                                         )}
-
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="degree" className="text-slate-700">Degree</Label>
-                                        <Input id="degree" {...formik.getFieldProps("degree")} />
-                                        {formik.touched.degree && formik.errors.degree && (
-                                            <p className="text-red-500 text-sm">{formik.errors.degree}</p>
+                                        <Input id="degree" {...formik.getFieldProps("degree")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('degree') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('degree')}</p>
                                         )}
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="education" className="text-slate-700">Education</Label>
-                                        <Input id="education" {...formik.getFieldProps("education")} />
-                                        {formik.touched.education && formik.errors.education && (
-                                            <p className="text-red-500 text-sm">{formik.errors.education}</p>
+                                        <Input id="education" {...formik.getFieldProps("education")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('education') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('education')}</p>
                                         )}
+
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="experience" className="text-slate-700">Experience</Label>
-                                        <Input id="experience" {...formik.getFieldProps("experience")} />
-                                        {formik.touched.experience && formik.errors.experience && (
-                                            <p className="text-red-500 text-sm">{formik.errors.experience}</p>
+                                        <Input id="experience" {...formik.getFieldProps("experience")} className='bg-slate-700 border-slate-600 text-left font-normal'/>
+                                        {getFieldError('experience') && (
+                                            <p className="text-red-500 text-sm">{getFieldError('experience')}</p>
                                         )}
                                     </div>
 
@@ -280,40 +332,36 @@ export default function index({ role }: SettingProps) {
                                         <Label htmlFor="username" className="text-slate-700">
                                             Username
                                         </Label>
-                                        <Input id="username" disabled defaultValue={profile?.username} className="border-slate-300" />
-                                        {/* {formik.touched. && formik.errors.name && (
-                                            <p className="text-red-500 text-sm">{formik.errors.name}</p>
-                                        )} */}
+                                        <Input id="username" disabled defaultValue={profile?.username} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="email" className="text-slate-700">
                                             Email Address
                                         </Label>
-                                        <Input id="email" type="email" disabled defaultValue={profile?.email || ""} className="border-slate-300" />
+                                        <Input id="email" type="email" disabled defaultValue={profile?.email || ""} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="department" className="text-slate-700">
                                             Department
                                         </Label>
-                                        <Input id="department" defaultValue={profile?.department || ""} className="border-slate-300" />
+                                        <Input id="department" defaultValue={profile?.department || ""} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Role</Label>
-                                        <Input disabled defaultValue={profile?.role || ""} className="border-slate-300" />
-                                        {/* <p className="text-sm text-slate-900 bg-slate-100 px-3 py-2 rounded-md border border-slate-200">{profile?.role}</p> */}
+                                        <Input disabled defaultValue={profile?.role || ""} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Created At</Label>
-                                        <Input disabled defaultValue={new Date(profile?.createdAt).toLocaleString()} className="border-slate-300" />
+                                        <Input disabled defaultValue={new Date(profile?.createdAt).toLocaleString()} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label className="text-slate-700">Last Updated</Label>
-                                        <Input disabled defaultValue={new Date(profile?.updatedAt).toLocaleString()} className="border-slate-300" />
+                                        <Input disabled defaultValue={new Date(profile?.updatedAt).toLocaleString()} className='bg-slate-700 border-slate-600 text-left font-normal' />
                                     </div>
 
 

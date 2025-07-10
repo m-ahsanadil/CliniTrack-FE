@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { CalendarIcon, FileText, Loader2 } from "lucide-react"
 import { AppointmentPriority, AppointmentPriorityValues, AppointmentStatus, AppointmentStatusValues, AppointmentType, AppointmentTypeValues, DepartmentName, DepartmentNameValues } from "@/src/enum"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,9 @@ import { useAppointment } from "../redux/providers/contexts/AppointmentContext"
 import { FormikHelpers, getIn, useFormik } from "formik"
 import { appointmentValidationSchema } from "../validation/schemas"
 import { generateId } from "../utils/idGenerator"
+import { formatDateForInput } from "../utils/FormatDateForInput"
+import { CalendarHeader } from "./ui/CalendarHeader"
+import { formatDateToString } from "../utils/FormatDateToString"
 
 interface AppointmentFormValues {
   appointmentNumber: string;
@@ -116,7 +119,7 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
         patientId: appointment.patientId?._id || "",
         providerId: appointment.providerId?._id || "",
         departmentName: appointment.departmentName || "",
-        appointmentDate: appointment.appointmentDate || "",
+        appointmentDate: formatDateForInput(appointment.appointmentDate) || "",
         startTime: appointment.startTime || "",
         endTime: appointment.endTime || "",
         duration: appointment.duration || 0,
@@ -177,6 +180,11 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
     onSubmit: handleAppointmentForm,
     enableReinitialize: true,
   });
+
+  const [calendarDate, setCalendarDate] = useState(
+    formik.values.appointmentDate ? new Date(formik.values.appointmentDate) : new Date()
+  );
+
 
   const timeSlots = useMemo(() => [
     "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
@@ -272,23 +280,35 @@ export default function AppointmentForm({ open, onOpenChange }: AppointmentFormP
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
-                        className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600 justify-start text-left font-normal"
+                        variant={"outline"}
+                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formik.values.appointmentDate
-                          ? format(new Date(formik.values.appointmentDate), "PPP")
-                          : "Pick a date"
-                        }
+                        {formik.values.appointmentDate ? (
+                          format(parseISO(formik.values.appointmentDate + 'T00:00:00'), 'PPP')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-slate-700 border-slate-600">
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarHeader
+                        date={calendarDate}
+                        onNavigate={setCalendarDate}
+                      />
                       <Calendar
                         mode="single"
-                        selected={formik.values.appointmentDate ? new Date(formik.values.appointmentDate) : undefined}
-                        onSelect={(date) => formik.setFieldValue('appointmentDate', date?.toISOString().split('T')[0])}
-                        initialFocus
-                        className="text-white"
+                        selected={formik.values.appointmentDate ? new Date(formik.values.appointmentDate + 'T00:00:00') : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            // Use local date without timezone conversion
+                            const formatted = formatDateToString(date);
+                            formik.setFieldValue("appointmentDate", formatted);
+                          }
+                        }}
+                        month={calendarDate}
+                        onMonthChange={setCalendarDate}
+                        className="border-none"
                       />
                     </PopoverContent>
                   </Popover>

@@ -14,12 +14,12 @@ import { medicalRecordValidationSchema } from "../validation/schemas"
 import { FormikHelpers, getIn, useFormik } from 'formik'
 import { useMedicalRecord } from "../redux/providers/contexts/MedicalRecordContext";
 import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook";
-import { clearCreateError, clearUpdateError, fetchSelectedPatientProviders } from "../modules/Dashboard/medicalRecords/api/slice";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarHeader } from "./ui/CalendarHeader";
 import { formatDateForInput } from "../utils/FormatDateForInput";
 import { format, parseISO } from "date-fns";
+import { formatDateToString } from "../utils/FormatDateToString";
 
 
 interface MedicalRecordFormValues {
@@ -98,7 +98,7 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
         treatment: medicalRecord.treatment,
         prescription: medicalRecord.prescription,
         notes: medicalRecord.notes,
-        recordDate: formatDateForInput(medicalRecord.recordDate),
+        recordDate: formatDateForInput(medicalRecord.recordDate) || "",
         createdBy: medicalRecord.createdBy,
         updatedBy: profile?.fullName || ""
       };
@@ -345,11 +345,6 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
                       className="w-full bg-slate-700 border-slate-600 text-left font-normal"
                     >
                       {formik.values.recordDate ? (
-                        // new Date(formik.values.recordDate + 'T00:00:00').toLocaleDateString('en-US', { 
-                        //   year: 'numeric', 
-                        //   month: 'long', 
-                        //   day: 'numeric' 
-                        // })
                         format(parseISO(formik.values.recordDate + 'T00:00:00'), 'PPP')
                       ) : (
                         <span>Select date</span>
@@ -368,11 +363,8 @@ export default function MedicalRecordForm({ open, onOpenChange }: MedicalRecordF
                       onSelect={(date) => {
                         if (date) {
                           // Use local date without timezone conversion
-                          const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          const day = String(date.getDate()).padStart(2, '0');
-                          const localDate = `${year}-${month}-${day}`;
-                          formik.setFieldValue("recordDate", localDate);
+                          const formatted = formatDateToString(date)
+                          formik.setFieldValue("recordDate", formatted);
                         }
                       }}
                       month={calendarDate}

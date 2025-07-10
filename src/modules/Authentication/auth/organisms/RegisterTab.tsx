@@ -1,13 +1,19 @@
-import React, { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { useRegister } from '../api/hooks/useRegister';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TabsContent } from "@/components/ui/tabs"
-import { Eye, EyeOff } from "lucide-react"
+import { CalendarIcon, Eye, EyeOff } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserRole, UserRoleValues } from '@/src/enum';
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format, parseISO } from 'date-fns';
+import { CalendarHeader } from '@/src/components/ui/CalendarHeader';
+import { Calendar } from '@/components/ui/calendar';
+import { getIn } from 'formik';
+import { formatDateToString } from '@/src/utils/FormatDateToString';
 
 interface RegisterTabProps {
     onSuccessCallback?: () => void;
@@ -23,6 +29,9 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
         setShowConfirmPassword,
         toggleConfirmPasswordVisibility,
     } = useGlobalUI();
+    const [dates, setDates] = useState({
+        dateOfBirth: new Date()
+    });
 
     const sanitize = (text: string) =>
         text.toLowerCase().replace(/[^a-z]/g, "");
@@ -46,6 +55,12 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
         }
     };
 
+    // Function to get field error
+    const getFieldError = (fieldName: string) => {
+        const touched = getIn(registerFormik.touched, fieldName);
+        const error = getIn(registerFormik.errors, fieldName);
+        return touched && error ? error : null;
+    };
 
     return (
         <TabsContent value="register">
@@ -87,8 +102,8 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                     </option>
                                 ))}
                             </select>
-                            {registerFormik.touched.role && registerFormik.errors.role && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.role}</div>
+                            {getFieldError('role') && (
+                                <p className="text-red-500 text-sm">{getFieldError('role')}</p>
                             )}
                         </div>
 
@@ -105,8 +120,9 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                 onBlur={registerFormik.handleBlur}
                                 className="h-12"
                             />
-                            {registerFormik.touched.username && registerFormik.errors.username && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.username}</div>
+
+                            {getFieldError('username') && (
+                                <p className="text-red-500 text-sm">{getFieldError('username')}</p>
                             )}
                         </div>
 
@@ -123,6 +139,9 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                 readOnly
                                 className="h-12 bg-gray-100 text-slate-700 placeholder:text-slate-400 cursor-not-allowed"
                             />
+                            {getFieldError('email') && (
+                                <p className="text-red-500 text-sm">{getFieldError('email')}</p>
+                            )}
                         </div>
 
                         {/* Full Name */}
@@ -137,8 +156,8 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                 onBlur={registerFormik.handleBlur}
                                 className="h-12"
                             />
-                            {registerFormik.touched.fullName && registerFormik.errors.fullName && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.fullName}</div>
+                            {getFieldError('fullName') && (
+                                <p className="text-red-500 text-sm">{getFieldError('fullName')}</p>
                             )}
                         </div>
 
@@ -170,25 +189,55 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                     )}
                                 </Button>
                             </div>
-                            {registerFormik.touched.password && registerFormik.errors.password && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.password}</div>
+                            {getFieldError('password') && (
+                                <p className="text-red-500 text-sm">{getFieldError('password')}</p>
                             )}
                         </div>
 
-                        {/* Date of Birth */}
+                        {/* Date Of Birth */}
                         <div className="space-y-2">
-                            <Label htmlFor="dob" className="text-slate-700">Date of Birth</Label>
-                            <Input
-                                id="dob"
-                                name="dob"
-                                type="date"
-                                value={registerFormik.values.dob}
-                                onChange={registerFormik.handleChange}
-                                onBlur={registerFormik.handleBlur}
-                                className="h-12"
-                            />
-                            {registerFormik.touched.dob && registerFormik.errors.dob && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.dob}</div>
+                            <Label htmlFor="dateOfBirth">Date Of Birth *</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                                    >
+                                        {registerFormik.values.dob ? (
+                                            format(parseISO(registerFormik.values.dob + 'T00:00:00'), 'PPP')
+                                        ) : (
+                                            <span>Select date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                    <CalendarHeader
+                                        date={dates.dateOfBirth}
+                                        onNavigate={(newDate) => {
+                                            setDates((prev) => ({ ...prev, dateOfBirth: newDate }));
+                                        }}
+                                    />
+                                    <Calendar
+                                        mode="single"
+                                        selected={dates.dateOfBirth}
+                                        onSelect={(date) => {
+                                            if (date) {
+                                                setDates((prev) => ({ ...prev, dateOfBirth: date }));
+                                                const formatted = formatDateToString(date);
+                                                registerFormik.setFieldValue("dob", formatted);
+                                            }
+                                        }}
+                                        month={dates.dateOfBirth}
+                                        onMonthChange={(newMonth) => {
+                                            setDates((prev) => ({ ...prev, dateOfBirth: newMonth }));
+                                        }}
+                                        className="border-none"
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            {getFieldError('dob') && (
+                                <p className="text-red-500 text-sm">{getFieldError('dob')}</p>
                             )}
                         </div>
 
@@ -204,8 +253,9 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                 onBlur={registerFormik.handleBlur}
                                 className="h-12"
                             />
-                            {registerFormik.touched.education && registerFormik.errors.education && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.education}</div>
+
+                            {getFieldError('education') && (
+                                <p className="text-red-500 text-sm">{getFieldError('education')}</p>
                             )}
                         </div>
 
@@ -221,8 +271,8 @@ export const RegisterTab: FC<RegisterTabProps> = ({ onSuccessCallback }) => {
                                 onBlur={registerFormik.handleBlur}
                                 className="h-12"
                             />
-                            {registerFormik.touched.experience && registerFormik.errors.experience && (
-                                <div className="text-sm text-red-600">{registerFormik.errors.experience}</div>
+                            {getFieldError('experience') && (
+                                <p className="text-red-500 text-sm">{getFieldError('experience')}</p>
                             )}
                         </div>
 

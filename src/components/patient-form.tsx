@@ -10,26 +10,29 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, CalendarIcon, Loader2, Plus, Upload, X } from "lucide-react"
+import { CalendarIcon, Loader2, Plus, Upload, X } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
 import { Medication, Patient, PatientPostRequest } from "../modules/Dashboard/patients/api/types"
 import { generateId } from "../utils/idGenerator"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format, parseISO } from "date-fns"
-import { useAppDispatch, useAppSelector } from "../redux/store/reduxHook"
-import { Gender, GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
+import { useAppSelector } from "../redux/store/reduxHook"
+import { GenderValues, Language, LanguageValues, PatientStatus, PatientStatusValues, Relationship, RelationshipValues } from "../enum"
 import { FormikHelpers, getIn, useFormik } from 'formik'
 
-import { clearCreateError, clearCreateSuccess, clearUpdateError, clearUpdateSuccess, createPatients, updatePatients } from "../modules/Dashboard/patients/api/slice"
 import { usePatient } from "../redux/providers/contexts/PatientContext"
 import { patientValidationSchema } from "../validation/schemas"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { formatDateForInput } from "../utils/FormatDateForInput"
+import { CalendarHeader } from "./ui/CalendarHeader"
+import { formatDateToString } from "../utils/FormatDateToString"
 
 interface PatientFormValues {
   patientId: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: string; // ISO date string
+  dateOfBirth: string;
   gender: string;
   ssn: string;
   phone: string;
@@ -102,7 +105,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     updateLoading,
     updateSuccess,
   } = useAppSelector(state => state.patients)
-  console.log(profile)
+
   const [profileImage, setProfileImage] = useState<string | null>(null)
 
   const initialPatientValues: PatientFormValues = {
@@ -157,7 +160,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
         patientId: patient.patientId || "",
         firstName: patient.firstName || "",
         lastName: patient.lastName || "",
-        dateOfBirth: patient.dateOfBirth ? format(parseISO(patient.dateOfBirth), "yyyy-MM-dd") : "",
+        dateOfBirth: formatDateForInput(patient.dateOfBirth) || "",
         gender: patient.gender || "",
         ssn: patient.ssn || "",
         phone: patient.phone,
@@ -183,7 +186,7 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
           dosage: med.dosage || "",
           frequency: med.frequency || "",
           prescribedBy: med.prescribedBy || "",
-          startDate: med.startDate ? format(parseISO(med.startDate), "yyyy-MM-dd") : ""
+          startDate: formatDateForInput(med.startDate) || "",
         })) : [],
         insurance: {
           provider: patient.insurance?.provider || "",
@@ -191,11 +194,11 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
           groupNumber: patient.insurance?.groupNumber || "",
           subscriberId: patient.insurance?.subscriberId || "",
           relationshipToSubscriber: patient.insurance?.relationshipToSubscriber || "",
-          effectiveDate: patient.insurance?.effectiveDate ? format(parseISO(patient.insurance.effectiveDate), "yyyy-MM-dd") : "",
-          expirationDate: patient.insurance?.expirationDate ? format(parseISO(patient.insurance.expirationDate), "yyyy-MM-dd") : ""
+          effectiveDate: formatDateForInput(patient.insurance?.effectiveDate) || "",
+          expirationDate: formatDateForInput(patient.insurance.expirationDate) || "",
         },
         status: patient.status || PatientStatus.ACTIVE,
-        registrationDate: patient.registrationDate ? format(parseISO(patient.registrationDate), "yyyy-MM-dd") : "",
+        registrationDate: formatDateForInput(patient.registrationDate) || "",
         preferredLanguage: patient.preferredLanguage || "",
         createdBy: patient.createdBy || "",
         updatedBy: profile?.fullName || ""
@@ -234,6 +237,15 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
     onSubmit: handlePatientForm,
     enableReinitialize: true,
   });
+
+  const [dates, setDates] = useState({
+    dateOfBirth: formik.values.dateOfBirth ? new Date(formik.values.dateOfBirth) : new Date(),
+    registrationDate: formik.values.registrationDate ? new Date(formik.values.registrationDate) : new Date(),
+    // startDate: formik.values.currentMedications
+    effectiveDate: formik.values.insurance.effectiveDate ? new Date(formik.values.insurance.effectiveDate) : new Date(),
+    expirationDate: formik.values.insurance.expirationDate ? new Date(formik.values.insurance.expirationDate) : new Date(),
+  });
+
 
   const handleAddMedication = (medication: Medication) => {
     if (!medication.name || !medication.dosage || !medication.frequency) {
@@ -384,21 +396,51 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
 
                 {/* Date Of Birth */}
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth *</Label>
-                  <Input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={formik.values.dateOfBirth}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className="bg-slate-700 border-slate-600"
-                    disabled={isLoading}
-                  />
+                  <Label htmlFor="dateOfBirth">Date Of Birth *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                      >
+                        {formik.values.dateOfBirth ? (
+                          format(parseISO(formik.values.dateOfBirth + 'T00:00:00'), 'PPP')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarHeader
+                        date={dates.dateOfBirth}
+                        onNavigate={(newDate) => {
+                          setDates((prev) => ({ ...prev, dateOfBirth: newDate }));
+                        }}
+                      />
+                      <Calendar
+                        mode="single"
+                        selected={dates.dateOfBirth}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDates((prev) => ({ ...prev, dateOfBirth: date }));
+                            const formatted = formatDateToString(date);
+                            formik.setFieldValue("dateOfBirth", formatted);
+                          }
+                        }}
+                        month={dates.dateOfBirth}
+                        onMonthChange={(newMonth) => {
+                          setDates((prev) => ({ ...prev, dateOfBirth: newMonth }));
+                        }}
+                        className="border-none"
+                      />
+                    </PopoverContent>
+                  </Popover>
                   {getFieldError('dateOfBirth') && (
                     <p className="text-red-500 text-sm">{formik.errors.dateOfBirth}</p>
                   )}
                 </div>
+
 
                 {/* Gender */}
                 <div className="space-y-2">
@@ -469,16 +511,45 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                 {/* Registration Date */}
                 <div className="space-y-2">
                   <Label htmlFor="registrationDate">Registration Date *</Label>
-                  <Input
-                    id="registrationDate"
-                    name="registrationDate"
-                    type="date"
-                    value={formik.values.registrationDate}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    disabled={isLoading}
-                    className="bg-slate-700 border-slate-600"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                      >
+                        {formik.values.registrationDate ? (
+                          format(parseISO(formik.values.registrationDate + 'T00:00:00'), 'PPP')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarHeader
+                        date={dates.registrationDate}
+                        onNavigate={(newDate) => {
+                          setDates((prev) => ({ ...prev, registrationDate: newDate }));
+                        }}
+                      />
+                      <Calendar
+                        mode="single"
+                        selected={dates.registrationDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDates((prev) => ({ ...prev, registrationDate: date }));
+                            const formatted = formatDateToString(date);
+                            formik.setFieldValue("registrationDate", formatted);
+                          }
+                        }}
+                        month={dates.registrationDate}
+                        onMonthChange={(newMonth) => {
+                          setDates((prev) => ({ ...prev, registrationDate: newMonth }));
+                        }}
+                        className="border-none"
+                      />
+                    </PopoverContent>
+                  </Popover>
                   {getFieldError('registrationDate') && (
                     <p className="text-red-500 text-sm">{formik.errors.registrationDate}</p>
                   )}
@@ -567,8 +638,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
-                {formik.touched.address?.street && formik.errors.address?.street && (
-                  <p className="text-red-500 text-sm">{formik.errors.address.street}</p>
+                {getFieldError('address.street') && (
+                  <p className="text-red-500 text-sm">{getFieldError('address.street')}</p>
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -584,8 +655,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.address?.city && formik.errors.address?.city && (
-                    <p className="text-red-500 text-sm">{formik.errors.address.city}</p>
+                  {getFieldError('address.city') && (
+                    <p className="text-red-500 text-sm">{getFieldError('address.city')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -599,8 +670,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.address?.state && formik.errors.address?.state && (
-                    <p className="text-red-500 text-sm">{formik.errors.address.state}</p>
+                  {getFieldError('address.state') && (
+                    <p className="text-red-500 text-sm">{getFieldError('address.state')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -614,8 +685,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.address?.zipCode && formik.errors.address?.zipCode && (
-                    <p className="text-red-500 text-sm">{formik.errors.address.zipCode}</p>
+                  {getFieldError('address.zipCode') && (
+                    <p className="text-red-500 text-sm">{getFieldError('address.zipCode')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -630,8 +701,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     className="bg-slate-700 border-slate-600"
                     placeholder="United States"
                   />
-                  {formik.touched.address?.country && formik.errors.address?.country && (
-                    <p className="text-red-500 text-sm">{formik.errors.address.country}</p>
+                  {getFieldError('address.country') && (
+                    <p className="text-red-500 text-sm">{getFieldError('address.country')}</p>
                   )}
                 </div>
               </div>
@@ -654,8 +725,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
-                {formik.touched.emergencyContact?.name && formik.errors.emergencyContact?.name && (
-                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.name}</p>
+                {getFieldError('emergencyContact.name') && (
+                  <p className="text-red-500 text-sm">{getFieldError('emergencyContact.name')}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -676,8 +747,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                {formik.touched.emergencyContact?.relationship && formik.errors.emergencyContact?.relationship && (
-                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.relationship}</p>
+                {getFieldError('emergencyContact.relationship') && (
+                  <p className="text-red-500 text-sm">{getFieldError('emergencyContact.relationship')}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -691,8 +762,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
-                {formik.touched.emergencyContact?.phone && formik.errors.emergencyContact?.phone && (
-                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.phone}</p>
+                {getFieldError('emergencyContact.phone') && (
+                  <p className="text-red-500 text-sm">{getFieldError('emergencyContact.phone')}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -707,8 +778,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
-                {formik.touched.emergencyContact?.email && formik.errors.emergencyContact?.email && (
-                  <p className="text-red-500 text-sm">{formik.errors.emergencyContact.email}</p>
+                {getFieldError('emergencyContact.email') && (
+                  <p className="text-red-500 text-sm">{getFieldError('emergencyContact.email')}</p>
                 )}
               </div>
             </CardContent>
@@ -921,8 +992,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                   disabled={isLoading}
                   className="bg-slate-700 border-slate-600"
                 />
-                {formik.touched.insurance?.provider && formik.errors.insurance?.provider && (
-                  <p className="text-red-500 text-sm">{formik.errors.insurance.provider}</p>
+                {getFieldError('insurance.provider') && (
+                  <p className="text-red-500 text-sm">{getFieldError('insurance.provider')}</p>
                 )}
               </div>
 
@@ -938,8 +1009,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.insurance?.policyNumber && formik.errors.insurance?.policyNumber && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.policyNumber}</p>
+                  {getFieldError('insurance.policyNumber') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.policyNumber')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -953,8 +1024,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.insurance?.groupNumber && formik.errors.insurance?.groupNumber && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.groupNumber}</p>
+                  {getFieldError('insurance.groupNumber') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.groupNumber')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -968,8 +1039,8 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                     disabled={isLoading}
                     className="bg-slate-700 border-slate-600"
                   />
-                  {formik.touched.insurance?.subscriberId && formik.errors.insurance?.subscriberId && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.subscriberId}</p>
+                  {getFieldError('insurance.subscriberId') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.subscriberId')}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -990,40 +1061,100 @@ export default function PatientForm({ open, onOpenChange }: PatientFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  {formik.touched.insurance?.relationshipToSubscriber && formik.errors.insurance?.relationshipToSubscriber && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.relationshipToSubscriber}</p>
+                  {getFieldError('insurance.relationshipToSubscriber') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.relationshipToSubscriber')}</p>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="insurance.effectiveDate">Effective Date *</Label>
-                  <Input
-                    id="insurance.effectiveDate"
-                    name="insurance.effectiveDate"
-                    type="date"
-                    value={formik.values.insurance.effectiveDate}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    disabled={isLoading}
-                    className="bg-slate-700 border-slate-600"
-                  />
-                  {formik.touched.insurance?.effectiveDate && formik.errors.insurance?.effectiveDate && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.effectiveDate}</p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                      >
+                        {formik.values.insurance.effectiveDate ? (
+                          format(parseISO(formik.values.insurance.effectiveDate + 'T00:00:00'), 'PPP')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarHeader
+                        date={dates.effectiveDate}
+                        onNavigate={(newDate) => {
+                          setDates((prev) => ({ ...prev, effectiveDate: newDate }));
+                        }}
+                      />
+                      <Calendar
+                        mode="single"
+                        selected={dates.effectiveDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDates((prev) => ({ ...prev, effectiveDate: date }));
+                            const formatted = formatDateToString(date);
+                            formik.setFieldValue("insurance.effectiveDate", formatted);
+                          }
+                        }}
+                        month={dates.effectiveDate}
+                        onMonthChange={(newMonth) => {
+                          setDates((prev) => ({ ...prev, effectiveDate: newMonth }));
+                        }}
+                        className="border-none"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {getFieldError('insurance.effectiveDate') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.effectiveDate')}</p>
                   )}
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="insurance.expirationDate">Expiration Date *</Label>
-                  <Input
-                    id="insurance.expirationDate"
-                    name="insurance.expirationDate"
-                    type="date"
-                    value={formik.values.insurance.expirationDate}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    disabled={isLoading}
-                    className="bg-slate-700 border-slate-600"
-                  />
-                  {formik.touched.insurance?.expirationDate && formik.errors.insurance?.expirationDate && (
-                    <p className="text-red-500 text-sm">{formik.errors.insurance.expirationDate}</p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full bg-slate-700 border-slate-600 text-left font-normal"
+                      >
+                        {formik.values.insurance.expirationDate ? (
+                          format(parseISO(formik.values.insurance.expirationDate + 'T00:00:00'), 'PPP')
+                        ) : (
+                          <span>Select date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <CalendarHeader
+                        date={dates.expirationDate}
+                        onNavigate={(newDate) => {
+                          setDates((prev) => ({ ...prev, expirationDate: newDate }));
+                        }}
+                      />
+                      <Calendar
+                        mode="single"
+                        selected={dates.expirationDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDates((prev) => ({ ...prev, expirationDate: date }));
+                            const formatted = formatDateToString(date);
+                            formik.setFieldValue("insurance.expirationDate", formatted);
+                          }
+                        }}
+                        month={dates.expirationDate}
+                        onMonthChange={(newMonth) => {
+                          setDates((prev) => ({ ...prev, expirationDate: newMonth }));
+                        }}
+                        className="border-none"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {getFieldError('insurance.expirationDate') && (
+                    <p className="text-red-500 text-sm">{getFieldError('insurance.expirationDate')}</p>
                   )}
                 </div>
               </div>
