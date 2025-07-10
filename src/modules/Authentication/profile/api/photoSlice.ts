@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '@/src/redux/store/store';
 import { profileApi } from './api';
+import { useAppSelector } from '@/src/redux/store/reduxHook';
+import { RootState } from '@/src/redux/store/rootReducer';
 
 // Convert blob to object URL
 const createObjectUrl = (blob: Blob) => URL.createObjectURL(blob);

@@ -1,6 +1,5 @@
 "use client";
 import { profileApi } from "@/src/modules/Authentication/profile/api/api";
-import { uploadUserPhoto, fetchUserPhoto } from "@/src/modules/Authentication/profile/api/photoSlice";
 import { usePhoto } from "@/src/modules/Authentication/profile/api/usePhoto";
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook";
 import { compressImage } from "@/src/utils/compressImage";
