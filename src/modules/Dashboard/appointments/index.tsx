@@ -27,7 +27,7 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useAppointment } from "@/src/redux/providers/contexts/AppointmentContext"
 import { AppointmentProps } from "@/app/(DASHBOARD)/[role]/appointments/page"
-import { TableRowActions } from "../patients/atoms/TableRowActions"
+import { TableRowActions } from "../../../components/ui/TableRowActions"
 
 export default function index({ role }: AppointmentProps) {
     useAppointmentsFetcher()

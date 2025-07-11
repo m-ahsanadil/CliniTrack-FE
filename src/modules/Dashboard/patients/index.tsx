@@ -25,7 +25,7 @@ import { UserRole } from "@/src/enum";
 import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 import { PatientsProps } from "@/app/(DASHBOARD)/[role]/patients/page";
 import { ActionDropdown, createDeleteAction, createEditAction, createViewAction } from "@/src/components/ActionDropdown";
-import { TableRowActions } from "./atoms/TableRowActions";
+import { TableRowActions } from "../../../components/ui/TableRowActions";
 
 
 export default function index({ role }: PatientsProps) {
