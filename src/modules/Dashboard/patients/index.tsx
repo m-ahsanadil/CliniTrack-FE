@@ -24,6 +24,8 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 import { UserRole } from "@/src/enum";
 import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 import { PatientsProps } from "@/app/(DASHBOARD)/[role]/patients/page";
+import { ActionDropdown, createDeleteAction, createEditAction, createViewAction } from "@/src/components/ActionDropdown";
+import { TableRowActions } from "./atoms/TableRowActions";
 
 
 export default function index({ role }: PatientsProps) {
@@ -115,7 +117,7 @@ export default function index({ role }: PatientsProps) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end space-x-2">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleViewPatients(patient)} className="text-slate-600 hover:text-slate-900">
+                                                    {/* <Button variant="ghost" size="sm" onClick={() => handleViewPatients(patient)} className="text-slate-600 hover:text-slate-900">
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                     <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
@@ -137,7 +139,12 @@ export default function index({ role }: PatientsProps) {
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
-                                                    </RoleGuard>
+                                                    </RoleGuard> */}
+                                                    <TableRowActions
+                                                        onView={() => handleViewPatients(patient)}
+                                                        onEdit={() => handleEditPatient(patient)}
+                                                        onDelete={() => handleDeletePatient(patient._id)}
+                                                    />
                                                 </div>
                                             </TableCell>
                                         </TableRow>

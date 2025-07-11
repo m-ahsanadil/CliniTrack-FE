@@ -6,6 +6,11 @@ import { clearCreateError, clearCreateSuccess, clearDeleteError, clearUpdateErro
 import { Patient, PatientPostRequest } from "@/src/modules/Dashboard/patients/api/types";
 import { fetchProfile } from "@/src/modules/Authentication/profile/api/slice";
 import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
+import { useToast } from "@/hooks/use-toast";
+import { fetchAllAppointments } from "@/src/modules/Dashboard/appointments/api/slice";
+import { fetchAllInvoices } from "@/src/modules/Dashboard/billing/api/slice";
+import { fetchAllMedicalRecord } from "@/src/modules/Dashboard/medicalRecords/api/slice";
+import { fetchAllReports } from "@/src/modules/Dashboard/reports/api/slice";
 
 type PatientContextType = {
   // Data States
@@ -39,6 +44,7 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
 export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
   const patients = useAppSelector(state => state.patients.patients)
   const { profile, loading: profileLoading } = useAppSelector(state => state.profile);
 
@@ -154,13 +160,30 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
     try {
       const resultAction = await dispatch(deletePatient(patientId));
       if (deletePatient.fulfilled.match(resultAction)) {
-        // Optionally refresh the list (though the reducer should handle this)
-        await dispatch(fetchAllPatients());
+        await Promise.all([
+          dispatch(fetchAllPatients()),
+          dispatch(fetchAllAppointments()),
+          dispatch(fetchAllInvoices()),
+          dispatch(fetchAllMedicalRecord()),
+          dispatch(fetchAllReports()),
+        ]);
+
         dispatch(clearDeleteError());
+
+        toast({
+          title: "Deleted successfully",
+          description: "Patient and related records have been removed.",
+        });
+
       }
 
     } catch (err) {
       console.error("Error deleting patient", err);
+      toast({
+        variant: "destructive",
+        title: "Deletion failed",
+        description: "Something went wrong while deleting the patient.",
+      });
     }
   };
 

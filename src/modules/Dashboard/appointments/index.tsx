@@ -2,9 +2,6 @@
 
 import {
     Plus,
-    Edit,
-    Trash2,
-    Eye,
     Shield,
     Loader2,
 } from "lucide-react"
@@ -13,8 +10,13 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
+import {
+    getAppointmentTypeBadgeVariant as getTypeVariant,
+    getAppointmentStatusBadgeVariant as getStatusVariant,
+    getAppointmentTypeCustomStyles,
+    getAppointmentStatusCustomStyles
+} from '@/src/utils/appointment-badge.utils'
 // Import form components
-import { getStatusBadgeVariant } from "@/src/constants"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store/reduxHook"
 import { RoleGuard } from "@/components/role-guard"
 import { useState } from "react"
@@ -25,6 +27,7 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute"
 import { UserRole } from "@/src/enum"
 import { useAppointment } from "@/src/redux/providers/contexts/AppointmentContext"
 import { AppointmentProps } from "@/app/(DASHBOARD)/[role]/appointments/page"
+import { TableRowActions } from "../patients/atoms/TableRowActions"
 
 export default function index({ role }: AppointmentProps) {
     useAppointmentsFetcher()
@@ -40,23 +43,24 @@ export default function index({ role }: AppointmentProps) {
         handleAddAppointment,
         handleDeleteAppointment,
         handleCancelAppointment,
+        setAppointment,
+        appointment,
         handleEditAppointment,
-        handleRescheduleAppointment,
+        handleEditRescheduledAppointment,
     } = useAppointment();
 
 
-    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [isViewOpen, setIsViewOpen] = useState(false);
 
 
     const handleViewAppointment = (appointment: Appointment) => {
-        setSelectedAppointment(appointment);
+        setAppointment(appointment);
         setIsViewOpen(true);
     }
 
     const handleCloseViewDialog = () => {
         setIsViewOpen(false);
-        setSelectedAppointment(null);
+        setAppointment(null);
     }
 
     return (
@@ -117,13 +121,31 @@ export default function index({ role }: AppointmentProps) {
                                             <TableCell className="text-slate-600">{new Date(appointment.appointmentDate).toLocaleDateString()}</TableCell>
                                             <TableCell className="text-slate-600">{appointment.startTime}</TableCell>
                                             <TableCell className="text-slate-600">{appointment.providerId?.name}</TableCell>
-                                            <TableCell className="text-slate-600">{appointment.type}</TableCell>
                                             <TableCell>
-                                                <Badge variant={getStatusBadgeVariant(appointment.status)}>{appointment.status}</Badge>
+                                                <Badge className={getAppointmentTypeCustomStyles(appointment.type)}>
+                                                    {appointment.type}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={getAppointmentStatusCustomStyles(appointment.status)}>
+                                                    {appointment.status}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end space-x-2">
-                                                    <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
+                                                    <TableRowActions
+                                                        onView={() => handleViewAppointment(appointment)}
+                                                        onEdit={() => handleEditAppointment(appointment)}
+                                                        onDelete={() => handleDeleteAppointment(appointment._id)}
+                                                        onReschedule={() => handleEditRescheduledAppointment(appointment)}
+                                                        onCancel={() => handleCancelAppointment(appointment._id)}
+                                                    //   ,
+                                                    // ,
+                                                    // ,
+                                                    // ,
+                                                    />
+
+                                                    {/* <Button variant="ghost" onClick={() => handleViewAppointment(appointment)} size="sm" className="text-slate-600 hover:text-slate-900">
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                     <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
@@ -145,7 +167,7 @@ export default function index({ role }: AppointmentProps) {
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
-                                                    </RoleGuard>
+                                                    </RoleGuard> */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -159,7 +181,7 @@ export default function index({ role }: AppointmentProps) {
                 </Card >
             </div >
             <ViewAppointmentDialog
-                appointment={selectedAppointment}
+                appointment={appointment}
                 isOpen={isViewOpen}
                 onClose={handleCloseViewDialog}
             />

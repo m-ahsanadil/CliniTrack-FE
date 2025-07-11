@@ -14,6 +14,7 @@ import { fetchPatientsName } from "@/src/modules/Dashboard/patients/api/slice";
 import { GetUserProfile } from "@/src/modules/Authentication/profile/api/types";
 import { PatientNames } from "@/src/modules/Dashboard/patients/api/types";
 import { ProviderNames } from "@/src/modules/Dashboard/Provider/api/types";
+import { useToast } from "@/hooks/use-toast";
 
 type AppointmentContextType = {
     // State
@@ -35,21 +36,26 @@ type AppointmentContextType = {
     isEditing: boolean;
     setIsEditing: (val: boolean) => void;
 
+    isRescheduleFormOpen: boolean;
+    setIsRescheduleFormOpen: (val: boolean) => void;
+
     // Filtered
     filteredAppointments: Appointment[];
 
     // CRUD operations
     handleAddAppointment: () => void;
     handleEditAppointment: (appointment: Appointment) => void;
+    handleEditRescheduledAppointment: (appointment: Appointment) => void;
     handleSaveAppointment: (appointmentData: AppointmentRequest, onSuccess?: () => void) => void;
     handleDeleteAppointment: (appointmentId: string) => void;
     handleCancelAppointment: (appointmentId: string) => void;
-    handleRescheduleAppointment: (appointmentId: string, newData: Partial<RescheduleAppointmentRequest>) => Promise<void>;
+    handleRescheduleAppointment: (appointmentId: string, newData: Partial<RescheduleAppointmentRequest>, onSuccess?: () => void) => Promise<void>;
 };
 
 const AppointmentContext = createContext<AppointmentContextType | undefined>(undefined);
 
 export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
+    const { toast } = useToast();
     const dispatch = useAppDispatch();
     const appointments = useAppSelector(state => state.appointment.appointments);
     const { basicInfo: patientNames, loading: patientsLoading } = useAppSelector(state => state.patients);
@@ -59,8 +65,9 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
     // states
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
-    const [isDataFetched, setIsDataFetched] = useState(false);
+    const [isDataFetched, setIsDataFetched] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isRescheduleFormOpen, setIsRescheduleFormOpen] = useState(false);
 
     const filteredAppointments = useMemo(() => appointments, [appointments])
 
@@ -185,18 +192,24 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const handleEditRescheduledAppointment = async (appointment: Appointment) => {
+        resetAllAppointmentFlags();
+        setAppointment(appointment);
+        setIsEditing(true);
+        setIsRescheduleFormOpen(true);
+    };
 
-    const handleRescheduleAppointment = async (appointmentId: string, newData: Partial<RescheduleAppointmentRequest>) => {
+    const handleRescheduleAppointment = async (appointmentId: string, newData: Partial<RescheduleAppointmentRequest>, onSuccess?: () => void) => {
         try {
             resetAllAppointmentFlags();
-            const result = await dispatch(
-                rescheduleAppointment({
-                    id: appointmentId,
-                    payload: newData as RescheduleAppointmentRequest,
-                })
-            );
-            if (rescheduleAppointment.fulfilled.match(result)) {
+            let resultAction
+            if (isEditing && appointmentId) {
+                resultAction = await dispatch(rescheduleAppointment({ id: appointmentId, payload: newData as RescheduleAppointmentRequest }))
+            }
+            
+            if (rescheduleAppointment.fulfilled.match(resultAction)) {
                 await dispatch(fetchAllAppointments());
+                if (onSuccess) onSuccess();
             }
         } catch (error) {
             console.error("Reschedule Appointment Error:", error);
@@ -223,6 +236,8 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 appointment,
                 setAppointment,
+                isRescheduleFormOpen,
+                setIsRescheduleFormOpen,
                 profile,
                 patientNames,
                 providerNames,
@@ -235,6 +250,7 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
                 filteredAppointments,
                 handleAddAppointment,
                 handleEditAppointment,
+                handleEditRescheduledAppointment,
                 handleSaveAppointment,
                 handleDeleteAppointment,
                 handleCancelAppointment,

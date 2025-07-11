@@ -20,6 +20,7 @@ import { usePatient } from '@/src/redux/providers/contexts/PatientContext';
 import { useProvider } from '@/src/redux/providers/contexts/ProviderContext';
 import { ProviderForm } from '@/src/components/provider-form';
 import { useAppointment } from '@/src/redux/providers/contexts/AppointmentContext';
+import { RescheduleAppointmentModal } from './appointments/organisms/RescheduleAppointmentModal';
 
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
@@ -56,8 +57,11 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
     } = useProvider()
 
     const {
+        setIsRescheduleFormOpen,
+        isRescheduleFormOpen,
         appointmentFormOpen,
         setAppointmentFormOpen,
+        setAppointment,
     } = useAppointment();
 
     const {
@@ -123,7 +127,15 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
                     />
                 )}
 
-
+                {isRescheduleFormOpen && (
+                    <RescheduleAppointmentModal
+                        open={isRescheduleFormOpen}
+                        onClose={() => {
+                            setIsRescheduleFormOpen(false);
+                            setAppointment(null);
+                        }}
+                    />
+                )}
 
                 <InvoiceForm
                     open={invoiceFormOpen}

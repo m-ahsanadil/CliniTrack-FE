@@ -27,7 +27,7 @@ import { useReportsFetcher } from './api/useReportsFetcher';
 import { ProtectedRoleGuard } from '@/src/redux/hook/ProtectedRoute';
 import { formatDate } from "@/src/utils/dateFormatter"
 import { useGlobalUI } from '@/src/redux/providers/contexts/GlobalUIContext';
-import { UserRole } from '@/src/enum';
+import { UserRole, ReportStatus, ReportType, ReportStatusValues, ReportTypeValues } from '@/src/enum';
 import { ReportsProps } from '@/app/(DASHBOARD)/[role]/reports/page';
 
 
@@ -39,13 +39,13 @@ interface QuickReport {
     roles: string[];
 }
 
-interface ReportType {
-    value: string;
-    label: string;
-    roles: string[];
-}
+// interface ReportType {
+//     value: string;
+//     label: string;
+//     roles: string[];
+// }
 
-export default function Reports({  role }: ReportsProps) {
+export default function Reports({ role }: ReportsProps) {
     // Custom hook for fetching appointments
     const dispatch = useAppDispatch()
     useReportsFetcher();
@@ -54,7 +54,7 @@ export default function Reports({  role }: ReportsProps) {
     const { user } = useAppSelector(state => state.auth);
 
     const [dateRange, setDateRange] = useState<string>('last-30-days');
-    const [reportType, setReportType] = useState<string>('overview');
+    const [reportType, setReportType] = useState<ReportType>(ReportType.OTHER);
 
     // Role-based permissions
     const permissions = {
@@ -65,95 +65,110 @@ export default function Reports({  role }: ReportsProps) {
     };
 
     // Quick reports configuration
-    const quickReports: QuickReport[] = [
-        {
-            title: "Patient Demographics",
-            description: "Age, gender, and location distribution",
-            icon: Users,
-            color: "bg-blue-50 text-blue-600",
-            roles: ['admin', 'staff', 'doctor']
-        },
-        {
-            title: "Appointment Trends",
-            description: "Booking patterns and no-show rates",
-            icon: Calendar,
-            color: "bg-green-50 text-green-600",
-            roles: ['admin', 'staff', 'doctor']
-        },
-        {
-            title: "Revenue Analysis",
-            description: "Income trends and payment methods",
-            icon: DollarSign,
-            color: "bg-emerald-50 text-emerald-600",
-            roles: ['admin', 'staff']
-        },
-        {
-            title: "Medical Records Summary",
-            description: "Diagnoses and treatment patterns",
-            icon: FileText,
-            color: "bg-purple-50 text-purple-600",
-            roles: ['admin', 'doctor']
-        },
-        {
-            title: "Department Performance",
-            description: "Efficiency and patient satisfaction",
-            icon: Activity,
-            color: "bg-orange-50 text-orange-600",
-            roles: ['admin', 'staff']
-        },
-        {
-            title: "Insurance Claims",
-            description: "Processing times and approval rates",
-            icon: AlertCircle,
-            color: "bg-red-50 text-red-600",
-            roles: ['admin', 'staff']
-        }
-    ].filter(report => report.roles.includes(user?.role || ''));
+    // const quickReports: QuickReport[] = [
+    //     {
+    //         title: "Patient Demographics",
+    //         description: "Age, gender, and location distribution",
+    //         icon: Users,
+    //         color: "bg-blue-50 text-blue-600",
+    //         roles: ['admin', 'staff', 'doctor']
+    //     },
+    //     {
+    //         title: "Appointment Trends",
+    //         description: "Booking patterns and no-show rates",
+    //         icon: Calendar,
+    //         color: "bg-green-50 text-green-600",
+    //         roles: ['admin', 'staff', 'doctor']
+    //     },
+    //     {
+    //         title: "Revenue Analysis",
+    //         description: "Income trends and payment methods",
+    //         icon: DollarSign,
+    //         color: "bg-emerald-50 text-emerald-600",
+    //         roles: ['admin', 'staff']
+    //     },
+    //     {
+    //         title: "Medical Records Summary",
+    //         description: "Diagnoses and treatment patterns",
+    //         icon: FileText,
+    //         color: "bg-purple-50 text-purple-600",
+    //         roles: ['admin', 'doctor']
+    //     },
+    //     {
+    //         title: "Department Performance",
+    //         description: "Efficiency and patient satisfaction",
+    //         icon: Activity,
+    //         color: "bg-orange-50 text-orange-600",
+    //         roles: ['admin', 'staff']
+    //     },
+    //     {
+    //         title: "Insurance Claims",
+    //         description: "Processing times and approval rates",
+    //         icon: AlertCircle,
+    //         color: "bg-red-50 text-red-600",
+    //         roles: ['admin', 'staff']
+    //     }
+    // ].filter(report => report.roles.includes(user?.role || ''));
 
     // Report types based on role
-    const reportTypes: ReportType[] = [
-        { value: "overview", label: "Overview", roles: ['admin', 'staff', 'doctor'] },
-        { value: "patient", label: "Patient Analysis", roles: ['admin', 'staff', 'doctor'] },
-        { value: "financial", label: "Financial", roles: ['admin', 'staff'] },
-        { value: "operational", label: "Operational", roles: ['admin', 'staff'] },
-        { value: "clinical", label: "Clinical", roles: ['admin', 'doctor'] }
-    ].filter(type => type.roles.includes(user?.role || ''));
+    // const reportTypes: ReportType[] = [
+    //     { value: "overview", label: "Overview", roles: ['admin', 'staff', 'doctor'] },
+    //     { value: "patient", label: "Patient Analysis", roles: ['admin', 'staff', 'doctor'] },
+    //     { value: "financial", label: "Financial", roles: ['admin', 'staff'] },
+    //     { value: "operational", label: "Operational", roles: ['admin', 'staff'] },
+    //     { value: "clinical", label: "Clinical", roles: ['admin', 'doctor'] }
+    // ].filter(type => type.roles.includes(user?.role || ''));
+
 
     // Filter reports based on role
     const getFilteredReports = (): Report[] => {
         if (!reports || reports.length === 0) return [];
 
         return reports.filter((report: Report) => {
-            const reportType = report.reportType?.toLowerCase() || '';
+            const reportType = report.reportType as ReportType;
             const title = report.title?.toLowerCase() || '';
             const description = report.description?.toLowerCase() || '';
 
-            if (user?.role === 'doctor') {
-                const financialKeywords = ['financial', 'revenue', 'billing', 'invoice', 'payment'];
-                return !financialKeywords.some(keyword =>
-                    reportType.includes(keyword) || title.includes(keyword) || description.includes(keyword)
-                );
+            // Doctor: restrict financial reports
+            if (user?.role === UserRole.DOCTOR) {
+                const restrictedTypesForDoctor = [
+                    ReportType.FINANCIAL_SUMMARY,
+                    ReportType.BILLING_REPORT,
+                ];
+
+                return !restrictedTypesForDoctor.includes(reportType);
             }
 
-            if (user?.role === 'staff') {
-                const restrictedKeywords = ['medical records analysis', 'clinical', 'diagnosis'];
-                return !restrictedKeywords.some(keyword =>
-                    reportType.includes(keyword) || title.includes(keyword) || description.includes(keyword)
-                );
+
+            // Staff: restrict clinical/medical reports
+            if (user?.role === UserRole.STAFF) {
+                const restrictedTypesForStaff = [
+                    ReportType.TREATMENT_OUTCOMES,
+                    ReportType.LAB_RESULTS,
+                    ReportType.OTHER, // if needed
+                ];
+
+                return !restrictedTypesForStaff.includes(reportType);
             }
 
-            return true; // Admin can see all
+
+            // Admin and Super Admin: see all
+            return true;
         });
     };
 
 
 
-    const getStatusColor = (status: string): string => {
-        switch (status?.toLowerCase()) {
-            case 'generated': return 'bg-green-100 text-green-800';
-            case 'processing': return 'bg-yellow-100 text-yellow-800';
-            case 'failed': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+    const getStatusColor = (status: ReportStatus): string => {
+        switch (status) {
+            case ReportStatus.GENERATED:
+                return 'bg-green-100 text-green-800';
+            case ReportStatus.PENDING:
+                return 'bg-yellow-100 text-yellow-800';
+            case ReportStatus.FAILED:
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
         }
     };
 
@@ -230,7 +245,7 @@ export default function Reports({  role }: ReportsProps) {
 
                     {/* Generate Reports Tab */}
                     <TabsContent value="generate" className="space-y-6">
-                        <Card>
+                        <Card className='bg-slate-800 border-slate-700'>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
@@ -239,7 +254,7 @@ export default function Reports({  role }: ReportsProps) {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {quickReports.map((report, index) => {
+                                    {/* {quickReports.map((report, index) => {
                                         const IconComponent = report.icon;
                                         const canGenerate = report.roles.includes(user?.role || '');
 
@@ -277,38 +292,39 @@ export default function Reports({  role }: ReportsProps) {
 
                                             </div>
                                         );
-                                    })}
+                                    })} */}
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Custom Report Builder */}
                         {permissions.canCreateReports && (
-                            <Card>
+                            <Card className='bg-slate-800 border-slate-700'>
                                 <CardHeader>
                                     <CardTitle>Custom Report Builder</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="text-sm font-medium text-gray-700 mb-2 block">Report Type</label>
-                                            <Select value={reportType} onValueChange={setReportType}>
-                                                <SelectTrigger>
+                                            <label className="text-sm font-medium text-gray-400 mb-2 block">Report Type</label>
+                                            <Select value={reportType} onValueChange={(value) => setReportType(value as ReportType)} >
+                                                <SelectTrigger className='bg-slate-600 border-slate-700'>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {reportTypes.map((type) => (
-                                                        <SelectItem key={type.value} value={type.value}>
-                                                            {type.label}
+                                                    {ReportTypeValues.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
                                                         </SelectItem>
                                                     ))}
+
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                         <div>
                                             <label className="text-sm font-medium text-gray-700 mb-2 block">Format</label>
                                             <Select defaultValue="pdf">
-                                                <SelectTrigger>
+                                                <SelectTrigger className='bg-slate-600 border-slate-700'>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -320,7 +336,7 @@ export default function Reports({  role }: ReportsProps) {
                                         </div>
                                         <div>
                                             <label className="text-sm font-medium text-gray-700 mb-2 block">Report Name</label>
-                                            <Input placeholder="Enter report name" />
+                                            <Input placeholder="Enter report name" className='bg-slate-600 border-slate-700' />
                                         </div>
                                     </div>
                                     <Button
@@ -337,7 +353,7 @@ export default function Reports({  role }: ReportsProps) {
 
                     {/* Recent Reports Tab */}
                     <TabsContent value="recent">
-                        <Card>
+                        <Card className='bg-slate-800 border-slate-700'>
                             <CardHeader>
                                 <div className="flex justify-between items-center">
                                     <CardTitle>Recent Reports</CardTitle>
@@ -346,7 +362,7 @@ export default function Reports({  role }: ReportsProps) {
                                     </Button>
                                 </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className='border-slate-700'>
                                 {loading ? (
                                     <div className="text-center py-8">
                                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -361,15 +377,15 @@ export default function Reports({  role }: ReportsProps) {
                                 ) : (
                                     <div className="space-y-4">
                                         {filteredReports.map((report: Report) => (
-                                            <div key={report._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                            <div key={report._id} className="flex items-center justify-between p-4 border border-slate-700 rounded-lg hover:bg-gray-400 hover:text-slate-800 transition-colors">
                                                 <div className="flex items-center gap-4">
                                                     <div className="p-2 bg-blue-50 rounded-lg">
                                                         <FileText className="h-5 w-5 text-blue-600" />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <h3 className="font-semibold text-gray-900">{report.title}</h3>
-                                                        <p className="text-sm text-gray-600">{report.description}</p>
-                                                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                                        <h3 className="font-semibold  text-gray-400">{report.title}</h3>
+                                                        <p className="text-sm text-gray-500">{report.description}</p>
+                                                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
                                                             <span>Type: {report.reportType}</span>
                                                             <span>Generated: {formatDate(report.createdAt)}</span>
                                                             <span>By: {report.generatedByUserId?.username || report.createdBy}</span>
@@ -377,7 +393,7 @@ export default function Reports({  role }: ReportsProps) {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <Badge className={getStatusColor(report.status)}>
+                                                    <Badge className={getStatusColor(report.status as ReportStatus)}>
                                                         {report.status}
                                                     </Badge>
                                                     {report.status?.toLowerCase() === 'generated' && (
