@@ -34,6 +34,7 @@ import { MedicalRecordGetAll } from "./api/types"
 import { useMedicalRecord } from "@/src/redux/providers/contexts/MedicalRecordContext"
 import { UserRole } from "@/src/enum"
 import { MedicalRecordProps } from "@/app/(DASHBOARD)/[role]/medical-records/page"
+import { TableRowActions } from "@/src/components/ui/TableRowActions"
 
 export default function index({ role }: MedicalRecordProps) {
     useMedicalRecordsFetcher();
@@ -207,36 +208,11 @@ export default function index({ role }: MedicalRecordProps) {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex items-center justify-end space-x-2">
-                                                            {/* View button - Available to all roles that can access medical records */}
-                                                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
-                                                                <Button variant="ghost" onClick={() => handleViewMedicalRecord(record)} size="sm" className="text-slate-600 hover:text-slate-900">
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                            </RoleGuard>
-
-                                                            {/* Edit button - Only admin and doctor can update medical records */}
-                                                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.DOCTOR]}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleEditMedicalRecord(record)}
-                                                                    className="text-slate-600 hover:text-slate-900"
-                                                                >
-                                                                    <Edit className="h-4 w-4" />
-                                                                </Button>
-                                                            </RoleGuard>
-
-                                                            {/* Delete button - Only admin can delete medical records */}
-                                                            <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleDeleteMedicalRecord(record._id)}
-                                                                    className="text-red-600 hover:text-red-900"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </RoleGuard>
+                                                            <TableRowActions
+                                                                onView={() => handleViewMedicalRecord(record)}
+                                                                onEdit={() => handleEditMedicalRecord(record)}
+                                                                onDelete={() => handleDeleteMedicalRecord(record._id)}
+                                                            />
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

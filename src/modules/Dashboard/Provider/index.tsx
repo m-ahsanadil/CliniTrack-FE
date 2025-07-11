@@ -27,9 +27,10 @@ import { ViewProviderDialog } from "./organisms/ViewProvidersDialog"
 import { UserRole } from "@/src/enum"
 import { useProvider } from "@/src/redux/providers/contexts/ProviderContext"
 import { ProviderProps } from "@/app/(DASHBOARD)/[role]/providers/page"
+import { TableRowActions } from "@/src/components/ui/TableRowActions"
 
 
-export default function index({  role }: ProviderProps) {
+export default function index({ role }: ProviderProps) {
     useProviderFetcher();
     const { user } = useAppSelector(state => state.auth)
     const { handleAddProvider, handleDeleteProvider, handleEditProvider } = useProvider();
@@ -115,29 +116,11 @@ export default function index({  role }: ProviderProps) {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end space-x-2">
-                                                        <Button variant="ghost" onClick={() => handleViewProvider(provider)} size="sm" className="text-slate-600 hover:text-slate-900">
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleEditProvider(provider)}
-                                                                className="text-slate-600 hover:text-slate-900"
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                        </RoleGuard>
-                                                        <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleDeleteProvider(provider._id)}
-                                                                className="text-red-600 hover:text-red-900"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </RoleGuard>
+                                                        <TableRowActions
+                                                            onView={() => handleViewProvider(provider)}
+                                                            onEdit={() => handleEditProvider(provider)}
+                                                            onDelete={() => handleDeleteProvider(provider._id)}
+                                                        />
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

@@ -1,9 +1,6 @@
 "use client";
 import {
     Plus,
-    Edit,
-    Trash2,
-    Eye,
     Loader2,
     Shield,
 } from "lucide-react"
@@ -24,7 +21,6 @@ import { ProtectedRoleGuard } from "@/src/redux/hook/ProtectedRoute";
 import { UserRole } from "@/src/enum";
 import { usePatient } from "@/src/redux/providers/contexts/PatientContext";
 import { PatientsProps } from "@/app/(DASHBOARD)/[role]/patients/page";
-import { ActionDropdown, createDeleteAction, createEditAction, createViewAction } from "@/src/components/ActionDropdown";
 import { TableRowActions } from "../../../components/ui/TableRowActions";
 
 
@@ -117,29 +113,6 @@ export default function index({ role }: PatientsProps) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end space-x-2">
-                                                    {/* <Button variant="ghost" size="sm" onClick={() => handleViewPatients(patient)} className="text-slate-600 hover:text-slate-900">
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF]}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEditPatient(patient)}
-                                                            className="text-slate-600 hover:text-slate-900"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                    </RoleGuard>
-                                                    <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDeletePatient(patient._id)}
-                                                            className="text-red-600 hover:text-red-900"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </RoleGuard> */}
                                                     <TableRowActions
                                                         onView={() => handleViewPatients(patient)}
                                                         onEdit={() => handleEditPatient(patient)}

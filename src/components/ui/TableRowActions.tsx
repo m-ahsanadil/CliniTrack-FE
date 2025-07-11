@@ -1,4 +1,3 @@
-// components/TableRowActions.tsx
 "use client";
 
 import {
@@ -6,10 +5,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Eye, Edit2, Trash2, CalendarClock, XCircle } from "lucide-react";
+import { MoreVertical, Eye, Trash2, CalendarClock, XCircle, Edit } from "lucide-react";
 import { UserRole } from "@/src/enum";
 import { RoleGuard } from "@/components/role-guard";
 
@@ -38,7 +36,7 @@ export function TableRowActions({ onView, onEdit, onDelete, onCancel, onReschedu
 
         <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.DOCTOR, UserRole.SUPER_ADMIN]}>
           <DropdownMenuItem onClick={onEdit}>
-            <Edit2 className="mr-2 h-4 w-4" />
+            <Edit className="h-4 w-4" />
             Edit
           </DropdownMenuItem>
         </RoleGuard>
