@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 // Import components
 import { getRoleColor, getRoleIcon } from "@/src/constants"
 import { useGlobalUI } from "@/src/redux/providers/contexts/GlobalUIContext"
-import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "../redux/store/reduxHook"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
@@ -46,10 +45,10 @@ const SidebarHeaderSkeleton = () => (
         </div>
 
         {/* User Info Skeleton */}
-        <div className="mt-3 space-y-1">
+        {/* <div className="mt-3 space-y-1">
             <Skeleton className="h-3 w-24 bg-slate-700" />
             <Skeleton className="h-3 w-20 bg-slate-700" />
-        </div>
+        </div> */}
     </div>
 );
 

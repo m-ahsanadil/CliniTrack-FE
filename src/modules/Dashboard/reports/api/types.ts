@@ -1,46 +1,39 @@
-import { ReportStatus } from "./enum";
-
-// User information embedded in reports
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-}
+import { ReportStatus } from "@/src/enum";
 
 // Data filtering criteria for reports
 interface DataFilters {
-  startDate: string; // ISO date string (YYYY-MM-DD)
-  endDate: string;   // ISO date string (YYYY-MM-DD)
+  startDate: string;
+  endDate: string;
   status: ReportStatus.FAILED | ReportStatus.GENERATED | ReportStatus.PENDING;
 }
 
 // Individual report record
-export interface Report {
+export interface GetAllReports {
   _id: string;
   title: string;
   description: string;
-  reportDate: string;      // ISO datetime string
+  reportDate: string;
   reportType: string;
-  generatedByUserId: User | null;
+  generatedByUserId: string | null;
   dataFilters: DataFilters;
   status: ReportStatus.FAILED | ReportStatus.GENERATED | ReportStatus.PENDING;
   createdBy: string;
   updatedBy: string;
-  createdAt: string;       // ISO datetime string
-  updatedAt: string;       // ISO datetime string
+  createdAt: string;
+  updatedAt: string;
   __v: number;
 }
 
 // API response wrapper
-export interface ReportsGetResponse {
+export interface ReportsGetAllResponse {
   success: boolean;
-  data: Report[];
+  data: GetAllReports[];
   count: number;
   message?: string;
 }
 
 // When sending a request to create/update a report
-export interface ReportRequest {
+export interface ReportPostRequest {
   title: string;
   description: string;
   reportDate: string;
@@ -56,13 +49,13 @@ export interface ReportRequest {
 export interface ReportPostResponse {
   success: true;
   message: string;
-  data: Report;
+  data: ReportPostRequest;
 }
 
-export interface ReportErrorResponse {
+export interface ReportErrorPostResponse {
   success: false;
   message: string;
   data?: string;
 }
 
-export type ReportApiResponse = ReportPostResponse | ReportErrorResponse;
+export type ReportApiPostResponse = ReportPostResponse | ReportErrorPostResponse;

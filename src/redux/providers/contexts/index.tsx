@@ -6,6 +6,7 @@ import { MedicalRecordProvider } from "./MedicalRecordContext";
 import { PatientProvider } from "./PatientContext";
 import { DoctorProvider } from "./ProviderContext";
 import { AppointmentProvider } from "./AppointmentContext";
+import { ReportProvider } from "./ReportContext";
 
 
 interface ContextWrapperProps {
@@ -19,7 +20,9 @@ export const ContextWrapper: FC<ContextWrapperProps> = ({ children }) => {
                 <DoctorProvider>
                     <MedicalRecordProvider>
                         <AppointmentProvider>
-                            {children}
+                            <ReportProvider>
+                                {children}
+                            </ReportProvider>
                         </AppointmentProvider>
                     </MedicalRecordProvider>
                 </DoctorProvider>

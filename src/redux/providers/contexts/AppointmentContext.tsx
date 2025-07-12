@@ -170,6 +170,9 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
 
                 // Call optional success callback
                 if (onSuccess) onSuccess();
+            } else {
+                // Handle the rejected case
+                console.error("Operation failed:", resultAction.payload);
             }
 
         } catch (error) {
@@ -206,7 +209,7 @@ export const AppointmentProvider = ({ children }: { children: ReactNode }) => {
             if (isEditing && appointmentId) {
                 resultAction = await dispatch(rescheduleAppointment({ id: appointmentId, payload: newData as RescheduleAppointmentRequest }))
             }
-            
+
             if (rescheduleAppointment.fulfilled.match(resultAction)) {
                 await dispatch(fetchAllAppointments());
                 if (onSuccess) onSuccess();

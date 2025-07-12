@@ -48,27 +48,31 @@ export default function index({ role }: ProviderProps) {
     return (
         <ProtectedRoleGuard role={role}>
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                {/* Header Section */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-900">Providers</h2>
                         {user?.role === 'admin' ? (
                             <p className="text-slate-600">Manage your clinic’s healthcare providers.</p>
-
                         ) : (
                             <p className="text-slate-600">View appointments by provider.</p>
                         )}
-
-
                     </div>
+
                     <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.STAFF, UserRole.SUPER_ADMIN]}>
-                        <Button onClick={handleAddProvider} className="bg-green-600 hover:bg-green-700 text-white">
+                        <Button
+                            onClick={handleAddProvider}
+                            className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                        >
                             <Plus className="mr-2 h-4 w-4" />
                             Schedule Provider
                         </Button>
                     </RoleGuard>
                 </div>
+
+                {/* Table Card */}
                 <Card className="bg-white border border-slate-200">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6 overflow-x-auto">
                         {loading ? (
                             <div className="flex items-center justify-center py-12">
                                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -79,65 +83,73 @@ export default function index({ role }: ProviderProps) {
                                 <p>{error}</p>
                             </div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-slate-600">Name</TableHead>
-                                        <TableHead className="text-slate-600">Specialty</TableHead>
-                                        <TableHead className="text-slate-600">Email</TableHead>
-                                        <TableHead className="text-slate-600">Phone</TableHead>
-                                        <TableHead className="text-slate-600">Clinic</TableHead>
-                                        <TableHead className="text-slate-600">Status</TableHead>
-                                        <TableHead className="text-center text-slate-600">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-
-                                <TableBody>
-                                    {apiProvider.length === 0 ? (
+                            <div className="min-w-[768px]">
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={7} className="text-center py-10">
-                                                <div className="flex flex-col items-center justify-center space-y-2">
-                                                    <Shield className="w-10 h-10 text-slate-400" />
-                                                    <p className="text-slate-600">No providers found</p>
-                                                    <p className="text-sm text-slate-400">Start by adding a new provider to your clinic.</p>
-                                                </div>
-                                            </TableCell>
+                                            <TableHead className="text-slate-600">Name</TableHead>
+                                            <TableHead className="text-slate-600">Specialty</TableHead>
+                                            <TableHead className="text-slate-600">Email</TableHead>
+                                            <TableHead className="text-slate-600">Phone</TableHead>
+                                            <TableHead className="text-slate-600">Clinic</TableHead>
+                                            <TableHead className="text-slate-600">Status</TableHead>
+                                            <TableHead className="text-center text-slate-600">Actions</TableHead>
                                         </TableRow>
-                                    ) : (
-                                        apiProvider.map((provider: Provider) => (
-                                            <TableRow key={provider._id} className="hover:bg-slate-50">
-                                                <TableCell className="text-slate-600">{provider.name}</TableCell>
-                                                <TableCell className="text-slate-600">{provider.specialty}</TableCell>
-                                                <TableCell className="text-slate-600">{provider.email}</TableCell>
-                                                <TableCell className="text-slate-600">{provider.phone}</TableCell>
-                                                <TableCell className="text-slate-600">{provider.clinicAffiliation}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={getStatusBadgeVariant(provider.status)}>{provider.status}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end space-x-2">
-                                                        <TableRowActions
-                                                            onView={() => handleViewProvider(provider)}
-                                                            onEdit={() => handleEditProvider(provider)}
-                                                            onDelete={() => handleDeleteProvider(provider._id)}
-                                                        />
+                                    </TableHeader>
+
+                                    <TableBody>
+                                        {apiProvider.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-10">
+                                                    <div className="flex flex-col items-center justify-center space-y-2">
+                                                        <Shield className="w-10 h-10 text-slate-400" />
+                                                        <p className="text-slate-600">No providers found</p>
+                                                        <p className="text-sm text-slate-400">
+                                                            Start by adding a new provider to your clinic.
+                                                        </p>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
+                                        ) : (
+                                            apiProvider.map((provider: Provider) => (
+                                                <TableRow key={provider._id} className="hover:bg-slate-50">
+                                                    <TableCell className="text-slate-600">{provider.name}</TableCell>
+                                                    <TableCell className="text-slate-600">{provider.specialty}</TableCell>
+                                                    <TableCell className="text-slate-600">{provider.email}</TableCell>
+                                                    <TableCell className="text-slate-600">{provider.phone}</TableCell>
+                                                    <TableCell className="text-slate-600">{provider.clinicAffiliation}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={getStatusBadgeVariant(provider.status)}>
+                                                            {provider.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end space-x-2">
+                                                            <TableRowActions
+                                                                onView={() => handleViewProvider(provider)}
+                                                                onEdit={() => handleEditProvider(provider)}
+                                                                onDelete={() => handleDeleteProvider(provider._id)}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
 
+                {/* Dialog */}
+                <ViewProviderDialog
+                    provider={selectedProvider}
+                    isOpen={isViewOpen}
+                    onClose={() => setIsViewOpen(false)}
+                />
             </div>
-            <ViewProviderDialog
-                provider={selectedProvider}
-                isOpen={isViewOpen}
-                onClose={() => setIsViewOpen(false)}
-            />
         </ProtectedRoleGuard>
+
     )
 }

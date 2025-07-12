@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Eye, Trash2, CalendarClock, XCircle, Edit } from "lucide-react";
+import { MoreVertical, Eye, Trash2, CalendarClock, XCircle, Edit, Download } from "lucide-react";
 import { UserRole } from "@/src/enum";
 import { RoleGuard } from "@/components/role-guard";
 
@@ -17,9 +17,10 @@ interface TableRowActionsProps {
   onDelete: () => void;
   onReschedule?: () => void;
   onCancel?: () => void;
+  onDownload?: () => void;
 }
 
-export function TableRowActions({ onView, onEdit, onDelete, onCancel, onReschedule }: TableRowActionsProps) {
+export function TableRowActions({ onView, onEdit, onDelete, onCancel, onReschedule, onDownload }: TableRowActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="bg-transparent">
@@ -55,6 +56,15 @@ export function TableRowActions({ onView, onEdit, onDelete, onCancel, onReschedu
             <DropdownMenuItem onClick={onCancel} className="text-red-500">
               <XCircle className="mr-2 h-4 w-4" />
               Cancel
+            </DropdownMenuItem>
+          </RoleGuard>
+        )}
+
+        {onDownload && (
+          <RoleGuard allowedRoles={[]}>
+            <DropdownMenuItem onClick={onDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
             </DropdownMenuItem>
           </RoleGuard>
         )}

@@ -42,8 +42,7 @@ const MedicalRecordContext = createContext<MedicalRecordContextType | undefined>
 export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => {
     const dispatch = useAppDispatch();
     const medicalRecords = useAppSelector(state => state.medicalRecord.medicalRecords)
-    const { profile } = useAppSelector(state => state.profile);
-    const profileLoading = useAppSelector(state => state.profile.loading);
+    const { profile, loading: profileLoading } = useAppSelector(state => state.profile);
     // states
     const [medicalRecord, setMedicalRecord] = useState<MedicalRecordGetAll | null>(null);
     const [medicalRecordFormOpen, setMedicalRecordFormOpen] = useState(false);
@@ -148,6 +147,9 @@ export const MedicalRecordProvider = ({ children }: { children: ReactNode }) => 
 
                 // Call optional success callback
                 if (onSuccess) onSuccess();
+            } else {
+                // Handle the rejected case
+                console.error("Operation failed:", resultAction.payload);
             }
 
         } catch (err) {

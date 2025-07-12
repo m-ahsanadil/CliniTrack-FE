@@ -63,19 +63,25 @@ interface ProviderFormProps {
 
 
 export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
-    const dispatch = useAppDispatch();
     const { toast } = useToast();
-    const { profile } = useAppSelector(state => state.profile)
 
-    // Fetch profile when component mounts
-    useEffect(() => {
-        if (open) {
-            if (!profile) {
-                dispatch(fetchProfile())
-            }
-        }
-    }, [open, dispatch, profile]);
+    //REDUX STATES
+    const {
+        createError,
+        createLoading,
+        updateError,
+        createSuccess,
+        updateSuccess,
+        updateLoading,
+    } = useAppSelector(state => state.provider)
 
+    // CONTEXT STATES
+    const {
+        isEditing,
+        provider,
+        profile,
+        handleSaveProvider,
+    } = useProvider();
 
     const initialProviderValues: ProviderFormValues = {
         address: {
@@ -98,22 +104,7 @@ export function ProviderForm({ open, onOpenChange }: ProviderFormProps) {
         updatedBy: profile?.name || ""
     }
 
-    // CONTEXT STATES
-    const {
-        isEditing,
-        provider,
-        handleSaveProvider,
-    } = useProvider();
 
-    //REDUX STATES
-    const {
-        createError,
-        createLoading,
-        updateError,
-        createSuccess,
-        updateSuccess,
-        updateLoading,
-    } = useAppSelector(state => state.provider)
 
     // Determine mode based on editingItem
     const mode = isEditing ? 'edit' : 'create';

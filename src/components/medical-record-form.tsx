@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, Edit, Loader2, Plus, X } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { medicalRecordValidationSchema } from "../validation/schemas"
 import { FormikHelpers, getIn, useFormik } from 'formik'
 import { useMedicalRecord } from "../redux/providers/contexts/MedicalRecordContext";

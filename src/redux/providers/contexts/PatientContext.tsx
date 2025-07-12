@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/reduxHook";
 import { clearCreateError, clearCreateSuccess, clearDeleteError, clearUpdateError, clearUpdateSuccess, createPatients, deletePatient, fetchAllPatients, updatePatients } from "@/src/modules/Dashboard/patients/api/slice";
 import { Patient, PatientPostRequest } from "@/src/modules/Dashboard/patients/api/types";
@@ -54,7 +54,7 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
   const [isDataFetched, setIsDataFetched] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const filteredPatients = patients;
+  const filteredPatients = useMemo(() => patients, [patients]);
 
   // Calculate if data is still loading
   const isDataLoading = profileLoading;
@@ -149,6 +149,9 @@ export const PatientProvider = ({ children }: { children: ReactNode }) => {
 
         // Call optional success callback
         if (onSuccess) onSuccess();
+      } else {
+        // Handle the rejected case
+        console.error("Operation failed:", resultAction.payload);
       }
 
     } catch (err) {
